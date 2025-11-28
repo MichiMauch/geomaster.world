@@ -1,0 +1,153 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { MapContainer, Marker, Popup, useMapEvents, GeoJSON, Circle } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { SWITZERLAND_BOUNDS } from "@/lib/distance";
+
+// Fix for default markers
+const defaultIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const targetIcon = L.icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = defaultIcon;
+
+interface MarkerPosition {
+  lat: number;
+  lng: number;
+}
+
+interface HintCircle {
+  lat: number;
+  lng: number;
+  radiusKm: number;
+}
+
+interface SwitzerlandMapProps {
+  onMarkerPlace?: (position: MarkerPosition) => void;
+  markerPosition?: MarkerPosition | null;
+  targetPosition?: MarkerPosition | null;
+  showTarget?: boolean;
+  interactive?: boolean;
+  height?: string;
+  hintCircle?: HintCircle | null;
+}
+
+function MapClickHandler({ onMarkerPlace }: { onMarkerPlace?: (position: MarkerPosition) => void }) {
+  useMapEvents({
+    click(e) {
+      if (onMarkerPlace) {
+        onMarkerPlace({ lat: e.latlng.lat, lng: e.latlng.lng });
+      }
+    },
+  });
+  return null;
+}
+
+export default function SwitzerlandMap({
+  onMarkerPlace,
+  markerPosition,
+  targetPosition,
+  showTarget = false,
+  interactive = true,
+  height = "400px",
+  hintCircle = null,
+}: SwitzerlandMapProps) {
+  const [mounted, setMounted] = useState(false);
+  const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    // Load GeoJSON data
+    fetch("/switzerland.geojson")
+      .then((res) => res.json())
+      .then((data) => setGeoData(data))
+      .catch((err) => console.error("Error loading GeoJSON:", err));
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div
+        className="bg-gray-100 rounded-lg flex items-center justify-center"
+        style={{ height }}
+      >
+        <span className="text-gray-500">Karte wird geladen...</span>
+      </div>
+    );
+  }
+
+  const bounds = L.latLngBounds(
+    [SWITZERLAND_BOUNDS.southWest.lat, SWITZERLAND_BOUNDS.southWest.lng],
+    [SWITZERLAND_BOUNDS.northEast.lat, SWITZERLAND_BOUNDS.northEast.lng]
+  );
+
+  // Style for Switzerland GeoJSON
+  const geoStyle = {
+    color: "#374151",      // Grenzlinie (gray-700)
+    weight: 2,
+    fillColor: "#ffffff",  // Inneres weiss
+    fillOpacity: 1,
+  };
+
+  return (
+    <MapContainer
+      center={[SWITZERLAND_BOUNDS.center.lat, SWITZERLAND_BOUNDS.center.lng]}
+      zoom={8}
+      style={{ height, width: "100%", backgroundColor: "#d1d5db" }}
+      className="rounded-lg"
+      maxBounds={bounds}
+      maxBoundsViscosity={1.0}
+      minZoom={7}
+    >
+      {/* Switzerland border - no TileLayer for clean look */}
+      {geoData && (
+        <GeoJSON data={geoData} style={geoStyle} />
+      )}
+
+      {/* Hint circle for players with hint enabled */}
+      {hintCircle && (
+        <Circle
+          center={[hintCircle.lat, hintCircle.lng]}
+          radius={hintCircle.radiusKm * 1000}
+          pathOptions={{
+            color: "#3b82f6",
+            fillColor: "#93c5fd",
+            fillOpacity: 0.15,
+            weight: 2,
+            dashArray: "5, 10",
+          }}
+        />
+      )}
+
+      {interactive && <MapClickHandler onMarkerPlace={onMarkerPlace} />}
+
+      {markerPosition && (
+        <Marker position={[markerPosition.lat, markerPosition.lng]} icon={defaultIcon}>
+          <Popup>Dein Tipp</Popup>
+        </Marker>
+      )}
+
+      {showTarget && targetPosition && (
+        <Marker position={[targetPosition.lat, targetPosition.lng]} icon={targetIcon}>
+          <Popup>Korrekter Ort</Popup>
+        </Marker>
+      )}
+    </MapContainer>
+  );
+}
