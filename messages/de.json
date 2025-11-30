@@ -56,6 +56,7 @@
     "gameCompleted": "Spiel abgeschlossen",
     "showHistory": "Spielhistorie anzeigen",
     "showLeaderboard": "Rangliste im neuen Tab anzeigen",
+    "completedGames": "Abgeschlossene Spiele",
     "deleteGroup": "Gruppe löschen",
     "leaveGroup": "Gruppe verlassen",
     "deleteGroupInfo": "Als Ersteller dieser Gruppe kannst du sie löschen. Alle Daten werden dabei gelöscht.",
@@ -144,7 +145,12 @@
     "days": "{count} Tage",
     "game": "Spiel",
     "games": "Spiele",
-    "revealedByAdmin": "Die Rangliste wird vom Admin enthüllt"
+    "revealedByAdmin": "Die Rangliste wird vom Admin enthüllt",
+    "round": "Runde",
+    "total": "Gesamt"
+  },
+  "modal": {
+    "close": "Schliessen"
   },
   "invite": {
     "title": "Einladungscode",

@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     const groupId = searchParams.get("groupId");
     const type = searchParams.get("type") || "weekly"; // weekly or alltime
     const gameId = searchParams.get("gameId"); // optional: specific game for history
+    const roundNumber = searchParams.get("roundNumber"); // optional: cumulative up to this round
 
     if (!groupId) {
       return NextResponse.json(
@@ -76,12 +77,23 @@ export async function GET(request: Request) {
         return NextResponse.json({ leaderboard: [], game: null });
       }
 
-      // Get total rounds for this game
-      const roundsCount = await db
-        .select({ count: sql<number>`count(*)` })
+      // Get total locations (for completion check) and max round number (for tabs)
+      const gameStats = await db
+        .select({
+          totalLocations: sql<number>`count(*)`,
+          maxRoundNumber: sql<number>`max(${gameRounds.roundNumber})`,
+        })
         .from(gameRounds)
         .where(eq(gameRounds.gameId, game.id))
         .get();
+
+      // Build WHERE conditions for leaderboard query
+      const whereConditions = roundNumber
+        ? and(
+            eq(gameRounds.gameId, game.id),
+            sql`${gameRounds.roundNumber} <= ${parseInt(roundNumber)}`
+          )
+        : eq(gameRounds.gameId, game.id);
 
       // Get leaderboard for this game with membership status
       const leaderboardRaw = await db
@@ -95,7 +107,7 @@ export async function GET(request: Request) {
         .from(guesses)
         .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
         .innerJoin(users, eq(guesses.userId, users.id))
-        .where(eq(gameRounds.gameId, game.id))
+        .where(whereConditions)
         .groupBy(guesses.userId, users.name, users.image)
         .orderBy(sql`sum(${guesses.distanceKm}) asc`);
 
@@ -111,12 +123,13 @@ export async function GET(request: Request) {
         leaderboard: leaderboardRaw.map((entry, index) => ({
           ...entry,
           rank: index + 1,
-          completed: entry.roundsPlayed >= (roundsCount?.count || 0),
+          completed: entry.roundsPlayed >= (gameStats?.totalLocations || 0),
           isMember: memberSet.has(entry.userId),
         })),
         game: {
           ...game,
-          totalRounds: roundsCount?.count || 0,
+          totalLocations: gameStats?.totalLocations || 0,
+          maxRoundNumber: gameStats?.maxRoundNumber || 0,
         },
         revealed: game.leaderboardRevealed || game.status === "completed",
       });

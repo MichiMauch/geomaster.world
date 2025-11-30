@@ -56,6 +56,7 @@
     "gameCompleted": "Game completed",
     "showHistory": "Show game history",
     "showLeaderboard": "Show leaderboard in new tab",
+    "completedGames": "Completed Games",
     "deleteGroup": "Delete Group",
     "leaveGroup": "Leave Group",
     "deleteGroupInfo": "As the creator of this group, you can delete it. All data will be deleted.",
@@ -144,7 +145,12 @@
     "days": "{count} days",
     "game": "game",
     "games": "games",
-    "revealedByAdmin": "The leaderboard will be revealed by the admin"
+    "revealedByAdmin": "The leaderboard will be revealed by the admin",
+    "round": "Round",
+    "total": "Total"
+  },
+  "modal": {
+    "close": "Close"
   },
   "invite": {
     "title": "Invite Code",

@@ -56,6 +56,7 @@
     "gameCompleted": "Igra končana",
     "showHistory": "Prikaži zgodovino iger",
     "showLeaderboard": "Prikaži lestvico v novem zavihku",
+    "completedGames": "Končane igre",
     "deleteGroup": "Izbriši skupino",
     "leaveGroup": "Zapusti skupino",
     "deleteGroupInfo": "Kot ustvarjalec te skupine jo lahko izbrišeš. Vsi podatki bodo izbrisani.",
@@ -144,7 +145,12 @@
     "days": "{count} dni",
     "game": "igra",
     "games": "iger",
-    "revealedByAdmin": "Lestvico bo razkril admin"
+    "revealedByAdmin": "Lestvico bo razkril admin",
+    "round": "Krog",
+    "total": "Skupaj"
+  },
+  "modal": {
+    "close": "Zapri"
   },
   "invite": {
     "title": "Koda za povabilo",

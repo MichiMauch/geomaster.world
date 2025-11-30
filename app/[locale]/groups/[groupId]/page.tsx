@@ -11,6 +11,7 @@ import InviteCode from "@/components/InviteCode";
 import RoundControlPanel from "@/components/RoundControlPanel";
 import LeaveGroupButton from "@/components/LeaveGroupButton";
 import GameStatusPoller from "@/components/GameStatusPoller";
+import CompletedGamesList from "@/components/CompletedGamesList";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -80,7 +81,41 @@ async function getGroupData(groupId: string, userId: string) {
     ).length;
   }
 
-  return { group, membership, locationsCount: locationsList.length, members, currentGame, userCompletedRounds };
+  // Fetch completed games (last 10)
+  const completedGamesRaw = await db
+    .select()
+    .from(games)
+    .where(and(eq(games.groupId, groupId), eq(games.status, "completed")))
+    .orderBy(desc(games.createdAt))
+    .limit(10);
+
+  // Fetch winner for each completed game
+  const completedGames = await Promise.all(
+    completedGamesRaw.map(async (game) => {
+      // Get winner (player with lowest total distance)
+      const winner = await db
+        .select({
+          userName: users.name,
+          userImage: users.image,
+          totalDistance: sql<number>`sum(${guesses.distanceKm})`,
+        })
+        .from(guesses)
+        .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
+        .innerJoin(users, eq(guesses.userId, users.id))
+        .where(eq(gameRounds.gameId, game.id))
+        .groupBy(guesses.userId, users.name, users.image)
+        .orderBy(sql`sum(${guesses.distanceKm}) asc`)
+        .limit(1)
+        .get();
+
+      return {
+        ...game,
+        winner: winner || undefined,
+      };
+    })
+  );
+
+  return { group, membership, locationsCount: locationsList.length, members, currentGame, userCompletedRounds, completedGames };
 }
 
 export default async function GroupPage({
@@ -100,7 +135,7 @@ export default async function GroupPage({
 
   const t = await getTranslations("group");
   const tCommon = await getTranslations("common");
-  const { group, membership, locationsCount, members, currentGame, userCompletedRounds } = data;
+  const { group, membership, locationsCount, members, currentGame, userCompletedRounds, completedGames } = data;
   const isAdmin = membership.role === "admin";
   const isOwner = group.ownerId === session.user.id;
 
@@ -170,6 +205,11 @@ export default async function GroupPage({
               </svg>
             </a>
           </div>
+        )}
+
+        {/* Completed Games */}
+        {completedGames.length > 0 && (
+          <CompletedGamesList games={completedGames} groupId={groupId} />
         )}
 
         {/* Two Column: Invite Code & Members */}
