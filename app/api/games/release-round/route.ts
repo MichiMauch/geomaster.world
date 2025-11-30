@@ -108,10 +108,13 @@ export async function POST(request: Request) {
     // Batch insert all locations for the round
     await db.insert(gameRounds).values(gameRoundsToInsert);
 
-    // Update currentRound
+    // Update currentRound and reset leaderboard visibility
     await db
       .update(games)
-      .set({ currentRound: newRoundNumber })
+      .set({
+        currentRound: newRoundNumber,
+        leaderboardRevealed: false,  // Rangliste nach neuer Runde wieder verstecken
+      })
       .where(eq(games.id, gameId));
 
     return NextResponse.json({
