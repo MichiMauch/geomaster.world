@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { cn } from "@/lib/utils";
 
 export default function NewGroupPage() {
   const router = useRouter();
@@ -16,8 +15,6 @@ export default function NewGroupPage() {
   const t = useTranslations("newGroup");
   const tCommon = useTranslations("common");
   const [name, setName] = useState("");
-  const [locationsPerRound, setLocationsPerRound] = useState(5);
-  const [timeLimitSeconds, setTimeLimitSeconds] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,11 +27,7 @@ export default function NewGroupPage() {
       const response = await fetch("/api/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          locationsPerRound,
-          timeLimitSeconds,
-        }),
+        body: JSON.stringify({ name }),
       });
 
       if (!response.ok) {
@@ -49,15 +42,6 @@ export default function NewGroupPage() {
       setLoading(false);
     }
   };
-
-  const locationOptions = [3, 5, 10];
-  const timeLimitOptions = [
-    { value: null, label: t("noLimit") },
-    { value: 15, label: t("seconds", { count: 15 }) },
-    { value: 30, label: t("seconds", { count: 30 }) },
-    { value: 60, label: t("seconds", { count: 60 }) },
-    { value: 120, label: t("minutes", { count: 2 }) },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,54 +79,6 @@ export default function NewGroupPage() {
               placeholder={t("groupNamePlaceholder")}
               required
             />
-
-            {/* Locations per Round */}
-            <div className="space-y-2">
-              <label className="block text-body-small font-medium text-text-primary">
-                {t("locationsPerRound")}
-              </label>
-              <div className="flex gap-2">
-                {locationOptions.map((count) => (
-                  <button
-                    key={count}
-                    type="button"
-                    onClick={() => setLocationsPerRound(count)}
-                    className={cn(
-                      "flex-1 py-3 rounded-xl border-2 font-medium transition-all",
-                      locationsPerRound === count
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-glass-border bg-surface-2 text-text-secondary hover:border-primary/50"
-                    )}
-                  >
-                    {count}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Time Limit */}
-            <div className="space-y-2">
-              <label className="block text-body-small font-medium text-text-primary">
-                {t("timeLimitPerLocation")}
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {timeLimitOptions.map((option) => (
-                  <button
-                    key={option.value ?? "none"}
-                    type="button"
-                    onClick={() => setTimeLimitSeconds(option.value)}
-                    className={cn(
-                      "py-3 px-2 rounded-xl border-2 text-sm font-medium transition-all",
-                      timeLimitSeconds === option.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-glass-border bg-surface-2 text-text-secondary hover:border-primary/50"
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {error && (
               <p className="text-error text-body-small text-center">{error}</p>
