@@ -88,7 +88,10 @@
     "gameCompleted": "Igra končana!",
     "openRoundsToPlay": "Imaš še odprte kroge za igranje!",
     "playedRound": "Odigral si {ordinal} krog",
-    "unknownError": "Neznana napaka"
+    "unknownError": "Neznana napaka",
+    "enterGameName": "Daj igri ime",
+    "gameNamePlaceholder": "npr. Božična igra 2024",
+    "nameRequired": "Prosim vnesi ime za igro"
   },
   "play": {
     "playing": "Igraj",

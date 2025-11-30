@@ -5,24 +5,12 @@ import {
   games,
   gameRounds,
   locations,
-  groups,
   groupMembers,
   users,
 } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
-
-// Get current ISO week number
-function getISOWeek(date: Date): number {
-  const d = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-  );
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-}
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -65,19 +53,14 @@ export async function GET(request: Request) {
       .where(eq(users.id, session.user.id))
       .get();
 
-    // Get current game with rounds
-    const now = new Date();
-    const currentWeek = getISOWeek(now);
-    const currentYear = now.getFullYear();
-
+    // Get current active game (most recent)
     const game = await db
       .select()
       .from(games)
       .where(
         and(
           eq(games.groupId, groupId),
-          eq(games.weekNumber, currentWeek),
-          eq(games.year, currentYear)
+          eq(games.status, "active")
         )
       )
       .orderBy(desc(games.createdAt))
@@ -86,13 +69,6 @@ export async function GET(request: Request) {
     if (!game) {
       return NextResponse.json({ game: null, rounds: [], timeLimitSeconds: null, hintEnabled: user?.hintEnabled ?? false });
     }
-
-    // Get group settings for timeLimitSeconds
-    const group = await db
-      .select()
-      .from(groups)
-      .where(eq(groups.id, groupId))
-      .get();
 
     // Get rounds with location info
     const rounds = await db
@@ -113,7 +89,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       game,
       rounds,
-      timeLimitSeconds: group?.timeLimitSeconds ?? null,
+      timeLimitSeconds: game.timeLimitSeconds ?? null,
       hintEnabled: user?.hintEnabled ?? false
     });
   } catch (error) {
@@ -134,7 +110,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { groupId } = body;
+    const { groupId, name, locationsPerRound, timeLimitSeconds } = body;
 
     // Check if user is admin
     const membership = await db
@@ -155,42 +131,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get group settings
-    const group = await db
-      .select()
-      .from(groups)
-      .where(eq(groups.id, groupId))
-      .get();
-
-    if (!group) {
-      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    // Validate required fields
+    if (!locationsPerRound || locationsPerRound < 1) {
+      return NextResponse.json(
+        { error: "locationsPerRound ist erforderlich" },
+        { status: 400 }
+      );
     }
 
     // Get available locations (global - all locations)
     const locationsList = await db.select().from(locations);
 
-    if (locationsList.length < group.locationsPerRound) {
+    if (locationsList.length < locationsPerRound) {
       return NextResponse.json(
         {
-          error: `Mindestens ${group.locationsPerRound} Orte benötigt`,
+          error: `Mindestens ${locationsPerRound} Orte benötigt`,
         },
         { status: 400 }
       );
     }
 
-    const now = new Date();
-    const currentWeek = getISOWeek(now);
-    const currentYear = now.getFullYear();
-
-    // Check if an ACTIVE game already exists for this week
+    // Check if an active game already exists for this group
     const existingActiveGame = await db
       .select()
       .from(games)
       .where(
         and(
           eq(games.groupId, groupId),
-          eq(games.weekNumber, currentWeek),
-          eq(games.year, currentYear),
           eq(games.status, "active")
         )
       )
@@ -198,37 +165,26 @@ export async function POST(request: Request) {
 
     if (existingActiveGame) {
       return NextResponse.json(
-        { error: "Es gibt bereits ein aktives Spiel für diese Woche" },
+        { error: "Es gibt bereits ein aktives Spiel" },
         { status: 400 }
       );
     }
 
-    // Create game
+    // Create game with currentRound: 0 (no rounds released yet, admin must release first round manually)
+    const now = new Date();
     const gameId = nanoid();
     await db.insert(games).values({
       id: gameId,
       groupId,
-      weekNumber: currentWeek,
-      year: currentYear,
+      name: name || null,
+      locationsPerRound,
+      timeLimitSeconds: timeLimitSeconds || null,
       status: "active",
+      currentRound: 0,
       createdAt: now,
     });
 
-    // Select random locations for Round 1
-    const shuffled = [...locationsList].sort(() => Math.random() - 0.5);
-    const selectedLocations = shuffled.slice(0, group.locationsPerRound);
-
-    // Prepare all gameRounds records for batch insert
-    const gameRoundsToInsert = selectedLocations.map((loc, i) => ({
-      id: nanoid(),
-      gameId,
-      roundNumber: 1,           // All locations belong to Round 1
-      locationIndex: i + 1,     // Position within the round (1, 2, 3...)
-      locationId: loc.id,
-    }));
-
-    // Batch insert all locations for Round 1
-    await db.insert(gameRounds).values(gameRoundsToInsert);
+    // Note: Locations for Round 1 are created when admin releases the round via /api/games/release-round
 
     return NextResponse.json({ gameId });
   } catch (error) {

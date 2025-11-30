@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, groups, groupMembers, locations, gameRounds } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { games, groupMembers, locations, gameRounds } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 
@@ -54,17 +54,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get group settings
-    const group = await db
-      .select()
-      .from(groups)
-      .where(eq(groups.id, game.groupId))
-      .get();
-
-    if (!group) {
-      return NextResponse.json({ error: "Group not found" }, { status: 404 });
-    }
-
     // Get all locations (global)
     const allLocations = await db.select().from(locations);
 
@@ -82,10 +71,10 @@ export async function POST(request: Request) {
     );
 
     // Check if we have enough locations for another round
-    if (availableLocations.length < group.locationsPerRound) {
+    if (availableLocations.length < game.locationsPerRound) {
       return NextResponse.json(
         {
-          error: `Nicht genügend unbenutzte Orte für eine weitere Runde. Benötigt: ${group.locationsPerRound}, Verfügbar: ${availableLocations.length}`,
+          error: `Nicht genügend unbenutzte Orte für eine weitere Runde. Benötigt: ${game.locationsPerRound}, Verfügbar: ${availableLocations.length}`,
         },
         { status: 400 }
       );
@@ -93,7 +82,7 @@ export async function POST(request: Request) {
 
     // Select random locations for the new round
     const shuffled = [...availableLocations].sort(() => Math.random() - 0.5);
-    const selectedLocations = shuffled.slice(0, group.locationsPerRound);
+    const selectedLocations = shuffled.slice(0, game.locationsPerRound);
 
     // Create the new round
     const newRoundNumber = game.currentRound + 1;
@@ -110,28 +99,6 @@ export async function POST(request: Request) {
     // Batch insert all locations for the round
     await db.insert(gameRounds).values(gameRoundsToInsert);
 
-    // Verify the correct number was inserted
-    const insertedCount = await db
-      .select({ count: sql<number>`COUNT(*)` })
-      .from(gameRounds)
-      .where(
-        and(
-          eq(gameRounds.gameId, gameId),
-          eq(gameRounds.roundNumber, newRoundNumber)
-        )
-      )
-      .get();
-
-    if (insertedCount?.count !== group.locationsPerRound) {
-      console.error(
-        `Expected ${group.locationsPerRound} locations, but inserted ${insertedCount?.count}`
-      );
-      return NextResponse.json(
-        { error: "Fehler beim Erstellen der Runde - nicht alle Orte wurden gespeichert" },
-        { status: 500 }
-      );
-    }
-
     // Update currentRound
     await db
       .update(games)
@@ -141,7 +108,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       currentRound: newRoundNumber,
-      locationsInRound: group.locationsPerRound,
+      locationsInRound: game.locationsPerRound,
     });
   } catch (error) {
     console.error("Error releasing round:", error);

@@ -32,8 +32,6 @@ interface Guess {
 
 interface Game {
   id: string;
-  weekNumber: number;
-  year: number;
   status: string;
   currentRound: number;
 }
@@ -392,9 +390,6 @@ export default function PlayPage({
               <h2 className="text-h2 text-text-primary">
                 {t("roundComplete", { number: completedRoundNumber })}
               </h2>
-              <p className="text-sm text-text-secondary">
-                {t("week", { number: game.weekNumber })}/{game.year}
-              </p>
             </div>
 
             <div className="py-3 rounded-xl bg-surface-2">

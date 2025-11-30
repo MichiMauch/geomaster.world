@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
+import { SetPageTitle } from "@/components/SetPageTitle";
 
 async function getGroupData(groupId: string, userId: string) {
   const membership = await db
@@ -49,10 +50,11 @@ async function getGroupData(groupId: string, userId: string) {
     .innerJoin(users, eq(groupMembers.userId, users.id))
     .where(eq(groupMembers.groupId, groupId));
 
+  // Only fetch active games - completed games should not be shown here
   const currentGame = await db
     .select()
     .from(games)
-    .where(eq(games.groupId, groupId))
+    .where(and(eq(games.groupId, groupId), eq(games.status, "active")))
     .orderBy(desc(games.createdAt))
     .get();
 
@@ -106,244 +108,161 @@ export default async function GroupPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="bg-surface-1/50 border-b border-glass-border">
-        <div className="max-w-6xl mx-auto px-4 py-6 text-center">
-          <h2 className="text-h1 text-text-primary mb-1">{group.name}</h2>
-          {currentGame && (
-            <p className="text-body text-text-secondary">
-              {t("roundLocations", { round: currentGame.currentRound, count: group.locationsPerRound })}
-            </p>
-          )}
-          {isAdmin && (
-            <Badge variant="primary" size="sm" className="mt-2">
-              {tCommon("admin")}
-            </Badge>
-          )}
-        </div>
-      </div>
+      <SetPageTitle title={group.name} />
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {currentGame?.status === "completed" ? (
-          /* Completed Game View */
-          <>
-            <Card variant="surface" padding="lg" className="border-success/30 bg-success/5">
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success/20">
-                  <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="text-h3 text-success">{t("gameCompleted")}</p>
-                {isAdmin && <StartGameButton groupId={groupId} />}
-              </div>
-            </Card>
-
-            <div className="flex justify-end">
-              <Link
-                href={`/${locale}/groups/${groupId}/history`}
-                className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
-              >
-                {t("showHistory")}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-
-            <Leaderboard groupId={groupId} blurred={false} />
-
-            {isAdmin && (
-              <div className="flex justify-end">
-                <a
-                  href={`/${locale}/groups/${groupId}/leaderboard`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
-                >
-                  {t("showLeaderboard")}
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
-            )}
-
-            {/* Leave/Delete Group */}
-            <Card variant="surface" padding="lg">
-              <h2 className="text-h3 text-text-primary mb-2">
-                {isOwner ? t("deleteGroup") : t("leaveGroup")}
-              </h2>
-              <p className="text-body-small text-text-secondary mb-4">
-                {isOwner ? t("deleteGroupInfo") : t("leaveGroupInfo")}
-              </p>
-              <LeaveGroupButton groupId={groupId} isOwner={isOwner} />
-            </Card>
-          </>
-        ) : (
-          /* Active Game / No Game View */
-          <>
-            {/* Play Card */}
-            <div className="max-w-md mx-auto">
-              {currentGame && locationsCount >= group.locationsPerRound ? (
-                <PlayButton
-                  groupId={groupId}
-                  currentRound={currentGame.currentRound}
-                  userCompletedRounds={userCompletedRounds}
-                />
-              ) : locationsCount < group.locationsPerRound ? (
-                <Card variant="surface" padding="lg" className="opacity-60">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
-                      <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-h3 text-text-muted">{t("play")}</h3>
-                      <p className="text-body-small text-text-muted">
-                        {t("minLocationsRequired", { count: group.locationsPerRound })}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ) : isAdmin ? (
-                <StartGameButton groupId={groupId} />
-              ) : (
-                <Card variant="surface" padding="lg" className="opacity-60">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
-                      <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-h3 text-text-muted">{t("play")}</h3>
-                      <p className="text-body-small text-text-muted">{t("noActiveGame")}</p>
-                    </div>
-                  </div>
-                </Card>
-              )}
-            </div>
-
-            {/* Round Control Panel (Admin) */}
-            {currentGame && (
-              <RoundControlPanel
-                gameId={currentGame.id}
+        {/* Play Card */}
+        <div className="max-w-md mx-auto space-y-3">
+          {currentGame && locationsCount >= currentGame.locationsPerRound ? (
+            <>
+              <PlayButton
                 groupId={groupId}
                 currentRound={currentGame.currentRound}
-                locationsPerRound={group.locationsPerRound}
-                isAdmin={isAdmin}
                 userCompletedRounds={userCompletedRounds}
-                gameStatus={currentGame.status}
               />
-            )}
-
-            {/* History Link */}
-            <div className="flex justify-end">
-              <Link
-                href={`/${locale}/groups/${groupId}/history`}
-                className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
-              >
-                {t("showHistory")}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-
-            {/* Leaderboard */}
-            <Leaderboard groupId={groupId} blurred={!isAdmin} />
-
-            {isAdmin && (
-              <div className="flex justify-end">
-                <a
-                  href={`/${locale}/groups/${groupId}/leaderboard`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
-                >
-                  {t("showLeaderboard")}
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              {/* Game Info */}
+              <div className="text-center">
+                {currentGame.name && (
+                  <p className="text-h3 text-primary">{currentGame.name}</p>
+                )}
+                <p className="text-body-small text-text-secondary">
+                  {t("roundLocations", { round: currentGame.currentRound, count: currentGame.locationsPerRound })}
+                </p>
+                {isAdmin && (
+                  <Badge variant="primary" size="sm" className="mt-2">
+                    {tCommon("admin")}
+                  </Badge>
+                )}
+              </div>
+            </>
+          ) : locationsCount < 3 ? (
+            <Card variant="surface" padding="lg" className="opacity-60">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                </a>
-              </div>
-            )}
-
-            {/* Invite Code */}
-            <InviteCode code={group.inviteCode} />
-
-            {/* Members */}
-            <Card variant="surface" padding="lg">
-              <h2 className="text-h3 text-text-primary mb-4">
-                {t("members")} ({members.length})
-              </h2>
-              <div className="space-y-2">
-                {members.map((member) => (
-                  <div
-                    key={member.userId}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-2 transition-colors"
-                  >
-                    <Avatar
-                      src={member.image}
-                      name={member.name}
-                      size="md"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-text-primary truncate">
-                        {member.name}
-                      </p>
-                    </div>
-                    {member.role === "admin" && (
-                      <Badge variant="primary" size="sm">
-                        {tCommon("admin")}
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Settings (Admin) */}
-            {isAdmin && (
-              <Card variant="surface" padding="lg">
-                <h2 className="text-h3 text-text-primary mb-4">{t("settings")}</h2>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b border-glass-border">
-                    <span className="text-text-secondary">{t("locationsPerRound")}</span>
-                    <span className="font-medium text-text-primary">{group.locationsPerRound}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-glass-border">
-                    <span className="text-text-secondary">{t("timeLimit")}</span>
-                    <span className="font-medium text-text-primary">
-                      {group.timeLimitSeconds
-                        ? t("timeLimitSeconds", { seconds: group.timeLimitSeconds })
-                        : t("noTimeLimit")}
-                    </span>
-                  </div>
-                  <Link href={`/${locale}/groups/${groupId}/settings`}>
-                    <Button variant="secondary" size="md" fullWidth>
-                      {t("changeSettings")}
-                    </Button>
-                  </Link>
                 </div>
-              </Card>
-            )}
-
-            {/* Leave/Delete Group */}
-            <Card variant="surface" padding="lg">
-              <h2 className="text-h3 text-text-primary mb-2">
-                {isOwner ? t("deleteGroup") : t("leaveGroup")}
-              </h2>
-              <p className="text-body-small text-text-secondary mb-4">
-                {isOwner ? t("deleteGroupInfo") : t("leaveGroupInfo")}
-              </p>
-              <LeaveGroupButton groupId={groupId} isOwner={isOwner} />
+                <div>
+                  <h3 className="text-h3 text-text-muted">{t("play")}</h3>
+                  <p className="text-body-small text-text-muted">
+                    {t("minLocationsRequired", { count: 3 })}
+                  </p>
+                </div>
+              </div>
             </Card>
-          </>
+          ) : isAdmin ? (
+            <StartGameButton groupId={groupId} />
+          ) : (
+            <Card variant="surface" padding="lg" className="opacity-60">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-h3 text-text-muted">{t("play")}</h3>
+                  <p className="text-body-small text-text-muted">{t("noActiveGame")}</p>
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Round Control Panel (Admin) */}
+        {currentGame && (
+          <RoundControlPanel
+            gameId={currentGame.id}
+            groupId={groupId}
+            currentRound={currentGame.currentRound}
+            locationsPerRound={currentGame.locationsPerRound}
+            isAdmin={isAdmin}
+            userCompletedRounds={userCompletedRounds}
+            gameStatus={currentGame.status}
+          />
         )}
+
+        {/* History Link */}
+        <div className="flex justify-end">
+          <Link
+            href={`/${locale}/groups/${groupId}/history`}
+            className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
+          >
+            {t("showHistory")}
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+
+        {/* Leaderboard */}
+        <Leaderboard groupId={groupId} blurred={!isAdmin} />
+
+        {isAdmin && (
+          <div className="flex justify-end">
+            <a
+              href={`/${locale}/groups/${groupId}/leaderboard`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
+            >
+              {t("showLeaderboard")}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+        )}
+
+        {/* Two Column: Invite Code & Members */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InviteCode code={group.inviteCode} />
+
+          <Card variant="surface" padding="lg">
+            <h2 className="text-h3 text-text-primary mb-4">
+              {t("members")} ({members.length})
+            </h2>
+            <div className="space-y-2">
+              {members.map((member) => (
+                <div
+                  key={member.userId}
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-2 transition-colors"
+                >
+                  <Avatar
+                    src={member.image}
+                    name={member.name}
+                    size="md"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-text-primary truncate">
+                      {member.name}
+                    </p>
+                  </div>
+                  {member.role === "admin" && (
+                    <Badge variant="primary" size="sm">
+                      {tCommon("admin")}
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Leave/Delete Group */}
+        <div className="max-w-md mx-auto">
+          <Card variant="surface" padding="lg">
+            <h2 className="text-h3 text-text-primary mb-2">
+              {isOwner ? t("deleteGroup") : t("leaveGroup")}
+            </h2>
+            <p className="text-body-small text-text-secondary mb-4">
+              {isOwner ? t("deleteGroupInfo") : t("leaveGroupInfo")}
+            </p>
+            <LeaveGroupButton groupId={groupId} isOwner={isOwner} />
+          </Card>
+        </div>
       </main>
     </div>
   );

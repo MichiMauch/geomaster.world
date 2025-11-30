@@ -84,7 +84,7 @@ export default async function GameLeaderboardPage({
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-h1 text-text-primary">
-              {t("week", { week: game.weekNumber, year: game.year })}
+              {game.name || (game.weekNumber && game.year ? t("week", { week: game.weekNumber, year: game.year }) : t("gameTitle"))}
             </h1>
             <Badge
               variant={game.status === "completed" ? "success" : "primary"}

@@ -90,14 +90,17 @@ export const locations = sqliteTable("locations", {
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 
-// Games (weekly)
+// Games
 export const games = sqliteTable("games", {
   id: text("id").primaryKey(),
   groupId: text("groupId")
     .notNull()
     .references(() => groups.id, { onDelete: "cascade" }),
-  weekNumber: integer("weekNumber").notNull(), // ISO week
-  year: integer("year").notNull(),
+  name: text("name"), // Game name (optional, set by admin)
+  locationsPerRound: integer("locationsPerRound").notNull().default(5), // How many locations per round for this game
+  timeLimitSeconds: integer("timeLimitSeconds"), // null = no limit
+  weekNumber: integer("weekNumber"), // Legacy: ISO week (optional for backwards compatibility)
+  year: integer("year"), // Legacy: year (optional for backwards compatibility)
   status: text("status", { enum: ["active", "completed"] }).notNull().default("active"),
   currentRound: integer("currentRound").notNull().default(1), // Currently released round (1 = only round 1 playable)
   leaderboardRevealed: integer("leaderboardRevealed", { mode: "boolean" }).notNull().default(false), // Admin can reveal leaderboard

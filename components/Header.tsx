@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { isSuperAdmin } from "@/lib/super-admin";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export function Header() {
   const { data: session, status } = useSession();
@@ -19,6 +20,7 @@ export function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("header");
   const tCommon = useTranslations("common");
+  const { pageTitle } = usePageTitle();
 
   // Scroll hide/show state
   const [isHidden, setIsHidden] = useState(false);
@@ -103,10 +105,12 @@ export function Header() {
             <span className="text-lg font-bold tracking-tight">Swiss Guesser</span>
           </Link>
 
-          {/* Page Title for Admin */}
-          {isAdminPage && (
+          {/* Page Title */}
+          {(pageTitle || isAdminPage) && (
             <div className="flex items-center gap-2 ml-4 pl-4 border-l border-glass-border">
-              <h1 className="text-lg font-semibold text-text-primary">Admin Dashboard</h1>
+              <h1 className="text-lg font-semibold text-text-primary truncate max-w-[200px]">
+                {pageTitle || "Admin Dashboard"}
+              </h1>
             </div>
           )}
         </div>

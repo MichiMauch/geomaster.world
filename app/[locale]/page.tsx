@@ -9,14 +9,12 @@ import { eq } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 
 async function getUserGroups(userId: string) {
   const userGroups = await db
     .select({
       id: groups.id,
       name: groups.name,
-      locationsPerRound: groups.locationsPerRound,
     })
     .from(groups)
     .innerJoin(groupMembers, eq(groups.id, groupMembers.groupId))
@@ -148,12 +146,9 @@ export default async function Home({
                         />
                       </svg>
                     </div>
-                    <h3 className="text-h3 text-text-primary mb-2 group-hover:text-primary transition-colors">
+                    <h3 className="text-h3 text-text-primary group-hover:text-primary transition-colors">
                       {group.name}
                     </h3>
-                    <Badge variant="default" size="sm">
-                      {t("locationsPerRound", { count: group.locationsPerRound })}
-                    </Badge>
                   </Card>
                 </Link>
               ))}

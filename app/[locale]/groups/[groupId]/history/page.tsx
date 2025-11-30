@@ -102,7 +102,7 @@ export default async function HistoryPage({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-text-primary group-hover:text-primary transition-colors">
-                        {t("week", { week: game.weekNumber, year: game.year })}
+                        {game.name || (game.weekNumber && game.year ? t("week", { week: game.weekNumber, year: game.year }) : t("gameTitle"))}
                       </p>
                       <p className="text-body-small text-text-secondary">
                         {formatDate(game.createdAt)}

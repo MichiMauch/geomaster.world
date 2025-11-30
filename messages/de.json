@@ -88,7 +88,10 @@
     "gameCompleted": "Spiel abgeschlossen!",
     "openRoundsToPlay": "Du hast noch offene Runden zu spielen!",
     "playedRound": "Du hast die {ordinal} Runde gespielt",
-    "unknownError": "Unbekannter Fehler"
+    "unknownError": "Unbekannter Fehler",
+    "enterGameName": "Gib dem Spiel einen Namen",
+    "gameNamePlaceholder": "z.B. Weihnachtsspiel 2024",
+    "nameRequired": "Bitte gib einen Namen für das Spiel ein"
   },
   "play": {
     "playing": "Spielen",

@@ -2,6 +2,8 @@
 
 import { NextIntlClientProvider, AbstractIntlMessages } from "next-intl";
 import { Header } from "./Header";
+import { CursorGlow } from "./CursorGlow";
+import { PageTitleProvider } from "@/contexts/PageTitleContext";
 
 interface LocaleProvidersProps {
   children: React.ReactNode;
@@ -12,8 +14,11 @@ interface LocaleProvidersProps {
 export function LocaleProviders({ children, messages, locale }: LocaleProvidersProps) {
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <Header />
-      {children}
+      <PageTitleProvider>
+        <CursorGlow />
+        <Header />
+        {children}
+      </PageTitleProvider>
     </NextIntlClientProvider>
   );
 }

@@ -5,17 +5,6 @@ import { guesses, gameRounds, games, groupMembers, users } from "@/lib/db/schema
 import { eq, and, sql, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-// Get current ISO week number
-function getISOWeek(date: Date): number {
-  const d = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-  );
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-}
-
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
 
@@ -69,19 +58,14 @@ export async function GET(request: Request) {
           )
           .get();
       } else {
-        // Normal mode: load current week's game
-        const now = new Date();
-        const currentWeek = getISOWeek(now);
-        const currentYear = now.getFullYear();
-
+        // Normal mode: load current active game
         game = await db
           .select()
           .from(games)
           .where(
             and(
               eq(games.groupId, groupId),
-              eq(games.weekNumber, currentWeek),
-              eq(games.year, currentYear)
+              eq(games.status, "active")
             )
           )
           .orderBy(desc(games.createdAt))
