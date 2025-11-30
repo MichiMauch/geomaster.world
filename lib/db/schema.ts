@@ -86,6 +86,7 @@ export const locations = sqliteTable("locations", {
   name: text("name").notNull(),
   latitude: real("latitude").notNull(),
   longitude: real("longitude").notNull(),
+  country: text("country").default("Switzerland"),
   difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).default("medium"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });

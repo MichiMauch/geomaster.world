@@ -71,6 +71,17 @@ export default function AdminPage() {
     locationId: null,
     locationName: "",
   });
+  const [importModal, setImportModal] = useState<{
+    isOpen: boolean;
+    country: string;
+    fileData: unknown[] | null;
+    fileName: string;
+  }>({
+    isOpen: false,
+    country: "Switzerland",
+    fileData: null,
+    fileName: "",
+  });
 
   const isSuperAdmin = session?.user?.email === "michi.mauch@netnode.ch";
 
@@ -264,25 +275,47 @@ export default function AdminPage() {
     }
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setImporting(true);
-    setImportError("");
 
     try {
       const text = await file.text();
       const data = JSON.parse(text);
 
       if (!Array.isArray(data)) {
-        throw new Error("Die Datei muss ein JSON-Array enthalten");
+        setImportError("Die Datei muss ein JSON-Array enthalten");
+        return;
       }
 
+      // Open modal with file data
+      setImportModal({
+        isOpen: true,
+        country: "Switzerland",
+        fileData: data,
+        fileName: file.name,
+      });
+    } catch {
+      setImportError("Fehler beim Lesen der Datei");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleImportConfirm = async () => {
+    if (!importModal.fileData) return;
+
+    setImporting(true);
+    setImportError("");
+
+    try {
       const response = await fetch("/api/locations/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locations: data }),
+        body: JSON.stringify({
+          locations: importModal.fileData,
+          country: importModal.country,
+        }),
       });
 
       const result = await response.json();
@@ -293,7 +326,11 @@ export default function AdminPage() {
         );
       }
 
-      toast.success(`${result.imported} Orte erfolgreich importiert!`);
+      let message = `${result.imported} Orte importiert`;
+      if (result.duplicatesSkipped > 0) {
+        message += `, ${result.duplicatesSkipped} Duplikate übersprungen`;
+      }
+      toast.success(message);
 
       // Refresh locations
       const locationsRes = await fetch("/api/locations");
@@ -301,14 +338,20 @@ export default function AdminPage() {
         const locData = await locationsRes.json();
         setLocations(locData);
       }
+
+      // Close modal
+      setImportModal({ isOpen: false, country: "Switzerland", fileData: null, fileName: "" });
     } catch (err) {
       setImportError(
         err instanceof Error ? err.message : "Fehler beim Import"
       );
     } finally {
       setImporting(false);
-      e.target.value = "";
     }
+  };
+
+  const closeImportModal = () => {
+    setImportModal({ isOpen: false, country: "Switzerland", fileData: null, fileName: "" });
   };
 
   const difficultyOptions = [
@@ -591,16 +634,20 @@ export default function AdminPage() {
                 <h2 className="text-h3 text-text-primary">
                   Vorhandene Orte ({locations.length})
                 </h2>
-                <label className="cursor-pointer">
-                  <Button variant="secondary" size="sm" isLoading={importing}>
+                <label className="relative inline-block cursor-pointer">
+                  <span className={cn(
+                    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg",
+                    "font-semibold transition-all duration-200 ease-out h-9 px-3 text-sm",
+                    "bg-surface-2 text-text-primary border border-glass-border",
+                    "hover:bg-surface-3 hover:border-glass-border-elevated"
+                  )}>
                     JSON importieren
-                  </Button>
+                  </span>
                   <input
                     type="file"
                     accept=".json"
-                    onChange={handleImport}
-                    disabled={importing}
-                    className="hidden"
+                    onChange={handleFileSelect}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                 </label>
               </div>
@@ -669,6 +716,60 @@ export default function AdminPage() {
         onConfirm={handleDeleteLocation}
         onCancel={closeDeleteModal}
       />
+
+      {/* Import Modal */}
+      {importModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <Card variant="elevated" padding="lg" className="w-full max-w-md mx-4">
+            <h2 className="text-h3 text-text-primary mb-4">Orte importieren</h2>
+            <p className="text-body-small text-text-secondary mb-4">
+              Datei: <span className="font-mono text-primary">{importModal.fileName}</span>
+              <br />
+              {importModal.fileData?.length} Orte gefunden
+            </p>
+
+            <div className="mb-6">
+              <label className="block text-body-small font-medium text-text-primary mb-2">
+                Land auswählen
+              </label>
+              <select
+                value={importModal.country}
+                onChange={(e) => setImportModal({ ...importModal, country: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="Switzerland">Schweiz</option>
+              </select>
+            </div>
+
+            {importError && (
+              <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-xl">
+                <p className="text-error text-body-small whitespace-pre-line">{importError}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={closeImportModal}
+                disabled={importing}
+                className="flex-1"
+              >
+                Abbrechen
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleImportConfirm}
+                isLoading={importing}
+                className="flex-1"
+              >
+                Importieren
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

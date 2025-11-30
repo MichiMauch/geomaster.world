@@ -83,7 +83,7 @@ export default function SummaryMap({ markers, height = "300px" }: SummaryMapProp
   return (
     <MapContainer
       center={[SWITZERLAND_BOUNDS.center.lat, SWITZERLAND_BOUNDS.center.lng]}
-      zoom={8}
+      zoom={7}
       style={{ height, width: "100%", backgroundColor: "#1A1F26" }}
       className="rounded-lg"
       maxBounds={bounds}

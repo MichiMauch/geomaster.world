@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +11,9 @@ import { Card } from "@/components/ui/Card";
 export default function LoginPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const locale = params.locale as string;
+  const callbackUrl = searchParams.get("callbackUrl") || `/${locale}`;
   const [loading, setLoading] = useState<number | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const t = useTranslations("login");
@@ -26,7 +28,7 @@ export default function LoginPage() {
       });
 
       if (response.ok) {
-        router.push(`/${locale}`);
+        router.push(callbackUrl);
         router.refresh();
       } else {
         const data = await response.json();
@@ -42,7 +44,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
-    signIn("google", { callbackUrl: `/${locale}` });
+    signIn("google", { callbackUrl });
   };
 
   return (

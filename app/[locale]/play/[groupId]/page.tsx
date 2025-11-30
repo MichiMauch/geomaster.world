@@ -390,22 +390,7 @@ export default function PlayPage({
     });
 
     return (
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 border-b border-glass-border bg-surface-1/80 backdrop-blur-xl">
-          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
-            <Link
-              href={`/${locale}/groups/${groupId}`}
-              className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="hidden sm:inline">{tCommon("back")}</span>
-            </Link>
-            <h1 className="text-h3 text-primary">{t("result")}</h1>
-          </div>
-        </header>
-        <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+      <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
           {/* Summary Map */}
           <Card variant="elevated" padding="md">
             <SummaryMap markers={summaryMarkers} height="300px" />
@@ -460,9 +445,8 @@ export default function PlayPage({
                 {t("toLeaderboard")}
               </Button>
             </Link>
-          </Card>
-        </main>
-      </div>
+        </Card>
+      </main>
     );
   }
 

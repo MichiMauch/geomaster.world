@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
@@ -16,37 +17,54 @@ export default function JoinWithCodePage({
   const router = useRouter();
   const routeParams = useParams();
   const locale = routeParams.locale as string;
+  const { status } = useSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isJoining, setIsJoining] = useState(false);
   const t = useTranslations("join");
   const tCommon = useTranslations("common");
 
-  useEffect(() => {
-    const joinGroup = async () => {
-      try {
-        const response = await fetch("/api/groups/join", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ inviteCode: code }),
-        });
+  const joinGroup = useCallback(async () => {
+    try {
+      const response = await fetch("/api/groups/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inviteCode: code }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to join group");
-        }
-
-        router.push(`/${locale}/groups/${data.groupId}`);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t("error"));
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to join group");
       }
-    };
 
-    joinGroup();
+      router.push(`/${locale}/groups/${data.groupId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("error"));
+      setLoading(false);
+    }
   }, [code, locale, router, t]);
 
-  if (loading && !error) {
+  useEffect(() => {
+    // Warten bis Session-Status bekannt ist
+    if (status === "loading") return;
+
+    // Nicht eingeloggt -> zur Login-Seite mit Callback
+    if (status === "unauthenticated") {
+      const callbackUrl = `/${locale}/join/${code}`;
+      router.push(`/${locale}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+      return;
+    }
+
+    // Eingeloggt -> Gruppe beitreten (nur einmal)
+    if (status === "authenticated" && !isJoining) {
+      setIsJoining(true);
+      joinGroup();
+    }
+  }, [status, code, locale, router, isJoining, joinGroup]);
+
+  // Loading während Session geprüft wird oder Redirect läuft
+  if (status === "loading" || status === "unauthenticated" || (loading && !error)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { locations: locationsToImport } = body;
+    const { locations: locationsToImport, country = "Switzerland" } = body;
 
     if (!Array.isArray(locationsToImport)) {
       return NextResponse.json(
@@ -38,21 +38,33 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get existing location names for duplicate check
+    const existingLocations = await db.select({ name: locations.name }).from(locations);
+    const existingNames = new Set(existingLocations.map(l => l.name.toLowerCase()));
+
     // Validate all locations
     const errors: string[] = [];
     const validLocations: LocationImport[] = [];
+    const duplicates: string[] = [];
 
     locationsToImport.forEach((loc: LocationImport, index: number) => {
       if (!loc.name || typeof loc.name !== "string") {
         errors.push(`Zeile ${index + 1}: Name fehlt`);
         return;
       }
-      if (typeof loc.latitude !== "number" || loc.latitude < 45 || loc.latitude > 48) {
-        errors.push(`Zeile ${index + 1}: Ungültiger Breitengrad (muss zwischen 45-48 sein)`);
+
+      // Check for duplicate
+      if (existingNames.has(loc.name.toLowerCase())) {
+        duplicates.push(loc.name);
         return;
       }
-      if (typeof loc.longitude !== "number" || loc.longitude < 5 || loc.longitude > 11) {
-        errors.push(`Zeile ${index + 1}: Ungültiger Längengrad (muss zwischen 5-11 sein)`);
+
+      if (typeof loc.latitude !== "number" || loc.latitude < -90 || loc.latitude > 90) {
+        errors.push(`Zeile ${index + 1}: Ungültiger Breitengrad`);
+        return;
+      }
+      if (typeof loc.longitude !== "number" || loc.longitude < -180 || loc.longitude > 180) {
+        errors.push(`Zeile ${index + 1}: Ungültiger Längengrad`);
         return;
       }
       if (loc.difficulty && !["easy", "medium", "hard"].includes(loc.difficulty)) {
@@ -69,7 +81,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert all locations
+    // Insert all valid locations
     const now = new Date();
     const insertedIds: string[] = [];
 
@@ -80,6 +92,7 @@ export async function POST(request: Request) {
         name: loc.name,
         latitude: loc.latitude,
         longitude: loc.longitude,
+        country,
         difficulty: loc.difficulty || "medium",
         createdAt: now,
       });
@@ -89,6 +102,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       imported: insertedIds.length,
+      duplicatesSkipped: duplicates.length,
+      duplicateNames: duplicates.slice(0, 10), // Return first 10 duplicate names
     });
   } catch (error) {
     console.error("Error importing locations:", error);
