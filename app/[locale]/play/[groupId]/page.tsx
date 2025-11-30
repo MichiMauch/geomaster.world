@@ -140,22 +140,24 @@ export default function PlayPage({
 
   // Generate hint circle when round changes
   useEffect(() => {
-    if (!hintEnabled || !currentRound || showResult || isLocationPlayed) {
+    if (loading || !hintEnabled || !currentRound || showResult || isLocationPlayed) {
       setHintCircle(null);
       return;
     }
 
+    const country = currentRound.country ?? game?.country ?? "switzerland";
     const center = generateHintCircleCenter(
       currentRound.latitude,
       currentRound.longitude,
-      HINT_CIRCLE_RADIUS_KM
+      HINT_CIRCLE_RADIUS_KM,
+      country
     );
     setHintCircle({
       lat: center.lat,
       lng: center.lng,
       radiusKm: HINT_CIRCLE_RADIUS_KM,
     });
-  }, [currentRound?.id, hintEnabled, showResult, isLocationPlayed]);
+  }, [loading, currentRound, hintEnabled, showResult, isLocationPlayed, game?.country]);
 
   // Timer effect
   useEffect(() => {
@@ -564,7 +566,7 @@ export default function PlayPage({
       {/* Kombiniertes Badge - zentriert */}
       {currentRound && (
         <div className={cn(
-          "absolute top-4 left-1/2 -translate-x-1/2 z-10",
+          "absolute top-4 left-1/2 -translate-x-1/2 z-[500]",
           "bg-background/85 backdrop-blur-md rounded-xl",
           "flex items-center gap-3 px-4 py-2",
           "border-2",

@@ -2,10 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { db } from "@/lib/db";
-import { groups, groupMembers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { groups, groupMembers, games } from "@/lib/db/schema";
+import { eq, count, sql } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +19,32 @@ async function getUserGroups(userId: string) {
     .innerJoin(groupMembers, eq(groups.id, groupMembers.groupId))
     .where(eq(groupMembers.userId, userId));
 
-  return userGroups;
+  // Load statistics for each group
+  const groupsWithStats = await Promise.all(
+    userGroups.map(async (group) => {
+      const memberResult = await db
+        .select({ value: count() })
+        .from(groupMembers)
+        .where(eq(groupMembers.groupId, group.id));
+
+      const gameResult = await db
+        .select({
+          total: count(),
+          active: sql<number>`SUM(CASE WHEN ${games.status} = 'active' THEN 1 ELSE 0 END)`,
+        })
+        .from(games)
+        .where(eq(games.groupId, group.id));
+
+      return {
+        ...group,
+        memberCount: memberResult[0]?.value ?? 0,
+        totalGames: gameResult[0]?.total ?? 0,
+        activeGames: Number(gameResult[0]?.active) || 0,
+      };
+    })
+  );
+
+  return groupsWithStats;
 }
 
 export default async function Home({
@@ -39,21 +63,9 @@ export default async function Home({
   const userGroups = await getUserGroups(session.user.id);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Switzerland Image */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.05]">
-        <Image
-          src="/schweiz.webp"
-          alt=""
-          fill
-          className="object-cover"
-          aria-hidden="true"
-          priority
-        />
-      </div>
-
+    <div className="min-h-screen bg-background">
       {/* Main Content */}
-      <main className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Groups Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
@@ -128,8 +140,8 @@ export default async function Home({
                     className="h-full animate-card-entrance"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-lg">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold">
                         {group.name.charAt(0).toUpperCase()}
                       </div>
                       <svg
@@ -146,9 +158,33 @@ export default async function Home({
                         />
                       </svg>
                     </div>
-                    <h3 className="text-h3 text-text-primary group-hover:text-primary transition-colors">
+                    <h3 className="text-h3 text-text-primary group-hover:text-primary transition-colors mb-3">
                       {group.name}
                     </h3>
+                    {/* Statistics */}
+                    <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span>{group.memberCount}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <span>{group.totalGames} {group.totalGames === 1 ? "Spiel" : "Spiele"}</span>
+                      </div>
+                      {group.activeGames > 0 && (
+                        <div className="flex items-center gap-1.5 text-accent">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>{group.activeGames} aktiv</span>
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 </Link>
               ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { MapContainer, Marker, Popup, GeoJSON, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -97,8 +97,28 @@ export default function SummaryMap({ country = DEFAULT_COUNTRY, markers, height 
     >
       {geoData && <GeoJSON data={geoData} style={geoStyle} />}
 
+      {/* First render all Polylines (so they appear above GeoJSON but below markers) */}
+      {markers.map((pair, index) =>
+        pair.guess ? (
+          <Polyline
+            key={`line-${index}`}
+            positions={[
+              [pair.guess.lat, pair.guess.lng],
+              [pair.target.lat, pair.target.lng],
+            ]}
+            pathOptions={{
+              color: getLineColor(pair.distanceKm),
+              weight: 3,
+              opacity: 1,
+              dashArray: "5, 10",
+            }}
+          />
+        ) : null
+      )}
+
+      {/* Then render all markers */}
       {markers.map((pair, index) => (
-        <div key={index}>
+        <Fragment key={`markers-${index}`}>
           {/* Target marker (always shown) */}
           <Marker position={[pair.target.lat, pair.target.lng]} icon={targetIcon}>
             <Popup>
@@ -110,27 +130,11 @@ export default function SummaryMap({ country = DEFAULT_COUNTRY, markers, height 
 
           {/* Guess marker (only if not timeout) */}
           {pair.guess && (
-            <>
-              <Marker position={[pair.guess.lat, pair.guess.lng]} icon={guessIcon}>
-                <Popup>Dein Tipp für {pair.target.name}</Popup>
-              </Marker>
-
-              {/* Line between guess and target */}
-              <Polyline
-                positions={[
-                  [pair.guess.lat, pair.guess.lng],
-                  [pair.target.lat, pair.target.lng],
-                ]}
-                pathOptions={{
-                  color: getLineColor(pair.distanceKm),
-                  weight: 2,
-                  opacity: 0.8,
-                  dashArray: "5, 10",
-                }}
-              />
-            </>
+            <Marker position={[pair.guess.lat, pair.guess.lng]} icon={guessIcon}>
+              <Popup>Dein Tipp für {pair.target.name}</Popup>
+            </Marker>
           )}
-        </div>
+        </Fragment>
       ))}
     </MapContainer>
   );

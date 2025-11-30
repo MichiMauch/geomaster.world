@@ -21,8 +21,12 @@ export default function RevealLeaderboardButton({
   const handleReveal = async () => {
     setIsRevealing(true);
     try {
-      const response = await fetch(`/api/leaderboard/reveal?groupId=${groupId}`, {
+      const response = await fetch("/api/leaderboard/reveal", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ groupId }),
       });
 
       if (response.ok) {

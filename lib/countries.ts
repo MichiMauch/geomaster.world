@@ -63,3 +63,10 @@ export function getCountryKeys(): string[] {
 export function getLocationCountryName(countryKey: string): string {
   return getCountryConfig(countryKey).name.en;
 }
+
+/**
+ * Get ISO codes of all active countries in the game (lowercase)
+ */
+export function getActiveCountryIsoCodes(): string[] {
+  return Object.values(COUNTRIES).map(c => c.code.toLowerCase());
+}

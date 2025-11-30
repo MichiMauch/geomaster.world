@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, Marker, Popup, useMapEvents, GeoJSON, Circle } from "react-leaflet";
+import { MapContainer, Marker, Popup, useMapEvents, useMap, GeoJSON, Circle, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getBoundsForCountry } from "@/lib/distance";
@@ -59,6 +59,18 @@ function MapClickHandler({ onMarkerPlace }: { onMarkerPlace?: (position: MarkerP
       }
     },
   });
+  return null;
+}
+
+// Custom pane for hint circle to ensure it renders above GeoJSON
+function HintCirclePane() {
+  const map = useMap();
+  useEffect(() => {
+    if (!map.getPane('hintCirclePane')) {
+      const pane = map.createPane('hintCirclePane');
+      pane.style.zIndex = '450'; // Above overlayPane (400) but below markers (600)
+    }
+  }, [map]);
   return null;
 }
 
@@ -121,6 +133,9 @@ export default function CountryMap({
       maxBoundsViscosity={1.0}
       minZoom={7}
     >
+      {/* Custom pane for hint circle - must be created before Circle is rendered */}
+      <HintCirclePane />
+
       {/* Country border - no TileLayer for clean look */}
       {geoData && (
         <GeoJSON data={geoData} style={geoStyle} />
@@ -131,6 +146,7 @@ export default function CountryMap({
         <Circle
           center={[hintCircle.lat, hintCircle.lng]}
           radius={hintCircle.radiusKm * 1000}
+          pane="hintCirclePane"
           pathOptions={{
             color: "#00D9FF",
             fillColor: "#00D9FF",
@@ -154,6 +170,22 @@ export default function CountryMap({
         <Marker position={[targetPosition.lat, targetPosition.lng]} icon={targetIcon}>
           <Popup>Korrekter Ort</Popup>
         </Marker>
+      )}
+
+      {/* Connection line between guess and target */}
+      {showTarget && markerPosition && targetPosition && (
+        <Polyline
+          positions={[
+            [markerPosition.lat, markerPosition.lng],
+            [targetPosition.lat, targetPosition.lng],
+          ]}
+          pathOptions={{
+            color: "#F59E0B",
+            weight: 2,
+            opacity: 0.8,
+            dashArray: "5, 10",
+          }}
+        />
       )}
     </MapContainer>
   );

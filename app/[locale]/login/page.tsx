@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import FlagBackground from "@/components/FlagBackground";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,31 +50,30 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Animated Background */}
+      {/* Animated Flag Background */}
       <div className="absolute inset-0 bg-background">
-        {/* Gradient orbs */}
+        <FlagBackground activeCountryCodes={["ch", "si"]} />
+        {/* Gradient orbs overlay */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
-          {/* Swiss Flag Logo */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-red-600 to-red-700 mb-6 shadow-lg shadow-red-600/20">
-            <svg
-              viewBox="0 0 32 32"
-              className="w-12 h-12"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M13 8h6v6h6v6h-6v6h-6v-6H7v-6h6V8z"
-                fill="white"
-              />
-            </svg>
+          {/* Active Countries Flags */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <img
+              src="https://flagcdn.com/w160/ch.png"
+              alt="Switzerland"
+              className="w-16 h-auto rounded-lg shadow-lg shadow-black/30"
+            />
+            <img
+              src="https://flagcdn.com/w160/si.png"
+              alt="Slovenia"
+              className="w-16 h-auto rounded-lg shadow-lg shadow-black/30"
+            />
           </div>
 
           <h1 className="text-h1 text-text-primary mb-2">
