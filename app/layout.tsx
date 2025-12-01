@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   title: "Swiss Guesser",
   description: "Teste dein Wissen über die Schweizer Geografie",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
