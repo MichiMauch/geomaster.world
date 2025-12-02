@@ -71,7 +71,8 @@
     "timeLimitSeconds": "{seconds} sekund",
     "noTimeLimit": "Brez omejitve",
     "changeSettings": "Spremeni nastavitve",
-    "roundLocations": "Krog {round} ({count} lokacij)"
+    "roundLocations": "Krog {round} ({count} lokacij)",
+    "round": "Krog {number}"
   },
   "game": {
     "newGame": "Nova igra",

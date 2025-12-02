@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import WinnerCelebration from "@/components/WinnerCelebration";
 import { getGameTypesByType, getGameTypeName } from "@/lib/game-types";
 import { cn } from "@/lib/utils";
@@ -46,12 +47,15 @@ export default function RoundControlPanel({
   const [winner, setWinner] = useState<Winner | null>(null);
   const [selectedGameType, setSelectedGameType] = useState(currentGameType);
   const [selectedLocationsPerRound, setSelectedLocationsPerRound] = useState(defaultLocationsPerRound);
+  const [selectedTimePerRound, setSelectedTimePerRound] = useState(60);
   const t = useTranslations("game");
   const tCommon = useTranslations("common");
   const tNewGroup = useTranslations("newGroup");
+  const tGroup = useTranslations("group");
 
   const { country: countryGameTypes, world: worldGameTypes } = getGameTypesByType();
   const locationOptions = [3, 5, 10];
+  const timeOptions = [30, 60, 90, 0]; // 0 = no limit
 
   const handleReleaseRound = async () => {
     setLoading(true);
@@ -61,7 +65,7 @@ export default function RoundControlPanel({
       const response = await fetch("/api/games/release-round", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameId, gameType: selectedGameType, locationsPerRound: selectedLocationsPerRound }),
+        body: JSON.stringify({ gameId, gameType: selectedGameType, locationsPerRound: selectedLocationsPerRound, timePerRound: selectedTimePerRound || null }),
       });
 
       const data = await response.json();
@@ -184,7 +188,7 @@ export default function RoundControlPanel({
   }
 
   return (
-    <div className="max-w-md mx-auto">
+    <Card variant="surface" padding="lg">
       {/* Admin controls */}
       {gameStatus === "active" && (
         <div className="space-y-4">
@@ -269,6 +273,30 @@ export default function RoundControlPanel({
             </div>
           </div>
 
+          {/* Time per Round */}
+          <div className="space-y-2">
+            <label className="block text-body-small font-medium text-text-primary text-center">
+              {tGroup("timeLimit")}
+            </label>
+            <div className="flex gap-2 justify-center">
+              {timeOptions.map((seconds) => (
+                <button
+                  key={seconds}
+                  type="button"
+                  onClick={() => setSelectedTimePerRound(seconds)}
+                  className={cn(
+                    "px-3 py-2 rounded-lg border-2 font-medium transition-all text-sm",
+                    selectedTimePerRound === seconds
+                      ? "border-success bg-success/10 text-success"
+                      : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                  )}
+                >
+                  {seconds === 0 ? tGroup("noTimeLimit") : `${seconds}s`}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Action buttons */}
           <div className="flex gap-2 justify-center">
             <Button
@@ -299,6 +327,6 @@ export default function RoundControlPanel({
           {t("gameCompleted")}
         </p>
       )}
-    </div>
+    </Card>
   );
 }

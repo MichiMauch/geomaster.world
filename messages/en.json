@@ -71,7 +71,8 @@
     "timeLimitSeconds": "{seconds} seconds",
     "noTimeLimit": "No limit",
     "changeSettings": "Change settings",
-    "roundLocations": "Round {round} ({count} locations)"
+    "roundLocations": "Round {round} ({count} locations)",
+    "round": "Round {number}"
   },
   "game": {
     "newGame": "New Game",

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { gameId, gameType: requestedGameType, locationsPerRound: requestedLocationsPerRound } = body;
+    const { gameId, gameType: requestedGameType, locationsPerRound: requestedLocationsPerRound, timePerRound } = body;
 
     if (!gameId) {
       return NextResponse.json(
@@ -142,6 +142,7 @@ export async function POST(request: Request) {
       locationSource,
       country: roundCountry,
       gameType: effectiveGameType,
+      timeLimitSeconds: timePerRound || null,
     }));
 
     // Batch insert all locations for the round

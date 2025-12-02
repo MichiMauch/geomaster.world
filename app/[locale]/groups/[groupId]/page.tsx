@@ -82,13 +82,13 @@ async function getGroupData(groupId: string, userId: string) {
     ).length;
   }
 
-  // Fetch completed games (last 10)
+  // Fetch completed games (last 5)
   const completedGamesRaw = await db
     .select()
     .from(games)
     .where(and(eq(games.groupId, groupId), eq(games.status, "completed")))
     .orderBy(desc(games.createdAt))
-    .limit(10);
+    .limit(5);
 
   // Fetch all winners in a single query (optimized to avoid N+1 queries)
   const gameIds = completedGamesRaw.map((g) => g.id);
@@ -158,63 +158,79 @@ export default async function GroupPage({
       <SetPageTitle title={group.name} />
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Play Card - with polling for real-time updates */}
-        <div className="max-w-md mx-auto space-y-3">
-          <GameStatusPoller
-            groupId={groupId}
-            initialGameStatus={currentGame ? {
-              gameId: currentGame.id,
-              currentRound: currentGame.currentRound,
-              userCompletedRounds,
-              gameName: currentGame.name,
-              locationsPerRound: currentGame.locationsPerRound,
-            } : null}
-            locationsCount={locationsCount}
-            isAdmin={isAdmin}
-          />
-        </div>
+        {/* Zeile 1: Play & Spielesteuerung */}
+        {isAdmin ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <GameStatusPoller
+              groupId={groupId}
+              initialGameStatus={currentGame ? {
+                gameId: currentGame.id,
+                currentRound: currentGame.currentRound,
+                userCompletedRounds,
+                gameName: currentGame.name,
+                locationsPerRound: currentGame.locationsPerRound,
+              } : null}
+              locationsCount={locationsCount}
+              isAdmin={isAdmin}
+            />
 
-        {/* Round Control Panel (Admin) */}
-        {currentGame && (
-          <RoundControlPanel
-            gameId={currentGame.id}
-            groupId={groupId}
-            currentRound={currentGame.currentRound}
-            locationsPerRound={currentGame.locationsPerRound}
-            isAdmin={isAdmin}
-            userCompletedRounds={userCompletedRounds}
-            gameStatus={currentGame.status}
-            gameName={currentGame.name ?? undefined}
-            currentGameType={currentGame.gameType || `country:${currentGame.country}`}
-          />
-        )}
-
-        {/* History Link */}
-        <div className="flex justify-end">
-          <Link
-            href={`/${locale}/groups/${groupId}/history`}
-            className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
-          >
-            {t("showHistory")}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-
-        {/* Leaderboard */}
-        <Leaderboard groupId={groupId} blurred={!isAdmin} />
-
-        {isAdmin && (
-          <div className="flex justify-end">
-            <RevealLeaderboardButton groupId={groupId} />
+            {currentGame && (
+              <RoundControlPanel
+                gameId={currentGame.id}
+                groupId={groupId}
+                currentRound={currentGame.currentRound}
+                locationsPerRound={currentGame.locationsPerRound}
+                isAdmin={isAdmin}
+                userCompletedRounds={userCompletedRounds}
+                gameStatus={currentGame.status}
+                gameName={currentGame.name ?? undefined}
+                currentGameType={currentGame.gameType || `country:${currentGame.country}`}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="max-w-md mx-auto">
+            <GameStatusPoller
+              groupId={groupId}
+              initialGameStatus={currentGame ? {
+                gameId: currentGame.id,
+                currentRound: currentGame.currentRound,
+                userCompletedRounds,
+                gameName: currentGame.name,
+                locationsPerRound: currentGame.locationsPerRound,
+              } : null}
+              locationsCount={locationsCount}
+              isAdmin={isAdmin}
+            />
           </div>
         )}
 
-        {/* Completed Games */}
-        {completedGames.length > 0 && (
-          <CompletedGamesList games={completedGames} groupId={groupId} />
-        )}
+        {/* Zeile 2: Rangliste & Abgeschlossene Spiele */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Leaderboard groupId={groupId} blurred={!isAdmin} />
+            {isAdmin && (
+              <div className="flex justify-end mt-2">
+                <RevealLeaderboardButton groupId={groupId} />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {completedGames.length > 0 && (
+              <CompletedGamesList games={completedGames} groupId={groupId} />
+            )}
+            <Link
+              href={`/${locale}/groups/${groupId}/history`}
+              className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
+            >
+              {t("showHistory")}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
 
         {/* Two Column: Invite Code & Members */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

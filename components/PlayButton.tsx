@@ -10,12 +10,14 @@ interface PlayButtonProps {
   groupId: string;
   currentRound: number;
   userCompletedRounds: number;
+  gameName?: string | null;
 }
 
 export default function PlayButton({
   groupId,
   currentRound,
   userCompletedRounds,
+  gameName,
 }: PlayButtonProps) {
   const router = useRouter();
   const params = useParams();
@@ -46,7 +48,7 @@ export default function PlayButton({
           "h-full transition-all duration-300",
           hasPlayedAllReleasedRounds
             ? "border-warning/30 hover:border-warning/50"
-            : "border-success/30 hover:border-success/50"
+            : "bg-success border-success hover:bg-success/90"
         )}
       >
         <div className="flex items-center gap-4">
@@ -55,7 +57,7 @@ export default function PlayButton({
               "w-14 h-14 rounded-xl flex items-center justify-center transition-colors",
               hasPlayedAllReleasedRounds
                 ? "bg-warning/20 group-hover:bg-warning/30"
-                : "bg-success/20 group-hover:bg-success/30"
+                : "bg-black/10 group-hover:bg-black/20"
             )}
           >
             {hasPlayedAllReleasedRounds ? (
@@ -74,7 +76,7 @@ export default function PlayButton({
               </svg>
             ) : (
               <svg
-                className="w-7 h-7 text-success"
+                className="w-7 h-7 text-black"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -94,21 +96,24 @@ export default function PlayButton({
               </svg>
             )}
           </div>
-          <div>
+          <div className="flex-1">
             <h3
               className={cn(
                 "text-h3 transition-colors",
                 hasPlayedAllReleasedRounds
                   ? "text-warning group-hover:text-warning"
-                  : "text-success group-hover:text-success"
+                  : "text-black"
               )}
             >
-              {t("play")}
+              {gameName ? `${gameName} spielen` : t("play")}
             </h3>
-            <p className="text-body-small text-text-secondary">
+            <p className={cn(
+              "text-body-small",
+              hasPlayedAllReleasedRounds ? "text-text-secondary" : "text-black/70"
+            )}>
               {hasPlayedAllReleasedRounds
                 ? t("waitForNextRound")
-                : t("playCurrentGame")}
+                : t("round", { number: currentRound })}
             </p>
           </div>
         </div>

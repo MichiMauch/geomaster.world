@@ -71,7 +71,8 @@
     "timeLimitSeconds": "{seconds} Sekunden",
     "noTimeLimit": "Kein Limit",
     "changeSettings": "Einstellungen ändern",
-    "roundLocations": "Runde {round} ({count} Orte)"
+    "roundLocations": "Runde {round} ({count} Orte)",
+    "round": "Runde {number}"
   },
   "game": {
     "newGame": "Neues Spiel",

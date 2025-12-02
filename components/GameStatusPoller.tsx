@@ -6,7 +6,6 @@ import PlayButton from "@/components/PlayButton";
 import StartGameButton from "@/components/StartGameButton";
 import WinnerCelebration from "@/components/WinnerCelebration";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 
 interface GameStatus {
   gameId: string | null;
@@ -42,7 +41,6 @@ export default function GameStatusPoller({
   const previousGameIdRef = useRef<string | null>(initialGameStatus?.gameId ?? null);
   const previousGameNameRef = useRef<string | null>(initialGameStatus?.gameName ?? null);
   const t = useTranslations("group");
-  const tCommon = useTranslations("common");
 
   const fetchWinner = useCallback(async (gameId: string) => {
     try {
@@ -181,26 +179,11 @@ export default function GameStatusPoller({
   }
 
   return (
-    <>
-      <PlayButton
-        groupId={groupId}
-        currentRound={gameStatus.currentRound}
-        userCompletedRounds={gameStatus.userCompletedRounds}
-      />
-      {/* Game Info */}
-      <div className="text-center">
-        {gameStatus.gameName && (
-          <p className="text-h3 text-primary">{gameStatus.gameName}</p>
-        )}
-        <p className="text-body-small text-text-secondary">
-          {t("roundLocations", { round: gameStatus.currentRound, count: gameStatus.locationsPerRound })}
-        </p>
-        {isAdmin && (
-          <Badge variant="primary" size="sm" className="mt-2">
-            {tCommon("admin")}
-          </Badge>
-        )}
-      </div>
-    </>
+    <PlayButton
+      groupId={groupId}
+      currentRound={gameStatus.currentRound}
+      userCompletedRounds={gameStatus.userCompletedRounds}
+      gameName={gameStatus.gameName}
+    />
   );
 }
