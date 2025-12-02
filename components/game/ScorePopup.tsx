@@ -10,6 +10,8 @@ interface ScorePopupProps {
   isOpen: boolean;
   /** Distance in km */
   distance: number;
+  /** Score (0-100) */
+  score: number;
   /** Whether it's a timeout result */
   isTimeout?: boolean;
   /** Penalty text (optional) */
@@ -25,6 +27,7 @@ interface ScorePopupProps {
 export function ScorePopup({
   isOpen,
   distance,
+  score,
   isTimeout = false,
   penaltyText,
   buttonText,
@@ -47,17 +50,17 @@ export function ScorePopup({
 
   const getScoreColor = () => {
     if (isTimeout) return "text-error";
-    if (distance < 50) return "text-success";
-    if (distance < 150) return "text-accent";
+    if (score >= 80) return "text-success";
+    if (score >= 50) return "text-accent";
     return "text-text-primary";
   };
 
   const getScoreEmoji = () => {
     if (isTimeout) return "⏱️";
-    if (distance < 10) return "🎯";
-    if (distance < 50) return "🔥";
-    if (distance < 100) return "👍";
-    if (distance < 200) return "😅";
+    if (score >= 95) return "🎯";
+    if (score >= 80) return "🔥";
+    if (score >= 60) return "👍";
+    if (score >= 30) return "😅";
     return "🗺️";
   };
 
@@ -95,19 +98,24 @@ export function ScorePopup({
                 getScoreColor()
               )}
             >
-              {distance.toFixed(0)}
+              {score}
             </span>
-            <span className="text-h2 text-text-secondary">km</span>
+            <span className="text-h2 text-text-secondary">Pkt</span>
           </div>
+
+          {/* Distance as secondary info */}
+          <p className="text-body text-text-muted mt-2 tabular-nums">
+            {distance.toFixed(1)} km Distanz
+          </p>
 
           {penaltyText && (
             <p className="text-body-small text-error mt-2">{penaltyText}</p>
           )}
         </div>
 
-        {/* Distance Rating */}
+        {/* Score Rating */}
         <div className="flex justify-center">
-          <DistanceRating distance={distance} isTimeout={isTimeout} />
+          <ScoreRating score={score} isTimeout={isTimeout} />
         </div>
 
         {/* Continue Button */}
@@ -125,28 +133,28 @@ export function ScorePopup({
   );
 }
 
-// Distance Rating Component
-function DistanceRating({
-  distance,
+// Score Rating Component
+function ScoreRating({
+  score,
   isTimeout,
 }: {
-  distance: number;
+  score: number;
   isTimeout: boolean;
 }) {
   if (isTimeout) {
     return (
       <span className="text-body-small text-text-muted">
-        400 km Strafe
+        0 Punkte (Timeout)
       </span>
     );
   }
 
   const getRating = () => {
-    if (distance < 10) return { text: "Perfekt!", color: "text-success" };
-    if (distance < 50) return { text: "Ausgezeichnet!", color: "text-success" };
-    if (distance < 100) return { text: "Sehr gut!", color: "text-accent" };
-    if (distance < 200) return { text: "Gut!", color: "text-accent" };
-    if (distance < 400) return { text: "Nicht schlecht", color: "text-text-secondary" };
+    if (score >= 95) return { text: "Perfekt!", color: "text-success" };
+    if (score >= 80) return { text: "Ausgezeichnet!", color: "text-success" };
+    if (score >= 60) return { text: "Sehr gut!", color: "text-accent" };
+    if (score >= 40) return { text: "Gut!", color: "text-accent" };
+    if (score >= 20) return { text: "Nicht schlecht", color: "text-text-secondary" };
     return { text: "Weit daneben", color: "text-text-muted" };
   };
 
@@ -160,6 +168,7 @@ interface RoundCompletePopupProps {
   isOpen: boolean;
   roundNumber: number;
   totalDistance: number;
+  totalScore: number;
   onToLeaderboard: () => void;
   onToGroup: () => void;
   leaderboardText?: string;
@@ -170,6 +179,7 @@ export function RoundCompletePopup({
   isOpen,
   roundNumber,
   totalDistance,
+  totalScore,
   onToLeaderboard,
   onToGroup,
   leaderboardText = "Zur Rangliste",
@@ -194,9 +204,12 @@ export function RoundCompletePopup({
 
         {/* Total Score */}
         <div className="py-4 rounded-xl bg-surface-2">
-          <p className="text-caption text-text-muted mb-1">Gesamtdistanz</p>
+          <p className="text-caption text-text-muted mb-1">Gesamtpunktzahl</p>
           <p className="text-display font-bold text-accent tabular-nums">
-            {totalDistance.toFixed(0)} km
+            {totalScore} Pkt
+          </p>
+          <p className="text-body text-text-muted mt-1 tabular-nums">
+            {totalDistance.toFixed(1)} km Distanz
           </p>
         </div>
 

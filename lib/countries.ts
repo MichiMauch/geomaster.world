@@ -35,6 +35,17 @@ export const COUNTRIES: Record<string, CountryConfig> = {
     geoJsonFile: "/slovenia.geojson",
     timeoutPenalty: 250, // km (Slovenia is smaller)
   },
+  world: {
+    code: "WORLD",
+    name: { de: "Welt", en: "World", sl: "Svet" },
+    bounds: {
+      southWest: { lat: -90, lng: -180 },
+      northEast: { lat: 90, lng: 180 },
+      center: { lat: 20, lng: 0 },
+    },
+    geoJsonFile: "/world.geojson",
+    timeoutPenalty: 5000, // km (world is much larger)
+  },
 };
 
 export const DEFAULT_COUNTRY = "switzerland";

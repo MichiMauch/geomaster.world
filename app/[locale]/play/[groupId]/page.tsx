@@ -4,7 +4,8 @@ import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { CountryMap, SummaryMap } from "@/components/Map";
-import { getTimeoutPenalty, DEFAULT_COUNTRY } from "@/lib/countries";
+import { DEFAULT_COUNTRY } from "@/lib/countries";
+import { getEffectiveGameType, getGameTypeConfig } from "@/lib/game-types";
 import toast from "react-hot-toast";
 import { generateHintCircleCenter, HINT_CIRCLE_RADIUS_KM } from "@/lib/hint";
 import { useTranslations } from "next-intl";
@@ -24,11 +25,13 @@ interface GameRound {
   latitude: number;
   longitude: number;
   country: string;
+  gameType?: string | null;
 }
 
 interface Guess {
   gameRoundId: string;
   distanceKm: number;
+  score: number; // Calculated from API based on gameType
   roundNumber: number;
   latitude?: number | null;
   longitude?: number | null;
@@ -39,6 +42,7 @@ interface Game {
   status: string;
   currentRound: number;
   country: string;
+  gameType?: string | null;
 }
 
 export default function PlayPage({
@@ -63,6 +67,7 @@ export default function PlayPage({
   const [showResult, setShowResult] = useState(false);
   const [lastResult, setLastResult] = useState<{
     distanceKm: number;
+    score: number;
     targetLat: number;
     targetLng: number;
   } | null>(null);
@@ -212,6 +217,7 @@ export default function PlayPage({
         const data = await response.json();
         setLastResult({
           distanceKm: data.distanceKm,
+          score: data.score,
           targetLat: data.targetLatitude,
           targetLng: data.targetLongitude,
         });
@@ -220,6 +226,7 @@ export default function PlayPage({
           {
             gameRoundId: currentRound.id,
             distanceKm: data.distanceKm,
+            score: data.score,
             roundNumber: currentRound.roundNumber,
             latitude: markerPosition.lat,
             longitude: markerPosition.lng,
@@ -252,12 +259,13 @@ export default function PlayPage({
       });
 
       if (response.ok) {
-        const timeoutPenalty = getTimeoutPenalty(currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY);
+        const data = await response.json();
         const newGuesses = [
           ...userGuesses,
           {
             gameRoundId: currentRound.id,
-            distanceKm: timeoutPenalty,
+            distanceKm: data.distanceKm,
+            score: data.score, // 0 for timeout
             roundNumber: currentRound.roundNumber,
             latitude: null,
             longitude: null,
@@ -378,6 +386,10 @@ export default function PlayPage({
       (sum, g) => sum + g.distanceKm,
       0
     );
+    const currentRoundScore = currentRoundGuesses.reduce(
+      (sum, g) => sum + g.score,
+      0
+    );
 
     // Prepare marker data for SummaryMap
     const summaryMarkers = currentRoundGuesses.map((guess) => {
@@ -395,14 +407,15 @@ export default function PlayPage({
       };
     });
 
-    // Get country from the first location in this round (all locations in a round have the same country)
+    // Get country and gameType from the first location in this round (all locations in a round have the same settings)
     const roundCountry = currentRoundLocations[0]?.country ?? game?.country ?? DEFAULT_COUNTRY;
+    const roundGameType = currentRoundLocations[0]?.gameType;
 
     return (
       <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
           {/* Summary Map */}
           <Card variant="elevated" padding="md">
-            <SummaryMap markers={summaryMarkers} height="300px" country={roundCountry} />
+            <SummaryMap markers={summaryMarkers} height="300px" gameType={roundGameType ?? undefined} country={roundCountry} />
           </Card>
 
           {/* Results Card */}
@@ -415,9 +428,12 @@ export default function PlayPage({
             </div>
 
             <div className="py-3 rounded-xl bg-surface-2">
-              <p className="text-xs text-text-muted mb-1">{t("totalDistance")}</p>
+              <p className="text-xs text-text-muted mb-1">Gesamtpunktzahl</p>
               <p className="text-3xl font-bold text-accent tabular-nums">
-                {currentRoundDistance.toFixed(1)} km
+                {currentRoundScore} Pkt
+              </p>
+              <p className="text-body text-text-muted mt-1 tabular-nums">
+                {currentRoundDistance.toFixed(1)} km Distanz
               </p>
             </div>
 
@@ -432,18 +448,23 @@ export default function PlayPage({
                     className="flex justify-between items-center p-2 rounded-lg bg-surface-2"
                   >
                     <span className="text-text-secondary">{location?.locationName}</span>
-                    <span
-                      className={cn(
-                        "font-medium tabular-nums",
-                        guess.distanceKm < 10
-                          ? "text-success"
-                          : guess.distanceKm < 30
-                          ? "text-accent"
-                          : "text-error"
-                      )}
-                    >
-                      {guess.distanceKm.toFixed(1)} km
-                    </span>
+                    <div className="text-right">
+                      <span
+                        className={cn(
+                          "font-medium tabular-nums",
+                          guess.score >= 80
+                            ? "text-success"
+                            : guess.score >= 50
+                            ? "text-accent"
+                            : "text-error"
+                        )}
+                      >
+                        {guess.score} Pkt
+                      </span>
+                      <span className="text-caption text-text-muted ml-2 tabular-nums">
+                        ({guess.distanceKm.toFixed(1)} km)
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -549,6 +570,7 @@ export default function PlayPage({
     <div className="h-[calc(100dvh-52px)] max-w-[1440px] mx-auto relative">
       {/* Fullscreen Map */}
       <CountryMap
+        gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
         country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
         onMarkerPlace={showResult || timeExpired ? undefined : setMarkerPosition}
         markerPosition={markerPosition}

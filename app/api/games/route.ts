@@ -5,6 +5,7 @@ import {
   games,
   gameRounds,
   locations,
+  worldLocations,
   groupMembers,
   users,
 } from "@/lib/db/schema";
@@ -12,6 +13,8 @@ import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { DEFAULT_COUNTRY, getCountryKeys } from "@/lib/countries";
+import { getGameTypeIds, isWorldGameType, getWorldCategory, DEFAULT_GAME_TYPE } from "@/lib/game-types";
+import { getLocalizedName, LocalizedLocation } from "@/lib/location-utils";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -23,6 +26,10 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get("groupId");
+    // Get locale from query param or Accept-Language header, default to "de"
+    const locale = searchParams.get("locale") ||
+      request.headers.get("Accept-Language")?.split(",")[0]?.split("-")[0] ||
+      "de";
 
     if (!groupId) {
       return NextResponse.json(
@@ -71,22 +78,66 @@ export async function GET(request: Request) {
       return NextResponse.json({ game: null, rounds: [], timeLimitSeconds: null, hintEnabled: user?.hintEnabled ?? false });
     }
 
-    // Get rounds with location info
-    const rounds = await db
-      .select({
-        id: gameRounds.id,
-        roundNumber: gameRounds.roundNumber,
-        locationIndex: gameRounds.locationIndex,
-        locationId: gameRounds.locationId,
-        locationName: locations.name,
-        latitude: locations.latitude,
-        longitude: locations.longitude,
-        country: gameRounds.country,
-      })
+    // Get rounds with location info - handle mixed game types per round
+    // First, get all game rounds
+    const allRounds = await db
+      .select()
       .from(gameRounds)
-      .innerJoin(locations, eq(gameRounds.locationId, locations.id))
       .where(eq(gameRounds.gameId, game.id))
       .orderBy(gameRounds.roundNumber, gameRounds.locationIndex);
+
+    // Separate rounds by locationSource
+    const countryRoundIds = allRounds.filter(r => r.locationSource === "locations").map(r => r.locationId);
+    const worldRoundIds = allRounds.filter(r => r.locationSource === "worldLocations").map(r => r.locationId);
+
+    // Fetch location names from respective tables (include all localized names)
+    const countryLocationsMap = new Map<string, LocalizedLocation & { latitude: number; longitude: number }>();
+    const worldLocationsMap = new Map<string, LocalizedLocation & { latitude: number; longitude: number }>();
+
+    if (countryRoundIds.length > 0) {
+      const countryLocs = await db.select().from(locations);
+      countryLocs.forEach(loc => {
+        countryLocationsMap.set(loc.id, {
+          name: loc.name,
+          nameDe: loc.nameDe,
+          nameEn: loc.nameEn,
+          nameSl: loc.nameSl,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+        });
+      });
+    }
+
+    if (worldRoundIds.length > 0) {
+      const worldLocs = await db.select().from(worldLocations);
+      worldLocs.forEach(loc => {
+        worldLocationsMap.set(loc.id, {
+          name: loc.name,
+          nameDe: loc.nameDe,
+          nameEn: loc.nameEn,
+          nameSl: loc.nameSl,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+        });
+      });
+    }
+
+    // Combine rounds with location info (using localized names)
+    const rounds = allRounds.map(round => {
+      const locationMap = round.locationSource === "worldLocations" ? worldLocationsMap : countryLocationsMap;
+      const locationInfo = locationMap.get(round.locationId);
+      return {
+        id: round.id,
+        roundNumber: round.roundNumber,
+        locationIndex: round.locationIndex,
+        locationId: round.locationId,
+        locationName: locationInfo ? getLocalizedName(locationInfo, locale) : "Unknown",
+        latitude: locationInfo?.latitude ?? 0,
+        longitude: locationInfo?.longitude ?? 0,
+        country: round.country,
+        gameType: round.gameType, // Include the round's gameType
+      };
+    });
 
     return NextResponse.json({
       game,
@@ -112,11 +163,26 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { groupId, name, locationsPerRound, timeLimitSeconds, country } = body;
+    const { groupId, name, locationsPerRound, timeLimitSeconds, country, gameType } = body;
 
-    // Validate country
+    // Validate gameType or fall back to country
+    const validGameTypes = getGameTypeIds();
     const validCountries = getCountryKeys();
-    const selectedCountry = country && validCountries.includes(country) ? country : DEFAULT_COUNTRY;
+
+    let selectedGameType: string | null = null;
+    let selectedCountry = DEFAULT_COUNTRY;
+
+    if (gameType && validGameTypes.includes(gameType)) {
+      // New gameType system
+      selectedGameType = gameType;
+      // Extract country from gameType for backwards compatibility
+      if (gameType.startsWith("country:")) {
+        selectedCountry = gameType.replace("country:", "");
+      }
+    } else if (country && validCountries.includes(country)) {
+      // Legacy country system
+      selectedCountry = country;
+    }
 
     // Check if user is admin
     const membership = await db
@@ -145,13 +211,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get available locations (global - all locations)
-    const locationsList = await db.select().from(locations);
+    // Check available locations based on game type
+    let availableLocationCount = 0;
 
-    if (locationsList.length < locationsPerRound) {
+    if (selectedGameType && isWorldGameType(selectedGameType)) {
+      // World game type - check worldLocations table
+      const category = getWorldCategory(selectedGameType);
+      if (category) {
+        const worldLocationsList = await db
+          .select()
+          .from(worldLocations)
+          .where(eq(worldLocations.category, category));
+        availableLocationCount = worldLocationsList.length;
+      }
+    } else {
+      // Country game type - check locations table
+      const locationsList = await db.select().from(locations);
+      availableLocationCount = locationsList.length;
+    }
+
+    if (availableLocationCount < locationsPerRound) {
       return NextResponse.json(
         {
-          error: `Mindestens ${locationsPerRound} Orte benötigt`,
+          error: `Mindestens ${locationsPerRound} Orte benötigt (${availableLocationCount} verfügbar)`,
         },
         { status: 400 }
       );
@@ -184,6 +266,7 @@ export async function POST(request: Request) {
       groupId,
       name: name || null,
       country: selectedCountry,
+      gameType: selectedGameType,
       locationsPerRound,
       timeLimitSeconds: timeLimitSeconds || null,
       status: "active",
@@ -193,7 +276,7 @@ export async function POST(request: Request) {
 
     // Note: Locations for Round 1 are created when admin releases the round via /api/games/release-round
 
-    return NextResponse.json({ gameId });
+    return NextResponse.json({ gameId, gameType: selectedGameType });
   } catch (error) {
     console.error("Error creating game:", error);
     return NextResponse.json(

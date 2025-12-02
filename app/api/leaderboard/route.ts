@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { guesses, gameRounds, games, groupMembers, users } from "@/lib/db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { calculateScore } from "@/lib/score";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -95,21 +96,56 @@ export async function GET(request: Request) {
           )
         : eq(gameRounds.gameId, game.id);
 
-      // Get leaderboard for this game with membership status
-      const leaderboardRaw = await db
+      // Get individual guesses with gameType to calculate scores
+      const guessesRaw = await db
         .select({
+          id: guesses.id,
           userId: guesses.userId,
           userName: users.name,
           userImage: users.image,
-          totalDistance: sql<number>`sum(${guesses.distanceKm})`,
-          roundsPlayed: sql<number>`count(${guesses.id})`,
+          distanceKm: guesses.distanceKm,
+          gameType: gameRounds.gameType,
+          country: gameRounds.country, // Fallback for old rounds without gameType
         })
         .from(guesses)
         .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
         .innerJoin(users, eq(guesses.userId, users.id))
-        .where(whereConditions)
-        .groupBy(guesses.userId, users.name, users.image)
-        .orderBy(sql`sum(${guesses.distanceKm}) asc`);
+        .where(whereConditions);
+
+      // Aggregate by user with score calculation
+      const userAggregates = new Map<string, {
+        userName: string | null;
+        userImage: string | null;
+        totalDistance: number;
+        totalScore: number;
+        roundsPlayed: number;
+      }>();
+
+      for (const guess of guessesRaw) {
+        const existing = userAggregates.get(guess.userId);
+        // Use gameType if available, otherwise construct from country field
+        const effectiveGameType = guess.gameType || `country:${guess.country || 'switzerland'}`;
+        const score = calculateScore(guess.distanceKm, effectiveGameType);
+
+        if (existing) {
+          existing.totalDistance += guess.distanceKm;
+          existing.totalScore += score;
+          existing.roundsPlayed += 1;
+        } else {
+          userAggregates.set(guess.userId, {
+            userName: guess.userName,
+            userImage: guess.userImage,
+            totalDistance: guess.distanceKm,
+            totalScore: score,
+            roundsPlayed: 1,
+          });
+        }
+      }
+
+      // Sort by total score DESC (higher is better)
+      const leaderboardRaw = Array.from(userAggregates.entries())
+        .map(([userId, data]) => ({ userId, ...data }))
+        .sort((a, b) => b.totalScore - a.totalScore);
 
       // Check membership for each user
       const memberUserIds = await db
@@ -134,23 +170,69 @@ export async function GET(request: Request) {
         revealed: game.leaderboardRevealed || game.status === "completed",
       });
     } else {
-      // All-time leaderboard (total distance across all games)
-      const leaderboardRaw = await db
+      // All-time leaderboard with scores
+      const guessesRaw = await db
         .select({
+          id: guesses.id,
           userId: guesses.userId,
           userName: users.name,
           userImage: users.image,
-          totalDistance: sql<number>`sum(${guesses.distanceKm})`,
-          totalGuesses: sql<number>`count(${guesses.id})`,
-          gamesPlayed: sql<number>`count(DISTINCT ${games.id})`,
+          distanceKm: guesses.distanceKm,
+          gameType: gameRounds.gameType,
+          country: gameRounds.country, // Fallback for old rounds without gameType
+          gameId: games.id,
         })
         .from(guesses)
         .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
         .innerJoin(games, eq(gameRounds.gameId, games.id))
         .innerJoin(users, eq(guesses.userId, users.id))
-        .where(eq(games.groupId, groupId))
-        .groupBy(guesses.userId, users.name, users.image)
-        .orderBy(sql`sum(${guesses.distanceKm}) asc`); // Sort by total km
+        .where(eq(games.groupId, groupId));
+
+      // Aggregate by user with score calculation
+      const userAggregates = new Map<string, {
+        userName: string | null;
+        userImage: string | null;
+        totalDistance: number;
+        totalScore: number;
+        totalGuesses: number;
+        gameIds: Set<string>;
+      }>();
+
+      for (const guess of guessesRaw) {
+        const existing = userAggregates.get(guess.userId);
+        // Use gameType if available, otherwise construct from country field
+        const effectiveGameType = guess.gameType || `country:${guess.country || 'switzerland'}`;
+        const score = calculateScore(guess.distanceKm, effectiveGameType);
+
+        if (existing) {
+          existing.totalDistance += guess.distanceKm;
+          existing.totalScore += score;
+          existing.totalGuesses += 1;
+          existing.gameIds.add(guess.gameId);
+        } else {
+          userAggregates.set(guess.userId, {
+            userName: guess.userName,
+            userImage: guess.userImage,
+            totalDistance: guess.distanceKm,
+            totalScore: score,
+            totalGuesses: 1,
+            gameIds: new Set([guess.gameId]),
+          });
+        }
+      }
+
+      // Sort by total score DESC (higher is better)
+      const leaderboardRaw = Array.from(userAggregates.entries())
+        .map(([userId, data]) => ({
+          userId,
+          userName: data.userName,
+          userImage: data.userImage,
+          totalDistance: data.totalDistance,
+          totalScore: data.totalScore,
+          totalGuesses: data.totalGuesses,
+          gamesPlayed: data.gameIds.size,
+        }))
+        .sort((a, b) => b.totalScore - a.totalScore);
 
       // Check membership for each user
       const memberUserIds = await db

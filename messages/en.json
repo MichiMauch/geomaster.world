@@ -98,7 +98,10 @@
     "gameNamePlaceholder": "e.g. Christmas Game 2024",
     "nameRequired": "Please enter a name for the game",
     "selectCountry": "Select Country",
-    "selectRoundCountry": "Country"
+    "selectRoundCountry": "Country",
+    "selectGameType": "Select Game Type",
+    "countries": "Countries",
+    "worldQuizzes": "World Quizzes"
   },
   "play": {
     "playing": "Play",
@@ -148,6 +151,7 @@
     "days": "{count} days",
     "game": "game",
     "games": "games",
+    "points": "pts",
     "revealedByAdmin": "The leaderboard will be revealed by the admin",
     "round": "Round",
     "total": "Total"

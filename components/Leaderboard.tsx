@@ -13,6 +13,7 @@ interface LeaderboardEntry {
   userName: string | null;
   userImage: string | null;
   totalDistance: number;
+  totalScore: number;
   roundsPlayed: number;
   completed?: boolean;
   gamesPlayed?: number;
@@ -161,12 +162,15 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
                   )}
                 </div>
 
-                {/* Distance */}
+                {/* Score & Distance */}
                 <div className="text-right">
                   <p className={cn(
                     "font-bold tabular-nums",
                     entry.rank === 1 ? "text-accent" : "text-text-primary"
                   )}>
+                    {entry.totalScore} {t("points")}
+                  </p>
+                  <p className="text-caption text-text-muted tabular-nums">
                     {entry.totalDistance.toFixed(1)} km
                   </p>
                   {type === "alltime" && entry.gamesPlayed && (

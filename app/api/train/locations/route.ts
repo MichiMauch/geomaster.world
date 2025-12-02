@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { locations } from "@/lib/db/schema";
 import { NextResponse } from "next/server";
+import { getLocalizedName } from "@/lib/location-utils";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -12,9 +13,21 @@ export async function GET() {
   }
 
   try {
+    // Get locale from query param or Accept-Language header, default to "de"
+    const { searchParams } = new URL(request.url);
+    const locale = searchParams.get("locale") ||
+      request.headers.get("Accept-Language")?.split(",")[0]?.split("-")[0] ||
+      "de";
+
     const locationsList = await db.select().from(locations);
 
-    return NextResponse.json(locationsList);
+    // Return locations with localized names
+    const localizedLocations = locationsList.map(loc => ({
+      ...loc,
+      name: getLocalizedName(loc, locale),
+    }));
+
+    return NextResponse.json(localizedLocations);
   } catch (error) {
     console.error("Error fetching locations:", error);
     return NextResponse.json(

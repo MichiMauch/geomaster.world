@@ -4,8 +4,7 @@ import { useEffect, useState, Fragment } from "react";
 import { MapContainer, Marker, Popup, GeoJSON, Polyline, Pane } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getBoundsForCountry } from "@/lib/distance";
-import { getCountryConfig, DEFAULT_COUNTRY } from "@/lib/countries";
+import { getGameTypeConfig, DEFAULT_GAME_TYPE } from "@/lib/game-types";
 
 // Blue marker for user guesses
 const guessIcon = L.icon({
@@ -35,7 +34,8 @@ interface MarkerPair {
 }
 
 interface SummaryMapProps {
-  country?: string;
+  gameType?: string;
+  country?: string; // Legacy support
   markers: MarkerPair[];
   height?: string;
 }
@@ -47,20 +47,23 @@ function getLineColor(distanceKm: number): string {
   return "#EF4444"; // red (error)
 }
 
-export default function SummaryMap({ country = DEFAULT_COUNTRY, markers, height = "300px" }: SummaryMapProps) {
+export default function SummaryMap({ gameType, country, markers, height = "300px" }: SummaryMapProps) {
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
 
-  const countryConfig = getCountryConfig(country);
-  const countryBounds = getBoundsForCountry(country);
+  // Determine the effective game type (like CountryMap)
+  const effectiveGameType = gameType || (country ? `country:${country}` : DEFAULT_GAME_TYPE);
+  const gameTypeConfig = getGameTypeConfig(effectiveGameType);
+  const isWorldMap = gameTypeConfig.bounds === null;
 
   useEffect(() => {
     setMounted(true);
-    fetch(countryConfig.geoJsonFile)
+    setGeoData(null); // Reset on change
+    fetch(gameTypeConfig.geoJsonFile)
       .then((res) => res.json())
       .then((data) => setGeoData(data))
       .catch((err) => console.error("Error loading GeoJSON:", err));
-  }, [countryConfig.geoJsonFile]);
+  }, [gameTypeConfig.geoJsonFile]);
 
   if (!mounted) {
     return (
@@ -73,32 +76,42 @@ export default function SummaryMap({ country = DEFAULT_COUNTRY, markers, height 
     );
   }
 
-  const bounds = L.latLngBounds(
-    [countryBounds.southWest.lat, countryBounds.southWest.lng],
-    [countryBounds.northEast.lat, countryBounds.northEast.lng]
-  );
+  // Build bounds only for country maps
+  const bounds = isWorldMap
+    ? undefined
+    : L.latLngBounds(
+        [gameTypeConfig.bounds!.southWest.lat, gameTypeConfig.bounds!.southWest.lng],
+        [gameTypeConfig.bounds!.northEast.lat, gameTypeConfig.bounds!.northEast.lng]
+      );
 
   const geoStyle = {
     color: "#00D9FF",
-    weight: 2,
+    weight: isWorldMap ? 1 : 2,
     fillColor: "#2E3744",
-    fillOpacity: 1,
+    fillOpacity: isWorldMap ? 0.8 : 1,
   };
 
+  // Map container props differ for world vs country maps
+  const mapContainerProps: Record<string, unknown> = {
+    center: [gameTypeConfig.defaultCenter.lat, gameTypeConfig.defaultCenter.lng],
+    zoom: isWorldMap ? 2 : 7,
+    style: { height, width: "100%", backgroundColor: "#1A1F26" },
+    className: "rounded-lg",
+    minZoom: gameTypeConfig.minZoom,
+  };
+
+  // Only add maxBounds for country maps
+  if (!isWorldMap && bounds) {
+    mapContainerProps.maxBounds = bounds;
+    mapContainerProps.maxBoundsViscosity = 1.0;
+  }
+
   return (
-    <MapContainer
-      center={[countryBounds.center.lat, countryBounds.center.lng]}
-      zoom={7}
-      style={{ height, width: "100%", backgroundColor: "#1A1F26" }}
-      className="rounded-lg"
-      maxBounds={bounds}
-      maxBoundsViscosity={1.0}
-      minZoom={7}
-    >
-      {geoData && <GeoJSON data={geoData} style={geoStyle} />}
+    <MapContainer {...mapContainerProps} key={effectiveGameType}>
+      {geoData && <GeoJSON key="geo-json" data={geoData} style={geoStyle} />}
 
       {/* Polylines in custom pane to appear above GeoJSON */}
-      <Pane name="polylines" style={{ zIndex: 450 }}>
+      <Pane key="polylines-pane" name="polylines" style={{ zIndex: 450 }}>
         {markers.map((pair, index) =>
           pair.guess ? (
             <Polyline

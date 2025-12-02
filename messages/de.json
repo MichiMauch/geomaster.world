@@ -98,7 +98,10 @@
     "gameNamePlaceholder": "z.B. Weihnachtsspiel 2024",
     "nameRequired": "Bitte gib einen Namen für das Spiel ein",
     "selectCountry": "Land auswählen",
-    "selectRoundCountry": "Land"
+    "selectRoundCountry": "Land",
+    "selectGameType": "Spieltyp auswählen",
+    "countries": "Länder",
+    "worldQuizzes": "Welt-Quizze"
   },
   "play": {
     "playing": "Spielen",
@@ -148,6 +151,7 @@
     "days": "{count} Tage",
     "game": "Spiel",
     "games": "Spiele",
+    "points": "Pkt",
     "revealedByAdmin": "Die Rangliste wird vom Admin enthüllt",
     "round": "Runde",
     "total": "Gesamt"

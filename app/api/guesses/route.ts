@@ -7,12 +7,14 @@ import {
   games,
   groupMembers,
   locations,
+  worldLocations,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { calculateDistance } from "@/lib/distance";
 import { getTimeoutPenalty } from "@/lib/countries";
+import { calculateScore } from "@/lib/score";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -32,8 +34,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get user's guesses for this game
-    const userGuesses = await db
+    // Get user's guesses for this game with gameType for score calculation
+    const userGuessesRaw = await db
       .select({
         id: guesses.id,
         gameRoundId: guesses.gameRoundId,
@@ -41,12 +43,19 @@ export async function GET(request: Request) {
         longitude: guesses.longitude,
         distanceKm: guesses.distanceKm,
         roundNumber: gameRounds.roundNumber,
+        gameType: gameRounds.gameType,
       })
       .from(guesses)
       .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
       .where(
         and(eq(gameRounds.gameId, gameId), eq(guesses.userId, session.user.id))
       );
+
+    // Calculate score for each guess
+    const userGuesses = userGuessesRaw.map((guess) => ({
+      ...guess,
+      score: guess.gameType ? calculateScore(guess.distanceKm, guess.gameType) : 0,
+    }));
 
     return NextResponse.json(userGuesses);
   } catch (error) {
@@ -75,7 +84,9 @@ export async function POST(request: Request) {
         id: gameRounds.id,
         gameId: gameRounds.gameId,
         locationId: gameRounds.locationId,
+        locationSource: gameRounds.locationSource,
         roundNumber: gameRounds.roundNumber,
+        gameType: gameRounds.gameType,
         groupId: games.groupId,
         currentRound: games.currentRound,
         country: games.country,
@@ -132,12 +143,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get location coordinates
-    const location = await db
-      .select()
-      .from(locations)
-      .where(eq(locations.id, round.locationId))
-      .get();
+    // Get location coordinates - query correct table based on locationSource
+    let location: { latitude: number; longitude: number } | undefined;
+
+    if (round.locationSource === "worldLocations") {
+      const worldLoc = await db
+        .select({ latitude: worldLocations.latitude, longitude: worldLocations.longitude })
+        .from(worldLocations)
+        .where(eq(worldLocations.id, round.locationId))
+        .get();
+      location = worldLoc;
+    } else {
+      const countryLoc = await db
+        .select({ latitude: locations.latitude, longitude: locations.longitude })
+        .from(locations)
+        .where(eq(locations.id, round.locationId))
+        .get();
+      location = countryLoc;
+    }
 
     if (!location) {
       return NextResponse.json(
@@ -172,9 +195,15 @@ export async function POST(request: Request) {
       createdAt: new Date(),
     });
 
+    // Calculate score based on game type
+    const effectiveGameType = round.gameType || `country:${round.country}`;
+    const score = calculateScore(distanceKm, effectiveGameType);
+
     return NextResponse.json({
       id: guessId,
       distanceKm,
+      score,
+      gameType: effectiveGameType,
       targetLatitude: location.latitude,
       targetLongitude: location.longitude,
     });

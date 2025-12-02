@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { COUNTRIES, DEFAULT_COUNTRY, getCountryName } from "@/lib/countries";
+import { GAME_TYPES, getGameTypesByType, getGameTypeName, DEFAULT_GAME_TYPE } from "@/lib/game-types";
 
 interface StartGameButtonProps {
   groupId: string;
@@ -18,13 +18,13 @@ export default function StartGameButton({ groupId }: StartGameButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [gameName, setGameName] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
+  const [selectedGameType, setSelectedGameType] = useState(DEFAULT_GAME_TYPE);
   const [locationsPerRound, setLocationsPerRound] = useState(5);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number | null>(null);
   const t = useTranslations("game");
   const tNewGroup = useTranslations("newGroup");
 
-  const countryOptions = Object.keys(COUNTRIES);
+  const { country: countryGameTypes, world: worldGameTypes } = getGameTypesByType();
   const locationOptions = [3, 5, 10];
   const timeLimitOptions = [
     { value: null, label: tNewGroup("noLimit") },
@@ -51,7 +51,7 @@ export default function StartGameButton({ groupId }: StartGameButtonProps) {
         body: JSON.stringify({
           groupId,
           name: gameName.trim(),
-          country: selectedCountry,
+          gameType: selectedGameType,
           locationsPerRound,
           timeLimitSeconds,
         }),
@@ -117,27 +117,56 @@ export default function StartGameButton({ groupId }: StartGameButtonProps) {
           }}
         />
 
-        {/* Country Selection */}
+        {/* Game Type Selection */}
         <div className="space-y-2">
           <label className="block text-body-small font-medium text-text-primary">
-            {t("selectCountry")}
+            {t("selectGameType")}
           </label>
-          <div className="flex gap-2">
-            {countryOptions.map((countryKey) => (
-              <button
-                key={countryKey}
-                type="button"
-                onClick={() => setSelectedCountry(countryKey)}
-                className={cn(
-                  "flex-1 py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm",
-                  selectedCountry === countryKey
-                    ? "border-success bg-success/10 text-success"
-                    : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
-                )}
-              >
-                {getCountryName(countryKey, locale)}
-              </button>
-            ))}
+
+          {/* Country Game Types */}
+          <div className="space-y-1">
+            <span className="text-xs text-text-muted">{t("countries")}</span>
+            <div className="flex gap-2">
+              {countryGameTypes.map((gameType) => (
+                <button
+                  key={gameType.id}
+                  type="button"
+                  onClick={() => setSelectedGameType(gameType.id)}
+                  className={cn(
+                    "flex-1 py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
+                    selectedGameType === gameType.id
+                      ? "border-success bg-success/10 text-success"
+                      : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                  )}
+                >
+                  <span>{gameType.icon}</span>
+                  <span>{getGameTypeName(gameType.id, locale)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* World Game Types */}
+          <div className="space-y-1">
+            <span className="text-xs text-text-muted">{t("worldQuizzes")}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {worldGameTypes.map((gameType) => (
+                <button
+                  key={gameType.id}
+                  type="button"
+                  onClick={() => setSelectedGameType(gameType.id)}
+                  className={cn(
+                    "py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
+                    selectedGameType === gameType.id
+                      ? "border-success bg-success/10 text-success"
+                      : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                  )}
+                >
+                  <span>{gameType.icon}</span>
+                  <span>{getGameTypeName(gameType.id, locale)}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

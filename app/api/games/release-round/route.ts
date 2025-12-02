@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, groupMembers, locations, gameRounds } from "@/lib/db/schema";
+import { games, groupMembers, locations, worldLocations, gameRounds } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { getLocationCountryName } from "@/lib/countries";
+import { getEffectiveGameType, isWorldGameType, getWorldCategory } from "@/lib/game-types";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { gameId, country: requestedCountry } = body;
+    const { gameId, gameType: requestedGameType, locationsPerRound: requestedLocationsPerRound } = body;
 
     if (!gameId) {
       return NextResponse.json(
@@ -55,15 +56,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use requested country or fall back to game's default country
-    const roundCountry = requestedCountry || game.country;
+    // Determine game type - use requested type if provided, otherwise fall back to game's type
+    const effectiveGameType = requestedGameType || getEffectiveGameType(game);
+    const isWorld = isWorldGameType(effectiveGameType);
 
-    // Get locations for the round's country
-    const countryName = getLocationCountryName(roundCountry);
-    const allLocations = await db
-      .select()
-      .from(locations)
-      .where(eq(locations.country, countryName));
+    // Use requested locationsPerRound if provided, otherwise fall back to game's default
+    const effectiveLocationsPerRound = requestedLocationsPerRound || game.locationsPerRound;
 
     // Get locations already used in this game
     const usedRounds = await db
@@ -73,16 +71,55 @@ export async function POST(request: Request) {
 
     const usedLocationIds = new Set(usedRounds.map((r) => r.locationId));
 
-    // Filter to available locations (not yet used)
-    const availableLocations = allLocations.filter(
-      (loc) => !usedLocationIds.has(loc.id)
-    );
+    let availableLocations: Array<{ id: string; name: string; latitude: number; longitude: number }> = [];
+    let roundCountry: string;
+    let locationSource: "locations" | "worldLocations" = "locations";
+
+    if (isWorld) {
+      // World game type - get locations from worldLocations table
+      const category = getWorldCategory(effectiveGameType);
+      if (category) {
+        const worldLocs = await db
+          .select()
+          .from(worldLocations)
+          .where(eq(worldLocations.category, category));
+
+        availableLocations = worldLocs
+          .filter((loc) => !usedLocationIds.has(loc.id))
+          .map((loc) => ({
+            id: loc.id,
+            name: loc.name,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+          }));
+      }
+      // For world games, use "world" as the country identifier and worldLocations as source
+      roundCountry = "world";
+      locationSource = "worldLocations";
+    } else {
+      // Country game type - extract country from gameType (e.g., "country:switzerland" -> "switzerland")
+      roundCountry = effectiveGameType.replace("country:", "");
+      const countryName = getLocationCountryName(roundCountry);
+      const countryLocs = await db
+        .select()
+        .from(locations)
+        .where(eq(locations.country, countryName));
+
+      availableLocations = countryLocs
+        .filter((loc) => !usedLocationIds.has(loc.id))
+        .map((loc) => ({
+          id: loc.id,
+          name: loc.name,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+        }));
+    }
 
     // Check if we have enough locations for another round
-    if (availableLocations.length < game.locationsPerRound) {
+    if (availableLocations.length < effectiveLocationsPerRound) {
       return NextResponse.json(
         {
-          error: `Nicht genügend unbenutzte Orte für eine weitere Runde. Benötigt: ${game.locationsPerRound}, Verfügbar: ${availableLocations.length}`,
+          error: `Nicht genügend unbenutzte Orte für eine weitere Runde. Benötigt: ${effectiveLocationsPerRound}, Verfügbar: ${availableLocations.length}`,
         },
         { status: 400 }
       );
@@ -90,7 +127,7 @@ export async function POST(request: Request) {
 
     // Select random locations for the new round
     const shuffled = [...availableLocations].sort(() => Math.random() - 0.5);
-    const selectedLocations = shuffled.slice(0, game.locationsPerRound);
+    const selectedLocations = shuffled.slice(0, effectiveLocationsPerRound);
 
     // Create the new round
     const newRoundNumber = game.currentRound + 1;
@@ -102,7 +139,9 @@ export async function POST(request: Request) {
       roundNumber: newRoundNumber,
       locationIndex: i + 1,
       locationId: loc.id,
+      locationSource,
       country: roundCountry,
+      gameType: effectiveGameType,
     }));
 
     // Batch insert all locations for the round
@@ -120,7 +159,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       currentRound: newRoundNumber,
-      locationsInRound: game.locationsPerRound,
+      locationsInRound: effectiveLocationsPerRound,
+      gameType: effectiveGameType,
     });
   } catch (error) {
     console.error("Error releasing round:", error);

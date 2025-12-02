@@ -84,9 +84,28 @@ export const groupMembers = sqliteTable(
 export const locations = sqliteTable("locations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  nameDe: text("name_de"),
+  nameEn: text("name_en"),
+  nameSl: text("name_sl"),
   latitude: real("latitude").notNull(),
   longitude: real("longitude").notNull(),
   country: text("country").default("Switzerland"),
+  difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).default("medium"),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+// World Locations (for world quiz categories)
+export const worldLocations = sqliteTable("worldLocations", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  category: text("category").notNull(), // "highest-mountains", "capitals", "famous-places"
+  name: text("name").notNull(),
+  nameDe: text("name_de"),
+  nameEn: text("name_en"),
+  nameSl: text("name_sl"),
+  latitude: real("latitude").notNull(),
+  longitude: real("longitude").notNull(),
+  countryCode: text("countryCode"), // ISO code (e.g., "NP", "US")
+  additionalInfo: text("additionalInfo"), // JSON for extra info (elevation, etc.)
   difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).default("medium"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
@@ -98,7 +117,8 @@ export const games = sqliteTable("games", {
     .notNull()
     .references(() => groups.id, { onDelete: "cascade" }),
   name: text("name"), // Game name (optional, set by admin)
-  country: text("country").notNull().default("switzerland"), // Country key (switzerland, slovenia)
+  country: text("country").notNull().default("switzerland"), // Country key (switzerland, slovenia) - legacy
+  gameType: text("gameType"), // New: "country:switzerland", "world:capitals" etc. null = use country field
   locationsPerRound: integer("locationsPerRound").notNull().default(5), // How many locations per round for this game
   timeLimitSeconds: integer("timeLimitSeconds"), // null = no limit
   weekNumber: integer("weekNumber"), // Legacy: ISO week (optional for backwards compatibility)
@@ -117,10 +137,10 @@ export const gameRounds = sqliteTable("gameRounds", {
     .references(() => games.id, { onDelete: "cascade" }),
   roundNumber: integer("roundNumber").notNull(), // Which round/day (1, 2, 3...)
   locationIndex: integer("locationIndex").notNull().default(1), // Position within round (1-N)
-  locationId: text("locationId")
-    .notNull()
-    .references(() => locations.id, { onDelete: "cascade" }),
+  locationId: text("locationId").notNull(), // No FK constraint - can reference locations OR worldLocations
+  locationSource: text("locationSource", { enum: ["locations", "worldLocations"] }).notNull().default("locations"),
   country: text("country").notNull().default("switzerland"), // Country key for this round (can differ from game.country)
+  gameType: text("gameType"), // Full game type ID for this round (e.g., "country:switzerland", "world:capitals")
 });
 
 // Player Guesses
@@ -144,6 +164,7 @@ export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;
 export type Location = typeof locations.$inferSelect;
+export type WorldLocation = typeof worldLocations.$inferSelect;
 export type Game = typeof games.$inferSelect;
 export type GameRound = typeof gameRounds.$inferSelect;
 export type Guess = typeof guesses.$inferSelect;

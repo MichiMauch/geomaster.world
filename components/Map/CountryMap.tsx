@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, useMapEvents, useMap, GeoJSON, Circle, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getBoundsForCountry } from "@/lib/distance";
-import { getCountryConfig, DEFAULT_COUNTRY } from "@/lib/countries";
+import { getGameTypeConfig, DEFAULT_GAME_TYPE } from "@/lib/game-types";
 
 // Fix for default markers
 const defaultIcon = L.icon({
@@ -41,7 +40,8 @@ interface HintCircle {
 }
 
 interface CountryMapProps {
-  country?: string;
+  gameType?: string;
+  country?: string; // Legacy support - will be converted to gameType
   onMarkerPlace?: (position: MarkerPosition) => void;
   markerPosition?: MarkerPosition | null;
   targetPosition?: MarkerPosition | null;
@@ -75,7 +75,8 @@ function HintCirclePane() {
 }
 
 export default function CountryMap({
-  country = DEFAULT_COUNTRY,
+  gameType,
+  country,
   onMarkerPlace,
   markerPosition,
   targetPosition,
@@ -87,17 +88,25 @@ export default function CountryMap({
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
 
-  const countryConfig = getCountryConfig(country);
-  const countryBounds = getBoundsForCountry(country);
+  // Determine the effective game type
+  const effectiveGameType = gameType || (country ? `country:${country}` : DEFAULT_GAME_TYPE);
+  const gameTypeConfig = getGameTypeConfig(effectiveGameType);
+
+  const isWorldMap = gameTypeConfig.bounds === null;
+
+  // Debug logging to track gameType issues
+  console.log("CountryMap props:", { gameType, country });
+  console.log("effectiveGameType:", effectiveGameType, "isWorldMap:", isWorldMap);
 
   useEffect(() => {
     setMounted(true);
-    // Load GeoJSON data for the selected country
-    fetch(countryConfig.geoJsonFile)
+    setGeoData(null); // Reset geoData to ensure fresh load on gameType change
+    // Load GeoJSON data for the selected game type
+    fetch(gameTypeConfig.geoJsonFile)
       .then((res) => res.json())
       .then((data) => setGeoData(data))
       .catch((err) => console.error("Error loading GeoJSON:", err));
-  }, [countryConfig.geoJsonFile]);
+  }, [gameTypeConfig.geoJsonFile]);
 
   if (!mounted) {
     return (
@@ -110,40 +119,51 @@ export default function CountryMap({
     );
   }
 
-  const bounds = L.latLngBounds(
-    [countryBounds.southWest.lat, countryBounds.southWest.lng],
-    [countryBounds.northEast.lat, countryBounds.northEast.lng]
-  );
+  // Build bounds only for country maps
+  const bounds = isWorldMap
+    ? undefined
+    : L.latLngBounds(
+        [gameTypeConfig.bounds!.southWest.lat, gameTypeConfig.bounds!.southWest.lng],
+        [gameTypeConfig.bounds!.northEast.lat, gameTypeConfig.bounds!.northEast.lng]
+      );
 
   // Style for country GeoJSON - Dark Gaming Theme
   const geoStyle = {
     color: "#00D9FF",      // Cyan border with glow effect
-    weight: 2,
-    fillColor: "#2E3744",  // Dark surface fill
-    fillOpacity: 1,
+    weight: isWorldMap ? 1 : 2,
+    fillColor: isWorldMap ? "#2E3744" : "#2E3744",  // Dark surface fill
+    fillOpacity: isWorldMap ? 0.8 : 1,
   };
 
+  // Map container props
+  const mapContainerProps: Record<string, unknown> = {
+    center: [gameTypeConfig.defaultCenter.lat, gameTypeConfig.defaultCenter.lng],
+    zoom: gameTypeConfig.defaultZoom,
+    style: { height, width: "100%", backgroundColor: "#1A1F26" },
+    className: "rounded-lg",
+    minZoom: gameTypeConfig.minZoom,
+  };
+
+  // Only add maxBounds for country maps
+  if (!isWorldMap && bounds) {
+    mapContainerProps.maxBounds = bounds;
+    mapContainerProps.maxBoundsViscosity = 1.0;
+  }
+
   return (
-    <MapContainer
-      center={[countryBounds.center.lat, countryBounds.center.lng]}
-      zoom={8}
-      style={{ height, width: "100%", backgroundColor: "#1A1F26" }}
-      className="rounded-lg"
-      maxBounds={bounds}
-      maxBoundsViscosity={1.0}
-      minZoom={7}
-    >
+    <MapContainer {...mapContainerProps} key={effectiveGameType}>
       {/* Custom pane for hint circle - must be created before Circle is rendered */}
-      <HintCirclePane />
+      <HintCirclePane key="hint-pane" />
 
       {/* Country border - no TileLayer for clean look */}
       {geoData && (
-        <GeoJSON data={geoData} style={geoStyle} />
+        <GeoJSON key="geo-json" data={geoData} style={geoStyle} />
       )}
 
       {/* Hint circle for players with hint enabled */}
       {hintCircle && (
         <Circle
+          key="hint-circle"
           center={[hintCircle.lat, hintCircle.lng]}
           radius={hintCircle.radiusKm * 1000}
           pane="hintCirclePane"
@@ -158,16 +178,16 @@ export default function CountryMap({
         />
       )}
 
-      {interactive && <MapClickHandler onMarkerPlace={onMarkerPlace} />}
+      {interactive && <MapClickHandler key="click-handler" onMarkerPlace={onMarkerPlace} />}
 
       {markerPosition && (
-        <Marker position={[markerPosition.lat, markerPosition.lng]} icon={defaultIcon}>
+        <Marker key="user-marker" position={[markerPosition.lat, markerPosition.lng]} icon={defaultIcon}>
           <Popup>Dein Tipp</Popup>
         </Marker>
       )}
 
       {showTarget && targetPosition && (
-        <Marker position={[targetPosition.lat, targetPosition.lng]} icon={targetIcon}>
+        <Marker key="target-marker" position={[targetPosition.lat, targetPosition.lng]} icon={targetIcon}>
           <Popup>Korrekter Ort</Popup>
         </Marker>
       )}
@@ -175,6 +195,7 @@ export default function CountryMap({
       {/* Connection line between guess and target */}
       {showTarget && markerPosition && targetPosition && (
         <Polyline
+          key="connection-line"
           positions={[
             [markerPosition.lat, markerPosition.lng],
             [targetPosition.lat, targetPosition.lng],

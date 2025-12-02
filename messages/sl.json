@@ -98,7 +98,10 @@
     "gameNamePlaceholder": "npr. Božična igra 2024",
     "nameRequired": "Prosim vnesi ime za igro",
     "selectCountry": "Izberi državo",
-    "selectRoundCountry": "Država"
+    "selectRoundCountry": "Država",
+    "selectGameType": "Izberi vrsto igre",
+    "countries": "Države",
+    "worldQuizzes": "Svetovni kvizi"
   },
   "play": {
     "playing": "Igraj",
@@ -148,6 +151,7 @@
     "days": "{count} dni",
     "game": "igra",
     "games": "iger",
+    "points": "točk",
     "revealedByAdmin": "Lestvico bo razkril admin",
     "round": "Krog",
     "total": "Skupaj"

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx drizzle-kit:*)",
+      "Bash(source:*)",
+      "Bash(set -a)",
+      "Bash(set +a)",
+      "Bash(npx tsx:*)",
+      "Bash(pgrep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

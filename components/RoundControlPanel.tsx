@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { getCountryKeys, getCountryName } from "@/lib/countries";
 import WinnerCelebration from "@/components/WinnerCelebration";
+import { getGameTypesByType, getGameTypeName } from "@/lib/game-types";
+import { cn } from "@/lib/utils";
 
 interface Winner {
   userName: string;
@@ -22,30 +23,35 @@ interface RoundControlPanelProps {
   isAdmin: boolean;
   userCompletedRounds?: number;
   gameStatus: "active" | "completed";
-  gameCountry: string;
   gameName?: string;
+  currentGameType: string;
 }
 
 export default function RoundControlPanel({
   gameId,
   groupId,
   currentRound,
+  locationsPerRound: defaultLocationsPerRound = 5,
   isAdmin,
   gameStatus,
-  gameCountry,
   gameName,
+  currentGameType,
 }: RoundControlPanelProps) {
   const router = useRouter();
   const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState(gameCountry);
   const [showCelebration, setShowCelebration] = useState(false);
   const [winner, setWinner] = useState<Winner | null>(null);
+  const [selectedGameType, setSelectedGameType] = useState(currentGameType);
+  const [selectedLocationsPerRound, setSelectedLocationsPerRound] = useState(defaultLocationsPerRound);
   const t = useTranslations("game");
   const tCommon = useTranslations("common");
-  const countryOptions = getCountryKeys();
+  const tNewGroup = useTranslations("newGroup");
+
+  const { country: countryGameTypes, world: worldGameTypes } = getGameTypesByType();
+  const locationOptions = [3, 5, 10];
 
   const handleReleaseRound = async () => {
     setLoading(true);
@@ -55,7 +61,7 @@ export default function RoundControlPanel({
       const response = await fetch("/api/games/release-round", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameId, country: selectedCountry }),
+        body: JSON.stringify({ gameId, gameType: selectedGameType, locationsPerRound: selectedLocationsPerRound }),
       });
 
       const data = await response.json();
@@ -181,28 +187,88 @@ export default function RoundControlPanel({
     <div className="max-w-md mx-auto">
       {/* Admin controls */}
       {gameStatus === "active" && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {error && (
             <p className="text-error text-body-small text-center">{error}</p>
           )}
-          {/* Country selector */}
-          <div className="flex items-center justify-center gap-2">
-            <label htmlFor="country-select" className="text-body-small text-text-secondary">
-              {t("selectRoundCountry")}:
+
+          {/* Game Type Selection for next round */}
+          <div className="space-y-2">
+            <label className="block text-body-small font-medium text-text-primary text-center">
+              {t("selectGameType")}
             </label>
-            <select
-              id="country-select"
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-              className="bg-surface-2 border border-glass-border rounded-lg px-3 py-1.5 text-body-small text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {countryOptions.map((countryKey) => (
-                <option key={countryKey} value={countryKey}>
-                  {getCountryName(countryKey, locale)}
-                </option>
-              ))}
-            </select>
+
+            {/* Country Game Types */}
+            <div className="space-y-1">
+              <span className="text-xs text-text-muted">{t("countries")}</span>
+              <div className="flex gap-2">
+                {countryGameTypes.map((gameType) => (
+                  <button
+                    key={gameType.id}
+                    type="button"
+                    onClick={() => setSelectedGameType(gameType.id)}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
+                      selectedGameType === gameType.id
+                        ? "border-success bg-success/10 text-success"
+                        : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                    )}
+                  >
+                    <span>{gameType.icon}</span>
+                    <span>{getGameTypeName(gameType.id, locale)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* World Game Types */}
+            <div className="space-y-1">
+              <span className="text-xs text-text-muted">{t("worldQuizzes")}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {worldGameTypes.map((gameType) => (
+                  <button
+                    key={gameType.id}
+                    type="button"
+                    onClick={() => setSelectedGameType(gameType.id)}
+                    className={cn(
+                      "py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
+                      selectedGameType === gameType.id
+                        ? "border-success bg-success/10 text-success"
+                        : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                    )}
+                  >
+                    <span>{gameType.icon}</span>
+                    <span>{getGameTypeName(gameType.id, locale)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+
+          {/* Locations per Round */}
+          <div className="space-y-2">
+            <label className="block text-body-small font-medium text-text-primary text-center">
+              {tNewGroup("locationsPerRound")}
+            </label>
+            <div className="flex gap-2 justify-center">
+              {locationOptions.map((count) => (
+                <button
+                  key={count}
+                  type="button"
+                  onClick={() => setSelectedLocationsPerRound(count)}
+                  className={cn(
+                    "w-12 py-2 rounded-lg border-2 font-medium transition-all text-sm",
+                    selectedLocationsPerRound === count
+                      ? "border-success bg-success/10 text-success"
+                      : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                  )}
+                >
+                  {count}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Action buttons */}
           <div className="flex gap-2 justify-center">
             <Button

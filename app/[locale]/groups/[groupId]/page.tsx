@@ -90,31 +90,44 @@ async function getGroupData(groupId: string, userId: string) {
     .orderBy(desc(games.createdAt))
     .limit(10);
 
-  // Fetch winner for each completed game
-  const completedGames = await Promise.all(
-    completedGamesRaw.map(async (game) => {
-      // Get winner (player with lowest total distance)
-      const winner = await db
-        .select({
-          userName: users.name,
-          userImage: users.image,
-          totalDistance: sql<number>`sum(${guesses.distanceKm})`,
-        })
-        .from(guesses)
-        .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
-        .innerJoin(users, eq(guesses.userId, users.id))
-        .where(eq(gameRounds.gameId, game.id))
-        .groupBy(guesses.userId, users.name, users.image)
-        .orderBy(sql`sum(${guesses.distanceKm}) asc`)
-        .limit(1)
-        .get();
+  // Fetch all winners in a single query (optimized to avoid N+1 queries)
+  const gameIds = completedGamesRaw.map((g) => g.id);
+  let winnersMap = new Map<string, { userName: string | null; userImage: string | null; totalDistance: number }>();
 
-      return {
-        ...game,
-        winner: winner || undefined,
-      };
-    })
-  );
+  if (gameIds.length > 0) {
+    // Get all player scores for all completed games
+    const allScores = await db
+      .select({
+        gameId: gameRounds.gameId,
+        userId: guesses.userId,
+        userName: users.name,
+        userImage: users.image,
+        totalDistance: sql<number>`sum(${guesses.distanceKm})`.as("totalDistance"),
+      })
+      .from(guesses)
+      .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
+      .innerJoin(users, eq(guesses.userId, users.id))
+      .where(sql`${gameRounds.gameId} IN (${sql.join(gameIds.map(id => sql`${id}`), sql`, `)})`)
+      .groupBy(gameRounds.gameId, guesses.userId, users.name, users.image);
+
+    // Find winner (lowest distance) for each game
+    for (const score of allScores) {
+      const existing = winnersMap.get(score.gameId);
+      if (!existing || score.totalDistance < existing.totalDistance) {
+        winnersMap.set(score.gameId, {
+          userName: score.userName,
+          userImage: score.userImage,
+          totalDistance: score.totalDistance,
+        });
+      }
+    }
+  }
+
+  // Combine games with their winners
+  const completedGames = completedGamesRaw.map((game) => ({
+    ...game,
+    winner: winnersMap.get(game.id),
+  }));
 
   return { group, membership, locationsCount: locationsList.length, members, currentGame, userCompletedRounds, completedGames };
 }
@@ -171,8 +184,8 @@ export default async function GroupPage({
             isAdmin={isAdmin}
             userCompletedRounds={userCompletedRounds}
             gameStatus={currentGame.status}
-            gameCountry={currentGame.country}
             gameName={currentGame.name ?? undefined}
+            currentGameType={currentGame.gameType || `country:${currentGame.country}`}
           />
         )}
 
