@@ -88,6 +88,8 @@ export async function POST(request: Request) {
         roundNumber: gameRounds.roundNumber,
         gameType: gameRounds.gameType,
         groupId: games.groupId,
+        userId: games.userId,
+        mode: games.mode,
         currentRound: games.currentRound,
         country: games.country,
       })
@@ -108,20 +110,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check membership
-    const membership = await db
-      .select()
-      .from(groupMembers)
-      .where(
-        and(
-          eq(groupMembers.groupId, round.groupId),
-          eq(groupMembers.userId, session.user.id)
+    // Authorization check based on game mode
+    if (round.mode === "group") {
+      // Group games: check group membership
+      if (!round.groupId) {
+        return NextResponse.json({ error: "Invalid game state" }, { status: 400 });
+      }
+      const membership = await db
+        .select()
+        .from(groupMembers)
+        .where(
+          and(
+            eq(groupMembers.groupId, round.groupId),
+            eq(groupMembers.userId, session.user.id)
+          )
         )
-      )
-      .get();
+        .get();
 
-    if (!membership) {
-      return NextResponse.json({ error: "Not a member" }, { status: 403 });
+      if (!membership) {
+        return NextResponse.json({ error: "Not a member" }, { status: 403 });
+      }
+    } else {
+      // Solo/Training games: check if user owns the game
+      if (round.userId !== session.user.id) {
+        return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+      }
     }
 
     // Check if user already guessed this round

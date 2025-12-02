@@ -114,8 +114,10 @@ export const worldLocations = sqliteTable("worldLocations", {
 export const games = sqliteTable("games", {
   id: text("id").primaryKey(),
   groupId: text("groupId")
-    .notNull()
-    .references(() => groups.id, { onDelete: "cascade" }),
+    .references(() => groups.id, { onDelete: "cascade" }), // NULLABLE for solo/training games
+  userId: text("userId")
+    .references(() => users.id, { onDelete: "cascade" }), // Owner for solo/training games
+  mode: text("mode", { enum: ["group", "solo", "training"] }).notNull().default("group"), // Game mode
   name: text("name"), // Game name (optional, set by admin)
   country: text("country").notNull().default("switzerland"), // Country key (switzerland, slovenia) - legacy
   gameType: text("gameType"), // New: "country:switzerland", "world:capitals" etc. null = use country field
@@ -159,6 +161,22 @@ export const guesses = sqliteTable("guesses", {
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 
+// User Stats (for training mode persistence)
+export const userStats = sqliteTable("userStats", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  gameType: text("gameType").notNull(), // e.g., "country:switzerland", "world:capitals"
+  totalGames: integer("totalGames").notNull().default(0),
+  totalRounds: integer("totalRounds").notNull().default(0),
+  totalDistance: real("totalDistance").notNull().default(0),
+  totalScore: integer("totalScore").notNull().default(0),
+  bestScore: integer("bestScore").notNull().default(0), // best single round score
+  averageDistance: real("averageDistance").notNull().default(0),
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
@@ -168,3 +186,4 @@ export type WorldLocation = typeof worldLocations.$inferSelect;
 export type Game = typeof games.$inferSelect;
 export type GameRound = typeof gameRounds.$inferSelect;
 export type Guess = typeof guesses.$inferSelect;
+export type UserStats = typeof userStats.$inferSelect;

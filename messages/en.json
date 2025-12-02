@@ -1,6 +1,7 @@
 {
   "header": {
     "myGroups": "My Groups",
+    "solo": "Solo",
     "train": "Train",
     "logout": "Logout",
     "login": "Login"
@@ -244,5 +245,30 @@
   "celebration": {
     "winner": "Winner",
     "redirecting": "Redirecting to group..."
+  },
+  "solo": {
+    "title": "Solo Games",
+    "loginRequired": "Log in to play solo games and save your progress.",
+    "activeGame": "Active Game",
+    "round": "Round",
+    "continueGame": "Continue",
+    "startNewGame": "Start a new solo game",
+    "newGame": "New Game",
+    "gameSettings": "Game Settings",
+    "totalRounds": "Number of Rounds",
+    "startGame": "Start Game",
+    "yourStats": "Your Statistics",
+    "gamesPlayed": "Games",
+    "bestScore": "Best Score",
+    "completedGames": "Completed Games",
+    "rounds": "Rounds",
+    "wantQuickPractice": "Quick practice without scores?",
+    "goToTraining": "Go to Training",
+    "gameComplete": "Game Complete!",
+    "totalScore": "Total Score",
+    "totalDistance": "Total Distance",
+    "backToDashboard": "Back to Dashboard",
+    "finishGame": "Finish Game",
+    "noActiveGame": "No active game found"
   }
 }

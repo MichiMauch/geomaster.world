@@ -37,23 +37,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Game not found" }, { status: 404 });
     }
 
-    // Check if user is admin of the group
-    const membership = await db
-      .select()
-      .from(groupMembers)
-      .where(
-        and(
-          eq(groupMembers.groupId, game.groupId),
-          eq(groupMembers.userId, session.user.id)
+    // Authorization check based on game mode
+    if (game.mode === "group") {
+      // Group games: check if user is admin of the group
+      if (!game.groupId) {
+        return NextResponse.json({ error: "Invalid game state" }, { status: 400 });
+      }
+      const membership = await db
+        .select()
+        .from(groupMembers)
+        .where(
+          and(
+            eq(groupMembers.groupId, game.groupId),
+            eq(groupMembers.userId, session.user.id)
+          )
         )
-      )
-      .get();
+        .get();
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Only admins can release rounds" },
-        { status: 403 }
-      );
+      if (!membership || membership.role !== "admin") {
+        return NextResponse.json(
+          { error: "Only admins can release rounds" },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Solo/Training games: check if user owns the game
+      if (game.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: "You can only control your own games" },
+          { status: 403 }
+        );
+      }
     }
 
     // Determine game type - use requested type if provided, otherwise fall back to game's type

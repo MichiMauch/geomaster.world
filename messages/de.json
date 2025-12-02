@@ -1,6 +1,7 @@
 {
   "header": {
     "myGroups": "Meine Gruppen",
+    "solo": "Solo",
     "train": "Trainieren",
     "logout": "Abmelden",
     "login": "Anmelden"
@@ -244,5 +245,30 @@
   "celebration": {
     "winner": "Gewinner",
     "redirecting": "Weiterleitung zur Gruppe..."
+  },
+  "solo": {
+    "title": "Solo-Spiele",
+    "loginRequired": "Melde dich an, um Solo-Spiele zu spielen und deinen Fortschritt zu speichern.",
+    "activeGame": "Aktives Spiel",
+    "round": "Runde",
+    "continueGame": "Weiterspielen",
+    "startNewGame": "Neues Solo-Spiel starten",
+    "newGame": "Neues Spiel",
+    "gameSettings": "Spieleinstellungen",
+    "totalRounds": "Anzahl Runden",
+    "startGame": "Spiel starten",
+    "yourStats": "Deine Statistiken",
+    "gamesPlayed": "Spiele",
+    "bestScore": "Beste Punktzahl",
+    "completedGames": "Abgeschlossene Spiele",
+    "rounds": "Runden",
+    "wantQuickPractice": "Schnell üben ohne Punkte?",
+    "goToTraining": "Zum Training",
+    "gameComplete": "Spiel abgeschlossen!",
+    "totalScore": "Gesamtpunktzahl",
+    "totalDistance": "Gesamtdistanz",
+    "backToDashboard": "Zurück zur Übersicht",
+    "finishGame": "Spiel beenden",
+    "noActiveGame": "Kein aktives Spiel gefunden"
   }
 }
