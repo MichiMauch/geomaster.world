@@ -92,7 +92,7 @@ export async function GET(request: Request) {
       const whereConditions = roundNumber
         ? and(
             eq(gameRounds.gameId, game.id),
-            sql`${gameRounds.roundNumber} <= ${parseInt(roundNumber)}`
+            sql`${gameRounds.roundNumber} = ${parseInt(roundNumber)}`
           )
         : eq(gameRounds.gameId, game.id);
 

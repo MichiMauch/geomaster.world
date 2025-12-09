@@ -9,7 +9,7 @@ import {
   locations,
   worldLocations,
 } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { calculateDistance } from "@/lib/distance";
@@ -26,6 +26,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const gameId = searchParams.get("gameId");
+    const userId = searchParams.get("userId"); // Optional: view another player's guesses
+    const roundNumber = searchParams.get("roundNumber"); // Optional: filter by round
 
     if (!gameId) {
       return NextResponse.json(
@@ -34,7 +36,70 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get user's guesses for this game with gameType for score calculation
+    // Determine which user's guesses to fetch
+    const targetUserId = userId || session.user.id;
+    const isOwnGuesses = targetUserId === session.user.id;
+
+    // Get the game to check permissions
+    const game = await db
+      .select({
+        id: games.id,
+        groupId: games.groupId,
+        leaderboardRevealed: games.leaderboardRevealed,
+        status: games.status,
+      })
+      .from(games)
+      .where(eq(games.id, gameId))
+      .get();
+
+    if (!game) {
+      return NextResponse.json({ error: "Game not found" }, { status: 404 });
+    }
+
+    // If viewing another user's guesses, check if allowed
+    if (!isOwnGuesses) {
+      // Must be revealed or game completed to view other players' guesses
+      const isRevealed = game.leaderboardRevealed || game.status === "completed";
+      if (!isRevealed) {
+        return NextResponse.json(
+          { error: "Leaderboard not revealed yet" },
+          { status: 403 }
+        );
+      }
+
+      // Must be member of the same group
+      if (game.groupId) {
+        const membership = await db
+          .select()
+          .from(groupMembers)
+          .where(
+            and(
+              eq(groupMembers.groupId, game.groupId),
+              eq(groupMembers.userId, session.user.id)
+            )
+          )
+          .get();
+
+        if (!membership) {
+          return NextResponse.json({ error: "Not a member" }, { status: 403 });
+        }
+      }
+    }
+
+    // Build WHERE conditions
+    let whereConditions = and(
+      eq(gameRounds.gameId, gameId),
+      eq(guesses.userId, targetUserId)
+    );
+
+    if (roundNumber) {
+      whereConditions = and(
+        whereConditions,
+        sql`${gameRounds.roundNumber} = ${parseInt(roundNumber)}`
+      );
+    }
+
+    // Get guesses with location details
     const userGuessesRaw = await db
       .select({
         id: guesses.id,
@@ -43,21 +108,63 @@ export async function GET(request: Request) {
         longitude: guesses.longitude,
         distanceKm: guesses.distanceKm,
         roundNumber: gameRounds.roundNumber,
+        locationIndex: gameRounds.locationIndex,
         gameType: gameRounds.gameType,
+        country: gameRounds.country,
+        locationId: gameRounds.locationId,
+        locationSource: gameRounds.locationSource,
       })
       .from(guesses)
       .innerJoin(gameRounds, eq(guesses.gameRoundId, gameRounds.id))
-      .where(
-        and(eq(gameRounds.gameId, gameId), eq(guesses.userId, session.user.id))
-      );
+      .where(whereConditions);
 
-    // Calculate score for each guess
-    const userGuesses = userGuessesRaw.map((guess) => ({
-      ...guess,
-      score: guess.gameType ? calculateScore(guess.distanceKm, guess.gameType) : 0,
-    }));
+    // Fetch location details for each guess
+    const guessesWithLocations = await Promise.all(
+      userGuessesRaw.map(async (guess) => {
+        let locationData: { name: string; latitude: number; longitude: number } | null = null;
 
-    return NextResponse.json(userGuesses);
+        if (guess.locationSource === "worldLocations") {
+          const loc = await db
+            .select({ name: worldLocations.name, latitude: worldLocations.latitude, longitude: worldLocations.longitude })
+            .from(worldLocations)
+            .where(eq(worldLocations.id, guess.locationId))
+            .get();
+          locationData = loc || null;
+        } else {
+          const loc = await db
+            .select({ name: locations.name, latitude: locations.latitude, longitude: locations.longitude })
+            .from(locations)
+            .where(eq(locations.id, guess.locationId))
+            .get();
+          locationData = loc || null;
+        }
+
+        // Fallback for old rounds without gameType
+        const effectiveGameType = guess.gameType || `country:${guess.country || 'switzerland'}`;
+
+        return {
+          id: guess.id,
+          latitude: guess.latitude,
+          longitude: guess.longitude,
+          distanceKm: guess.distanceKm,
+          score: calculateScore(guess.distanceKm, effectiveGameType),
+          roundNumber: guess.roundNumber,
+          locationIndex: guess.locationIndex,
+          targetLatitude: locationData?.latitude || 0,
+          targetLongitude: locationData?.longitude || 0,
+          locationName: locationData?.name || "Unknown",
+          gameType: effectiveGameType,
+        };
+      })
+    );
+
+    // Sort by roundNumber, then locationIndex
+    guessesWithLocations.sort((a, b) => {
+      if (a.roundNumber !== b.roundNumber) return a.roundNumber - b.roundNumber;
+      return a.locationIndex - b.locationIndex;
+    });
+
+    return NextResponse.json({ guesses: guessesWithLocations });
   } catch (error) {
     console.error("Error fetching guesses:", error);
     return NextResponse.json(

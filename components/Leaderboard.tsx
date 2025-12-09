@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge, MedalBadge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import PlayerResultsModal from "./PlayerResultsModal";
 
 interface LeaderboardEntry {
   rank: number;
@@ -31,6 +33,11 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
   const [type, setType] = useState<"weekly" | "alltime">("weekly");
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
+  const [maxRoundNumber, setMaxRoundNumber] = useState(0);
+  const [selectedRound, setSelectedRound] = useState<number | null>(null); // null = total
+  const [currentGameId, setCurrentGameId] = useState<string | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
+  const { data: session } = useSession();
   const t = useTranslations("leaderboard");
 
   const fetchLeaderboard = useCallback(async (showLoading = true) => {
@@ -40,6 +47,9 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
       if (gameId) {
         url += `&gameId=${gameId}`;
       }
+      if (selectedRound !== null && type === "weekly") {
+        url += `&roundNumber=${selectedRound}`;
+      }
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -47,13 +57,19 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
         if (data.revealed !== undefined) {
           setRevealed(data.revealed);
         }
+        if (data.game?.maxRoundNumber !== undefined) {
+          setMaxRoundNumber(data.game.maxRoundNumber);
+        }
+        if (data.game?.id) {
+          setCurrentGameId(data.game.id);
+        }
       }
     } catch (err) {
       console.error("Error fetching leaderboard:", err);
     } finally {
       setLoading(false);
     }
-  }, [groupId, gameId, type]);
+  }, [groupId, gameId, type, selectedRound]);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -72,6 +88,18 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
 
   const showBlur = blurred && !revealed;
 
+  // Can click on a player if revealed OR if it's the current user
+  const canClickPlayer = (userId: string) => {
+    if (type !== "weekly") return false; // Only in weekly mode
+    if (!currentGameId) return false; // Need a game ID
+    return revealed || userId === session?.user?.id;
+  };
+
+  const handlePlayerClick = (entry: LeaderboardEntry) => {
+    if (!canClickPlayer(entry.userId)) return;
+    setSelectedPlayer(entry);
+  };
+
   return (
     <Card variant="surface" padding="lg">
       <div className="flex items-center justify-between mb-4">
@@ -89,7 +117,10 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
             {t("thisWeek")}
           </button>
           <button
-            onClick={() => setType("alltime")}
+            onClick={() => {
+              setType("alltime");
+              setSelectedRound(null); // Reset round selection when switching to alltime
+            }}
             className={cn(
               "px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200",
               type === "alltime"
@@ -102,6 +133,39 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
         </div>
       </div>
 
+      {/* Round Tabs - only show when in weekly mode and rounds exist */}
+      {type === "weekly" && maxRoundNumber > 0 && (
+        <div className="mb-4 overflow-x-auto -mx-2 px-2">
+          <div className="flex gap-1 min-w-max">
+            <button
+              onClick={() => setSelectedRound(null)}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
+                selectedRound === null
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+              )}
+            >
+              {t("total")}
+            </button>
+            {Array.from({ length: maxRoundNumber }, (_, i) => i + 1).map((round) => (
+              <button
+                key={round}
+                onClick={() => setSelectedRound(round)}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
+                  selectedRound === round
+                    ? "bg-accent text-white shadow-sm"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                )}
+              >
+                {t("round")} {round}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className={cn(showBlur && "blur-md select-none pointer-events-none transition-all")}>
         {loading ? (
           <div className="flex items-center justify-center py-8">
@@ -113,15 +177,19 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
           </p>
         ) : (
           <div className="space-y-2">
-            {leaderboard.map((entry, index) => (
+            {leaderboard.map((entry, index) => {
+              const isClickable = canClickPlayer(entry.userId);
+              return (
               <div
                 key={entry.userId}
+                onClick={() => handlePlayerClick(entry)}
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-xl transition-all",
                   entry.rank === 1 && "bg-accent/10 border border-accent/30",
                   entry.rank === 2 && "bg-surface-2 border border-glass-border",
                   entry.rank === 3 && "bg-warning/10 border border-warning/30",
-                  entry.rank > 3 && "hover:bg-surface-2"
+                  entry.rank > 3 && "hover:bg-surface-2",
+                  isClickable && "cursor-pointer hover:ring-2 hover:ring-primary/30"
                 )}
                 style={{
                   animationDelay: `${index * 50}ms`,
@@ -155,7 +223,7 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
                       </span>
                     )}
                   </p>
-                  {type === "weekly" && !entry.completed && entry.isMember !== false && (
+                  {type === "weekly" && selectedRound === null && !entry.completed && entry.isMember !== false && (
                     <p className="text-caption text-text-muted">
                       {entry.roundsPlayed} {t("days", { count: entry.roundsPlayed })}
                     </p>
@@ -180,7 +248,8 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
                   )}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
@@ -204,6 +273,18 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
             <span className="text-body-small">{t("revealedByAdmin")}</span>
           </div>
         </div>
+      )}
+
+      {/* Player Results Modal */}
+      {selectedPlayer && currentGameId && (
+        <PlayerResultsModal
+          gameId={currentGameId}
+          userId={selectedPlayer.userId}
+          userName={selectedPlayer.userName}
+          userImage={selectedPlayer.userImage}
+          roundNumber={selectedRound}
+          onClose={() => setSelectedPlayer(null)}
+        />
       )}
     </Card>
   );
