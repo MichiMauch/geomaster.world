@@ -7,7 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import WinnerCelebration from "@/components/WinnerCelebration";
-import { getGameTypesByType, getGameTypeName } from "@/lib/game-types";
+import { getGameTypesByTypeExtended, getGameTypeName } from "@/lib/game-types";
 import { cn } from "@/lib/utils";
 
 interface Winner {
@@ -53,7 +53,7 @@ export default function RoundControlPanel({
   const tNewGroup = useTranslations("newGroup");
   const tGroup = useTranslations("group");
 
-  const { country: countryGameTypes, world: worldGameTypes } = getGameTypesByType();
+  const { country: countryGameTypes, world: worldGameTypes, image: imageGameTypes } = getGameTypesByTypeExtended();
   const locationOptions = [3, 5, 10];
   const timeOptions = [30, 60, 90, 0]; // 0 = no limit
 
@@ -247,6 +247,31 @@ export default function RoundControlPanel({
                 ))}
               </div>
             </div>
+
+            {/* Image Game Types */}
+            {imageGameTypes.length > 0 && (
+              <div className="space-y-1">
+                <span className="text-xs text-text-muted">{t("imageMaps")}</span>
+                <div className="flex gap-2">
+                  {imageGameTypes.map((gameType) => (
+                    <button
+                      key={gameType.id}
+                      type="button"
+                      onClick={() => setSelectedGameType(gameType.id)}
+                      className={cn(
+                        "flex-1 py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
+                        selectedGameType === gameType.id
+                          ? "border-success bg-success/10 text-success"
+                          : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                      )}
+                    >
+                      <span>{gameType.icon}</span>
+                      <span>{getGameTypeName(gameType.id, locale)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Locations per Round */}

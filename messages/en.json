@@ -103,7 +103,8 @@
     "selectRoundCountry": "Country",
     "selectGameType": "Select Game Type",
     "countries": "Countries",
-    "worldQuizzes": "World Quizzes"
+    "worldQuizzes": "World Quizzes",
+    "imageMaps": "Image Maps"
   },
   "play": {
     "playing": "Play",
