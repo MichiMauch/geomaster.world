@@ -8,7 +8,7 @@ import { DEFAULT_COUNTRY } from "@/lib/countries";
 import { formatDistance } from "@/lib/distance";
 import { getEffectiveGameType, getGameTypeConfig } from "@/lib/game-types";
 import toast from "react-hot-toast";
-import { generateHintCircleCenter, HINT_CIRCLE_RADIUS_KM } from "@/lib/hint";
+import { generateHintCircleCenter, getHintCircleRadius } from "@/lib/hint";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -153,19 +153,21 @@ export default function PlayPage({
       return;
     }
 
-    const country = currentRound.country ?? game?.country ?? "switzerland";
+    // Use gameType for dynamic radius calculation
+    const gameType = currentRound.gameType ?? (game ? getEffectiveGameType(game) : "country:switzerland");
+    const radiusKm = getHintCircleRadius(gameType);
     const center = generateHintCircleCenter(
       currentRound.latitude,
       currentRound.longitude,
-      HINT_CIRCLE_RADIUS_KM,
-      country
+      radiusKm,
+      gameType
     );
     setHintCircle({
       lat: center.lat,
       lng: center.lng,
-      radiusKm: HINT_CIRCLE_RADIUS_KM,
+      radiusKm: radiusKm,
     });
-  }, [loading, currentRound, hintEnabled, showResult, isLocationPlayed, game?.country]);
+  }, [loading, currentRound, hintEnabled, showResult, isLocationPlayed, game]);
 
   // Timer effect - use per-round time limit, fallback to game-level
   const currentTimeLimit = currentRound?.timeLimitSeconds ?? timeLimitSeconds;

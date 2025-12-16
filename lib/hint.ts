@@ -1,4 +1,5 @@
 import { getCountryBounds, DEFAULT_COUNTRY } from "./countries";
+import { getGameTypeConfig, DEFAULT_GAME_TYPE } from "./game-types";
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -37,15 +38,30 @@ function calculateDestination(
 }
 
 /**
- * Check if a circle (center + radius) stays within country bounds
+ * Get bounds for a game type, with fallback to country bounds
+ */
+function getBoundsForGameType(gameType: string): { southWest: { lat: number; lng: number }; northEast: { lat: number; lng: number } } {
+  const config = getGameTypeConfig(gameType);
+  if (config.bounds) {
+    return config.bounds;
+  }
+  // For world maps (bounds = null), use full world bounds
+  return {
+    southWest: { lat: -85, lng: -180 },
+    northEast: { lat: 85, lng: 180 },
+  };
+}
+
+/**
+ * Check if a circle (center + radius) stays within game type bounds
  */
 function isCircleWithinBounds(
   centerLat: number,
   centerLng: number,
   radiusKm: number,
-  country: string
+  gameType: string
 ): boolean {
-  const bounds = getCountryBounds(country);
+  const bounds = getBoundsForGameType(gameType);
 
   // Convert radius to approximate degrees
   const radiusLat = radiusKm / KM_PER_DEGREE_LAT;
@@ -72,9 +88,9 @@ function isCircleWithinBounds(
 function getBestBearings(
   targetLat: number,
   targetLng: number,
-  country: string
+  gameType: string
 ): number[] {
-  const bounds = getCountryBounds(country);
+  const bounds = getBoundsForGameType(gameType);
 
   // Calculate distances to each border
   const distToNorth = (bounds.northEast.lat - targetLat) * KM_PER_DEGREE_LAT;
@@ -105,34 +121,35 @@ function getBestBearings(
  * but guarantees the target is within the circle's radius.
  *
  * The center is placed away from the target, preferring directions
- * that keep the entire circle within the country bounds.
+ * that keep the entire circle within the game type bounds.
  */
 export function generateHintCircleCenter(
   targetLat: number,
   targetLng: number,
-  radiusKm: number = 60,
-  country: string = DEFAULT_COUNTRY
+  radiusKm: number,
+  gameType: string = DEFAULT_GAME_TYPE
 ): { lat: number; lng: number } {
   // Use full range of possible offsets for unpredictability
   // Target can be anywhere in the circle - near center OR near edge
-  const minBuffer = 5; // Minimum distance so target isn't exactly at center
+  // Buffer is proportional to radius (about 8% of radius)
+  const minBuffer = Math.max(5, radiusKm * 0.08);
   const minDistance = minBuffer;
   const maxDistance = radiusKm - minBuffer;
 
   // Get bearings sorted by available space
-  const bestBearings = getBestBearings(targetLat, targetLng, country);
+  const bestBearings = getBestBearings(targetLat, targetLng, gameType);
 
   // Try each bearing direction, starting with best options
   for (const baseBearing of bestBearings) {
     // Add randomness to the bearing (+/- 30 degrees for more variety)
     const bearing = baseBearing + (Math.random() * 60 - 30);
-    // Full range: target can be 5km to 55km from center (for 60km radius)
+    // Full range: target can be minBuffer to (radius - minBuffer) from center
     const distance = minDistance + Math.random() * (maxDistance - minDistance);
 
     const center = calculateDestination(targetLat, targetLng, distance, bearing);
 
     // Check if this circle stays within bounds
-    if (isCircleWithinBounds(center.lat, center.lng, radiusKm, country)) {
+    if (isCircleWithinBounds(center.lat, center.lng, radiusKm, gameType)) {
       return center;
     }
   }
@@ -144,4 +161,16 @@ export function generateHintCircleCenter(
   return calculateDestination(targetLat, targetLng, distance, bestBearing);
 }
 
+// Legacy constant - use getHintCircleRadius(gameType) instead for dynamic sizing
 export const HINT_CIRCLE_RADIUS_KM = 60;
+
+/**
+ * Get the hint circle radius based on game type.
+ * Uses 60% of the scoreScaleFactor to create a proportionally sized hint circle.
+ */
+export function getHintCircleRadius(gameType: string): number {
+  const config = getGameTypeConfig(gameType);
+  // Radius = ~60% of scoreScaleFactor (visible but not too easy)
+  // Results in: Switzerland ~60km, World ~1800km, Image maps ~21m
+  return config.scoreScaleFactor * 0.6;
+}
