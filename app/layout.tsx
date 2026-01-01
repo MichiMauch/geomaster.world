@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Swiss Guesser",
-  description: "Teste dein Wissen über die Schweizer Geografie",
+  title: "PinPoint",
+  description: "Teste dein geografisches Wissen",
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.png",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Swiss Guesser",
+    title: "PinPoint",
   },
 };
 

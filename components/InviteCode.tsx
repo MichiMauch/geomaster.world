@@ -26,7 +26,7 @@ export default function InviteCode({ code }: InviteCodeProps) {
     <Card variant="surface" padding="lg">
       <h2 className="text-h3 text-text-primary mb-4">{t("title")}</h2>
       <div className="flex items-center gap-4">
-        <code className="flex-1 bg-surface-3 px-4 py-3 rounded-xl text-lg font-mono text-primary border border-glass-border">
+        <code className="flex-1 bg-surface-3 px-4 py-3 rounded-lg text-lg font-mono text-primary border border-glass-border">
           {code}
         </code>
         <Button variant="primary" size="md" onClick={handleCopy}>

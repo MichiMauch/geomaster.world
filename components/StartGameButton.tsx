@@ -80,7 +80,7 @@ export default function StartGameButton({ groupId }: StartGameButtonProps) {
     >
       <div className="space-y-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+          <div className="w-14 h-14 rounded-lg bg-success/20 flex items-center justify-center shrink-0">
             <svg
               className="w-7 h-7 text-success"
               fill="none"

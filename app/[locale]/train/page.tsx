@@ -162,7 +162,7 @@ export default function TrainPage() {
       {currentLocation && (
         <div className={cn(
           "absolute top-4 left-1/2 -translate-x-1/2 z-10",
-          "bg-background/85 backdrop-blur-md rounded-xl",
+          "bg-background/85 backdrop-blur-md rounded-lg",
           "flex items-center gap-3 px-4 py-2",
           "border-2",
           // Border color based on state
@@ -220,7 +220,7 @@ export default function TrainPage() {
 
       {/* Stats Badge - bottom left */}
       {roundCount > 0 && (
-        <div className="absolute bottom-4 left-4 z-10 bg-background/85 backdrop-blur-md rounded-xl px-4 py-2 border border-glass-border">
+        <div className="absolute bottom-4 left-4 z-10 bg-background/85 backdrop-blur-md rounded-lg px-4 py-2 border border-glass-border">
           <div className="flex items-center gap-3">
             <div className="text-sm">
               <span className="text-text-muted">{roundCount}</span>

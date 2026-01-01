@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         email: testUserEmail,
         image: null,
       });
-      user = { id: testUserId, name: testUserName, email: testUserEmail, emailVerified: null, image: null, hintEnabled: null, isSuperAdmin: null };
+      user = { id: testUserId, name: testUserName, email: testUserEmail, emailVerified: null, image: null, password: null, hintEnabled: null, isSuperAdmin: null };
     }
 
     // Create a session
@@ -62,10 +62,17 @@ export async function POST(request: Request) {
 
     // Set the session cookie
     const cookieStore = await cookies();
-    cookieStore.set("next-auth.session-token", sessionToken, {
+    // Determine cookie name based on environment
+    const isProduction = process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test';
+    const cookieName = isProduction
+      ? '__Secure-next-auth.session-token'
+      : 'next-auth.session-token';
+
+    cookieStore.set(cookieName, sessionToken, {
       expires,
       httpOnly: true,
       sameSite: "lax",
+      secure: isProduction,
       path: "/",
     });
 

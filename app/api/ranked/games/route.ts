@@ -1,0 +1,185 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { games, gameRounds, locations, worldLocations } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
+import { NextResponse } from "next/server";
+import { getGameTypeConfig, isWorldGameType, getWorldCategory, GAME_TYPES } from "@/lib/game-types";
+import { getLocationCountryName } from "@/lib/countries";
+import { getCurrentScoringVersion } from "@/lib/scoring";
+
+export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  try {
+    const body = await request.json();
+    const { gameType, guestId } = body;
+
+    // Validate gameType
+    if (!gameType || !GAME_TYPES[gameType]) {
+      return NextResponse.json(
+        { error: "Invalid game type" },
+        { status: 400 }
+      );
+    }
+
+    // Exclude image game types from ranked
+    if (gameType.startsWith("image:")) {
+      return NextResponse.json(
+        { error: "Image game types are not supported in ranked mode" },
+        { status: 400 }
+      );
+    }
+
+    const config = getGameTypeConfig(gameType);
+
+    // Ranked games have fixed settings: 5 locations, 30 seconds per location
+    const locationsPerRound = 5;
+    const timeLimitSeconds = 30;
+
+    // Fetch available locations based on game type
+    let availableLocations: Array<{ id: string; name: string; latitude: number; longitude: number }> = [];
+
+    if (isWorldGameType(gameType)) {
+      const category = getWorldCategory(gameType);
+      if (!category) {
+        return NextResponse.json(
+          { error: "Invalid world game type" },
+          { status: 400 }
+        );
+      }
+
+      const worldLocs = await db
+        .select()
+        .from(worldLocations)
+        .where(eq(worldLocations.category, category));
+
+      availableLocations = worldLocs.map((loc) => ({
+        id: loc.id,
+        name: loc.name,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      }));
+    } else {
+      // Country game type - extract country from gameType
+      const countryKey = gameType.split(":")[1]; // e.g., "country:switzerland" → "switzerland"
+      const countryName = getLocationCountryName(countryKey); // "switzerland" → "Switzerland"
+
+      const countryLocs = await db
+        .select()
+        .from(locations)
+        .where(eq(locations.country, countryName));
+
+      availableLocations = countryLocs.map((loc) => ({
+        id: loc.id,
+        name: loc.name,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      }));
+    }
+
+    // Check if we have enough locations
+    if (availableLocations.length < locationsPerRound) {
+      return NextResponse.json(
+        { error: `Not enough locations available. Need ${locationsPerRound}, found ${availableLocations.length}` },
+        { status: 400 }
+      );
+    }
+
+    // Randomly select locations
+    const shuffled = [...availableLocations].sort(() => Math.random() - 0.5);
+    const selectedLocations = shuffled.slice(0, locationsPerRound);
+
+    // Create game
+    const gameId = nanoid();
+    const now = new Date();
+
+    await db.insert(games).values({
+      id: gameId,
+      groupId: null, // Ranked games have no group
+      userId: session?.user?.id || null, // Can be null for guests
+      mode: "ranked",
+      name: `Ranked: ${config.name.de}`,
+      country: "switzerland", // Legacy field
+      gameType,
+      locationsPerRound,
+      timeLimitSeconds,
+      scoringVersion: getCurrentScoringVersion(), // Use current scoring version (v2 = time-based)
+      status: "active",
+      currentRound: 1, // All locations are immediately available
+      createdAt: now,
+    });
+
+    // Create game rounds (all 5 locations)
+    for (let i = 0; i < selectedLocations.length; i++) {
+      const location = selectedLocations[i];
+      await db.insert(gameRounds).values({
+        id: nanoid(),
+        gameId,
+        roundNumber: 1, // Single round with 5 locations
+        locationIndex: i + 1,
+        locationId: location.id,
+        locationSource: isWorldGameType(gameType) ? "worldLocations" : "locations",
+        country: "switzerland", // Legacy field
+        gameType,
+        timeLimitSeconds, // 30 seconds per location
+      });
+    }
+
+    return NextResponse.json({
+      gameId,
+      gameType,
+      locationsPerRound,
+      timeLimitSeconds,
+      guestId: session?.user?.id ? null : guestId, // Return guestId if guest
+    });
+  } catch (error) {
+    console.error("Error creating ranked game:", error);
+    return NextResponse.json(
+      { error: "Failed to create ranked game" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const guestId = searchParams.get("guestId");
+
+    // Must be logged in OR provide guestId
+    if (!session?.user?.id && !guestId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session?.user?.id;
+
+    // Find active ranked games for this user
+    const activeGames = await db
+      .select()
+      .from(games)
+      .where(
+        eq(games.mode, "ranked")
+      )
+      .orderBy(games.createdAt);
+
+    // Filter by userId or guestId (we'd need to store guestId in games table for this to work properly)
+    // For now, just filter by userId if logged in
+    const userActiveGames = userId
+      ? activeGames.filter((g) => g.userId === userId && g.status === "active")
+      : [];
+
+    return NextResponse.json({
+      activeGames: userActiveGames,
+    });
+  } catch (error) {
+    console.error("Error fetching ranked games:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch ranked games" },
+      { status: 500 }
+    );
+  }
+}

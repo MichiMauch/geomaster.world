@@ -1,8 +1,11 @@
 import { getGameTypeConfig } from "./game-types";
 
 /**
- * Calculate score based on distance and game type.
+ * Calculate score based on distance and game type (v1 - distance-only scoring).
  * Uses exponential decay formula normalized by map size.
+ *
+ * @deprecated For ranked games, use calculateScore from @/lib/scoring instead.
+ * This function is kept for backward compatibility with group games, solo games, and training mode.
  *
  * @param distanceKm - Distance in kilometers
  * @param gameType - Game type ID (e.g., "country:switzerland", "world:capitals")

@@ -8,6 +8,7 @@ export const users = sqliteTable("users", {
   email: text("email").unique(),
   emailVerified: integer("emailVerified", { mode: "timestamp" }),
   image: text("image"),
+  password: text("password"), // Hashed password for email/password auth (null for OAuth-only users)
   hintEnabled: integer("hintEnabled", { mode: "boolean" }).default(false),
   isSuperAdmin: integer("isSuperAdmin", { mode: "boolean" }).default(false),
 });
@@ -118,12 +119,13 @@ export const games = sqliteTable("games", {
     .references(() => groups.id, { onDelete: "cascade" }), // NULLABLE for solo/training games
   userId: text("userId")
     .references(() => users.id, { onDelete: "cascade" }), // Owner for solo/training games
-  mode: text("mode", { enum: ["group", "solo", "training"] }).notNull().default("group"), // Game mode
+  mode: text("mode", { enum: ["group", "solo", "training", "ranked"] }).notNull().default("group"), // Game mode
   name: text("name"), // Game name (optional, set by admin)
   country: text("country").notNull().default("switzerland"), // Country key (switzerland, slovenia) - legacy
   gameType: text("gameType"), // New: "country:switzerland", "world:capitals" etc. null = use country field
   locationsPerRound: integer("locationsPerRound").notNull().default(5), // How many locations per round for this game
   timeLimitSeconds: integer("timeLimitSeconds"), // null = no limit
+  scoringVersion: integer("scoringVersion").notNull().default(1), // Scoring algorithm version (1 = distance only, 2 = time-based). Default to v1 for safety; ranked games set v2 explicitly
   weekNumber: integer("weekNumber"), // Legacy: ISO week (optional for backwards compatibility)
   year: integer("year"), // Legacy: year (optional for backwards compatibility)
   status: text("status", { enum: ["active", "completed"] }).notNull().default("active"),
@@ -193,6 +195,43 @@ export const userStats = sqliteTable("userStats", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });
 
+// Ranked Game Results (stores each completed ranked game)
+export const rankedGameResults = sqliteTable("rankedGameResults", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  gameId: text("gameId").notNull().references(() => games.id, { onDelete: "cascade" }),
+  userId: text("userId").references(() => users.id, { onDelete: "cascade" }), // nullable for guest players
+  guestId: text("guestId"), // for anonymous players (nanoid before login)
+  gameType: text("gameType").notNull(), // "country:switzerland", "world:capitals", etc.
+  totalScore: integer("totalScore").notNull(), // Sum of all 5 location scores
+  averageScore: real("averageScore").notNull(), // totalScore / 5
+  totalDistance: real("totalDistance").notNull(), // Sum of distances in km
+  completedAt: integer("completedAt", { mode: "timestamp" }).notNull(),
+});
+
+// Rankings aggregation - materialized view for fast leaderboard queries
+export const rankings = sqliteTable("rankings", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  gameType: text("gameType").notNull(), // specific game type OR "overall" for combined
+  period: text("period", { enum: ["daily", "weekly", "monthly", "alltime"] }).notNull(),
+  periodKey: text("periodKey").notNull(), // "2025-12-24", "2025-W52", "2025-12", "alltime"
+
+  // Aggregated stats
+  totalScore: integer("totalScore").notNull().default(0),
+  totalGames: integer("totalGames").notNull().default(0),
+  averageScore: real("averageScore").notNull().default(0), // per round average
+  bestScore: integer("bestScore").notNull().default(0), // best single game score
+
+  // Denormalized for display
+  userName: text("userName"),
+  userImage: text("userImage"),
+
+  // Ranking
+  rank: integer("rank"), // NULL until calculated
+
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
@@ -204,3 +243,5 @@ export type Game = typeof games.$inferSelect;
 export type GameRound = typeof gameRounds.$inferSelect;
 export type Guess = typeof guesses.$inferSelect;
 export type UserStats = typeof userStats.$inferSelect;
+export type RankedGameResult = typeof rankedGameResults.$inferSelect;
+export type Ranking = typeof rankings.$inferSelect;

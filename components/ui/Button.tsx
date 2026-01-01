@@ -6,11 +6,11 @@ import { forwardRef } from "react";
 
 const buttonVariants = cva(
   // Base styles
-  `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl
-   font-semibold transition-all duration-200 ease-out
+  `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg
+   font-semibold transition-all duration-200 ease-out cursor-pointer
    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
    focus-visible:ring-offset-background focus-visible:ring-primary
-   disabled:pointer-events-none disabled:opacity-50
+   disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed
    active:scale-[0.98]`,
   {
     variants: {

@@ -209,7 +209,7 @@ export function RoundCompletePopup({
         </div>
 
         {/* Total Score */}
-        <div className="py-4 rounded-xl bg-surface-2">
+        <div className="py-4 rounded-lg bg-surface-2">
           <p className="text-caption text-text-muted mb-1">Gesamtpunktzahl</p>
           <p className="text-display font-bold text-accent tabular-nums">
             {totalScore} Pkt

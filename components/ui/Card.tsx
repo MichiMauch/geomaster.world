@@ -6,7 +6,7 @@ import { forwardRef } from "react";
 
 const cardVariants = cva(
   // Base styles
-  "rounded-xl transition-all duration-300 ease-out",
+  "rounded-sm transition-all duration-300 ease-out",
   {
     variants: {
       variant: {

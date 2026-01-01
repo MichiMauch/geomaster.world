@@ -21,7 +21,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <LocaleProviders messages={messages} locale={locale}>
+    <LocaleProviders messages={messages} locale={locale} timeZone="Europe/Zurich">
       {children}
     </LocaleProviders>
   );

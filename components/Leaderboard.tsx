@@ -189,7 +189,7 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
                 key={entry.userId}
                 onClick={() => handlePlayerClick(entry)}
                 className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl transition-all",
+                  "flex items-center gap-3 p-3 rounded-lg transition-all",
                   entry.rank === 1 && "bg-accent/10 border border-accent/30",
                   entry.rank === 2 && "bg-surface-2 border border-glass-border",
                   entry.rank === 3 && "bg-warning/10 border border-warning/30",

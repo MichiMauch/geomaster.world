@@ -72,7 +72,7 @@ export default function RevealLeaderboardButton({
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
-            className="bg-surface-1 rounded-2xl max-w-md w-full p-6 shadow-xl"
+            className="bg-surface-1 rounded-lg max-w-md w-full p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-h3 text-text-primary mb-3">

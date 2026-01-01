@@ -1,6 +1,7 @@
 {
   "header": {
-    "myGroups": "Moje skupine",
+    "guesser": "Guesser",
+    "groups": "Skupine",
     "solo": "Solo",
     "train": "Treniraj",
     "logout": "Odjava",
@@ -35,6 +36,34 @@
     "testUsers": "Testni uporabniki (samo za razvoj)",
     "loginFailed": "Prijava ni uspela",
     "footer": "Igraj s prijatelji in ugotovi, kdo najbolje pozna geografijo!"
+  },
+  "auth": {
+    "email": "E-pošta",
+    "password": "Geslo",
+    "confirmPassword": "Potrdi geslo",
+    "name": "Ime",
+    "namePlaceholder": "Tvoje ime",
+    "login": "Prijava",
+    "loggingIn": "Prijavljanje...",
+    "register": "Registracija",
+    "registering": "Registriranje...",
+    "registerTitle": "Ustvari račun",
+    "registerSubtitle": "Registriraj se, da se pojaviš na lestvicah",
+    "registerError": "Napaka pri registraciji",
+    "passwordsMismatch": "Gesli se ne ujemata",
+    "orContinueWith": "ali nadaljuj z",
+    "noAccount": "Nimaš računa?",
+    "hasAccount": "Že imaš račun?",
+    "playAsGuest": "Igraj kot gost",
+    "guestInfo": "Igraj brez prijave - vendar brez lestvice",
+    "invalidCredentials": "Napačna e-pošta ali geslo",
+    "loginError": "Napaka pri prijavi",
+    "benefits": {
+      "title": "Prednosti računa",
+      "ranking": "Pojavi se na globalnih lestvicah",
+      "stats": "Spremljaj svojo statistiko skozi čas",
+      "groups": "Igraj v skupinah s prijatelji"
+    }
   },
   "join": {
     "title": "Pridruži se skupini",
@@ -246,6 +275,99 @@
   "celebration": {
     "winner": "Zmagovalec",
     "redirecting": "Preusmeritev na skupino..."
+  },
+  "landing": {
+    "hero": {
+      "subtitle": "Kako dobro poznaš naš planet?",
+      "tagline": "5 naključnih lokacij. 30 sekund časa. Pokaži, kaj znaš.",
+      "ctaPlay": "Igraj zdaj",
+      "ctaLogin": "Prijava z Google",
+      "locations": "Lokacije",
+      "perLocation": "na lokacijo",
+      "maxPoints": "Maks točk"
+    },
+    "howItWorks": {
+      "title": "Kako deluje",
+      "subtitle": "Postani geografski strokovnjak v 4 preprostih korakih",
+      "step1Title": "Izberi vrsto igre",
+      "step1Desc": "Švica, Slovenija ali Svetovni kviz",
+      "step2Title": "Postavi oznako",
+      "step2Desc": "Tapni na zemljevid, kjer misliš, da je lokacija",
+      "step3Title": "Časovni bonus",
+      "step3Desc": "Hitreje ko si, več točk dobiš",
+      "step4Title": "Povzpni se",
+      "step4Desc": "Bori se za vrh lestvice"
+    },
+    "gameTypes": {
+      "title": "Izberi svojo vrsto igre",
+      "subtitle": "Od lokalnih švicarskih lokacij do svetovnih izzivov"
+    },
+    "leaderboard": {
+      "title": "Današnji najboljši igralci",
+      "subtitle": "Jih lahko premagate?",
+      "points": "Točke",
+      "viewAll": "Poglej vse lestvice"
+    },
+    "stats": {
+      "title": "Tvoja statistika",
+      "subtitle": "Kako ti gre doslej",
+      "gamesPlayed": "Igre",
+      "bestScore": "Najboljši rezultat",
+      "avgScore": "Povprečje"
+    },
+    "loginPrompt": {
+      "title": "Prijavi se in zagotovi si mesto!",
+      "subtitle": "Igraj kot gost kadarkoli - za lestvice in statistiko pa potrebuješ račun.",
+      "benefit1": "Pojavi se na lestvicah",
+      "benefit2": "Spremljaj svojo statistiko",
+      "benefit3": "Igraj s prijatelji v skupinah",
+      "cta": "Prijava z Google"
+    }
+  },
+  "ranked": {
+    "title": "Guesser",
+    "subtitle": "Igrajte proti drugim in se povzpnite po lestvici!",
+    "selectGameType": "Prosimo, izberite vrsto igre!",
+    "loginPrompt": "Prijavite se za prikaz na lestvici!",
+    "loginDescription": "Lahko igrate kot gost, vendar se na lestvici prikažejo le prijavljeni igralci.",
+    "login": "Prijavite se z Google",
+    "yourStats": "Vaša statistika",
+    "totalGames": "Igre",
+    "bestScore": "Najboljši rezultat",
+    "avgScore": "Povprečje",
+    "bestRank": "Najboljše mesto",
+    "startGame": "Začni Ranked igro",
+    "creating": "Ustvarjanje igre...",
+    "rankings": "Lestvice",
+    "daily": "Dnevno",
+    "weekly": "Tedensko",
+    "monthly": "Mesečno",
+    "alltime": "Vse časa",
+    "rank": "Mesto",
+    "player": "Igralec",
+    "totalScore": "Skupaj",
+    "games": "Igre",
+    "noRankings": "Še ni lestvic. Bodite prvi!",
+    "anonymous": "Anonimen",
+    "you": "Vi",
+    "leaderboards": "Lestvice",
+    "leaderboardsSubtitle": "Oglejte si najboljše igralce v vseh kategorijah",
+    "filterByGameType": "Filtriraj po vrsti igre",
+    "overall": "Skupaj",
+    "gameComplete": "Igra končana!",
+    "resultsNotFound": "Rezultati niso bili najdeni",
+    "points": "Točke",
+    "yourRankings": "Vaše lestvice",
+    "loginToRank": "Prijavite se za prikaz na lestvici!",
+    "playAgain": "Igrajte znova",
+    "viewLeaderboard": "Poglej lestvico",
+    "finishGame": "Končaj igro",
+    "noActiveGame": "Aktivna igra ni najdena",
+    "backToHub": "Nazaj na pregled",
+    "yourRecord": "Vaš rekord",
+    "worldRecord": "Svetovni rekord",
+    "gamesPlayed": "odigrane igre",
+    "by": "od"
   },
   "solo": {
     "title": "Solo igre",

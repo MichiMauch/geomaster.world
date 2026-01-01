@@ -54,7 +54,7 @@ export default function PlayButton({
         <div className="flex items-center gap-4">
           <div
             className={cn(
-              "w-14 h-14 rounded-xl flex items-center justify-center transition-colors",
+              "w-14 h-14 rounded-lg flex items-center justify-center transition-colors",
               hasPlayedAllReleasedRounds
                 ? "bg-warning/20 group-hover:bg-warning/30"
                 : "bg-black/10 group-hover:bg-black/20"

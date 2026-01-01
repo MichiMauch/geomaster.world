@@ -100,7 +100,7 @@ export default function GameHistoryModal({
       onClick={onClose}
     >
       <div
-        className="bg-surface-1 rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[85vh] overflow-hidden"
+        className="bg-surface-1 rounded-lg shadow-2xl max-w-lg w-full mx-4 max-h-[85vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -185,7 +185,7 @@ export default function GameHistoryModal({
                 <div
                   key={entry.userId}
                   className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl transition-all",
+                    "flex items-center gap-3 p-3 rounded-lg transition-all",
                     entry.rank === 1 && "bg-accent/10 border border-accent/30",
                     entry.rank === 2 && "bg-surface-2 border border-glass-border",
                     entry.rank === 3 && "bg-warning/10 border border-warning/30",

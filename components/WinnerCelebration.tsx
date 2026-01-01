@@ -103,7 +103,7 @@ export default function WinnerCelebration({
         )}
 
         {/* Winner Info */}
-        <div className="winner-card bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-2xl p-8 shadow-2xl">
+        <div className="winner-card bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-lg p-8 shadow-2xl">
           {/* Avatar */}
           <div className="flex justify-center mb-4">
             {winner.userImage ? (

@@ -201,7 +201,7 @@ export default function SoloPage() {
                       type="button"
                       onClick={() => setSelectedGameType(gt.id)}
                       className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-xl border-2 font-medium transition-all text-sm",
+                        "flex items-center gap-2 px-4 py-2 rounded-lg border-2 font-medium transition-all text-sm",
                         selectedGameType === gt.id
                           ? "border-success bg-success/10 text-success"
                           : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
@@ -221,7 +221,7 @@ export default function SoloPage() {
                       type="button"
                       onClick={() => setSelectedGameType(gt.id)}
                       className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-xl border-2 font-medium transition-all text-sm",
+                        "flex items-center gap-2 px-4 py-2 rounded-lg border-2 font-medium transition-all text-sm",
                         selectedGameType === gt.id
                           ? "border-success bg-success/10 text-success"
                           : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"

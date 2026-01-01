@@ -116,7 +116,7 @@ export default function PlayerResultsModal({
       onClick={onClose}
     >
       <div
-        className="bg-surface-1 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden"
+        className="bg-surface-1 rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -169,18 +169,18 @@ export default function PlayerResultsModal({
             <div className="space-y-4">
               {/* Summary Stats */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-surface-2 rounded-xl p-4 text-center">
+                <div className="bg-surface-2 rounded-lg p-4 text-center">
                   <p className="text-caption text-text-muted mb-1">{t("points")}</p>
                   <p className="text-h2 font-bold text-accent">{totalScore}</p>
                 </div>
-                <div className="bg-surface-2 rounded-xl p-4 text-center">
+                <div className="bg-surface-2 rounded-lg p-4 text-center">
                   <p className="text-caption text-text-muted mb-1">Distanz</p>
                   <p className="text-h2 font-bold text-text-primary">{formatTotalDistance(totalDistance)}</p>
                 </div>
               </div>
 
               {/* Map */}
-              <div className="rounded-xl overflow-hidden">
+              <div className="rounded-lg overflow-hidden">
                 <SummaryMap markers={markers} gameType={gameType || undefined} height="300px" />
               </div>
 
@@ -191,7 +191,7 @@ export default function PlayerResultsModal({
                   return (
                     <div
                       key={guess.id}
-                      className="flex items-center gap-3 p-3 bg-surface-2 rounded-xl"
+                      className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg"
                     >
                       <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center flex-shrink-0">
                         <span className="text-body-small font-bold text-text-secondary">

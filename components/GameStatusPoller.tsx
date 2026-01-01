@@ -118,7 +118,7 @@ export default function GameStatusPoller({
       return (
         <Card variant="surface" padding="lg" className="opacity-60">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-lg bg-surface-3 flex items-center justify-center">
               <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -142,7 +142,7 @@ export default function GameStatusPoller({
     return (
       <Card variant="surface" padding="lg" className="opacity-60">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-lg bg-surface-3 flex items-center justify-center">
             <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -161,7 +161,7 @@ export default function GameStatusPoller({
     return (
       <Card variant="surface" padding="lg" className="opacity-60">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-lg bg-surface-3 flex items-center justify-center">
             <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

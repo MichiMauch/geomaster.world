@@ -434,7 +434,7 @@ export default function PlayPage({
               </h2>
             </div>
 
-            <div className="py-3 rounded-xl bg-surface-2">
+            <div className="py-3 rounded-lg bg-surface-2">
               <p className="text-xs text-text-muted mb-1">Gesamtpunktzahl</p>
               <p className="text-3xl font-bold text-accent tabular-nums">
                 {currentRoundScore} Pkt
@@ -598,7 +598,7 @@ export default function PlayPage({
       {currentRound && (
         <div className={cn(
           "absolute top-4 left-1/2 -translate-x-1/2 z-[500]",
-          "bg-background/85 backdrop-blur-md rounded-xl",
+          "bg-background/85 backdrop-blur-md rounded-lg",
           "flex items-center gap-3 px-4 py-2",
           "border-2",
           // Border color based on state

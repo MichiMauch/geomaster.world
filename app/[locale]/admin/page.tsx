@@ -746,7 +746,7 @@ export default function AdminPage() {
                   <label className="block text-body-small font-medium text-text-primary mb-2">
                     Position auf der Karte setzen
                   </label>
-                  <div className="rounded-xl overflow-hidden border border-glass-border">
+                  <div className="rounded-lg overflow-hidden border border-glass-border">
                     <SwitzerlandMap
                       onMarkerPlace={setMarkerPosition}
                       markerPosition={markerPosition}
@@ -771,7 +771,7 @@ export default function AdminPage() {
                         type="button"
                         onClick={() => setDifficulty(option.value)}
                         className={cn(
-                          "flex-1 py-3 rounded-xl border-2 font-medium transition-all",
+                          "flex-1 py-3 rounded-lg border-2 font-medium transition-all",
                           difficulty === option.value
                             ? option.value === "easy"
                               ? "border-success bg-success/10 text-success"
@@ -827,7 +827,7 @@ export default function AdminPage() {
               </div>
 
               {importError && (
-                <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-xl">
+                <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-lg">
                   <p className="text-error text-body-small whitespace-pre-line">
                     {importError}
                   </p>
@@ -843,7 +843,7 @@ export default function AdminPage() {
                   {locations.map((location) => (
                     <div
                       key={location.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors"
                     >
                       <div>
                         <p className="font-medium text-text-primary">
@@ -899,7 +899,7 @@ export default function AdminPage() {
                       setSelectedImageMap(e.target.value);
                       setImageMarkerPosition(null);
                     }}
-                    className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-4 py-3 rounded-lg bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">-- Bild wählen --</option>
                     {imageGameTypes.map((gt) => (
@@ -916,7 +916,7 @@ export default function AdminPage() {
                       <label className="block text-body-small font-medium text-text-primary mb-2">
                         Position auf dem Bild setzen
                       </label>
-                      <div className="rounded-xl overflow-hidden border border-glass-border">
+                      <div className="rounded-lg overflow-hidden border border-glass-border">
                         <ImageMap
                           gameType={`image:${selectedImageMap}`}
                           onMarkerPlace={setImageMarkerPosition}
@@ -950,7 +950,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => setImageLocationDifficulty(option.value)}
                             className={cn(
-                              "flex-1 py-3 rounded-xl border-2 font-medium transition-all",
+                              "flex-1 py-3 rounded-lg border-2 font-medium transition-all",
                               imageLocationDifficulty === option.value
                                 ? option.value === "easy"
                                   ? "border-success bg-success/10 text-success"
@@ -1002,7 +1002,7 @@ export default function AdminPage() {
                   {imageLocations.map((location) => (
                     <div
                       key={location.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors"
                     >
                       <div>
                         <p className="font-medium text-text-primary">
@@ -1079,14 +1079,14 @@ export default function AdminPage() {
               <select
                 value={importModal.country}
                 onChange={(e) => setImportModal({ ...importModal, country: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 rounded-lg bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="Switzerland">Schweiz</option>
               </select>
             </div>
 
             {importError && (
-              <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-xl">
+              <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-lg">
                 <p className="text-error text-body-small whitespace-pre-line">{importError}</p>
               </div>
             )}

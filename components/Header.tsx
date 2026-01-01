@@ -7,7 +7,6 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { isSuperAdmin } from "@/lib/super-admin";
-import LanguageSwitcher from "./LanguageSwitcher";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export function Header() {
@@ -101,8 +100,10 @@ export function Header() {
             href={`/${locale}`}
             className="flex items-center gap-2 text-text-primary hover:text-primary transition-colors"
           >
-            <span className="text-xl">CH</span>
-            <span className="text-lg font-bold tracking-tight">Swiss Guesser</span>
+            <svg className="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            <span className="text-lg font-bold tracking-tight">PinPoint</span>
           </Link>
 
           {/* Page Title */}
@@ -115,10 +116,8 @@ export function Header() {
           )}
         </div>
 
-        {/* Right side: Language Switcher + User Info */}
+        {/* Right side: User Info */}
         <div className="flex items-center gap-3">
-          <LanguageSwitcher />
-
           {status === "loading" ? (
             <div className="w-8 h-8 rounded-full bg-surface-2 animate-pulse" />
           ) : user ? (
@@ -163,13 +162,24 @@ export function Header() {
 
               {/* Dropdown Menu */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 py-1 bg-surface-2 border border-glass-border rounded-xl shadow-lg animate-fade-in">
+                <div className="absolute right-0 mt-2 w-48 py-1 bg-surface-2 border border-glass-border rounded-lg shadow-lg animate-fade-in">
                   {/* User Email */}
                   <div className="px-4 py-2 border-b border-glass-border">
                     <p className="text-xs text-text-muted truncate">{user.email}</p>
                   </div>
 
                   {/* Menu Items */}
+                  <Link
+                    href={`/${locale}/guesser`}
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-3 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    {t("guesser")}
+                  </Link>
+
                   <Link
                     href={`/${locale}/groups`}
                     onClick={() => setDropdownOpen(false)}
@@ -178,7 +188,7 @@ export function Header() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    {t("myGroups")}
+                    {t("groups")}
                   </Link>
 
                   <Link
@@ -234,7 +244,7 @@ export function Header() {
             </div>
           ) : (
             <Link
-              href={`/${locale}/login`}
+              href={`/${locale}`}
               className="px-4 py-2 text-sm font-medium text-primary hover:text-primary-light transition-colors"
             >
               {t("login")}

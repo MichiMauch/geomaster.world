@@ -1,0 +1,1 @@
+ALTER TABLE `games` ADD `scoringVersion` integer DEFAULT 1 NOT NULL;

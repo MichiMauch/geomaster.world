@@ -128,7 +128,7 @@ export function RoundHeaderCompact({
   const isWarning = timeLeft !== undefined && timeLeft <= 10;
 
   return (
-    <div className="bg-surface-1 border border-glass-border rounded-xl p-3 flex items-center justify-between gap-4 shadow-sm">
+    <div className="bg-surface-1 border border-glass-border rounded-lg p-3 flex items-center justify-between gap-4 shadow-sm">
       <div className="flex-1 min-w-0">
         <p className="text-caption text-text-muted truncate">{roundInfo}</p>
         <p className="text-body font-semibold text-text-primary truncate">

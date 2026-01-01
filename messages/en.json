@@ -1,6 +1,7 @@
 {
   "header": {
-    "myGroups": "My Groups",
+    "guesser": "Guesser",
+    "groups": "Groups",
     "solo": "Solo",
     "train": "Train",
     "logout": "Logout",
@@ -35,6 +36,34 @@
     "testUsers": "Test Users (development only)",
     "loginFailed": "Login failed",
     "footer": "Play with friends and find out who knows geography best!"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "login": "Sign in",
+    "loggingIn": "Signing in...",
+    "register": "Register",
+    "registering": "Registering...",
+    "registerTitle": "Create Account",
+    "registerSubtitle": "Register to appear in the rankings",
+    "registerError": "Error during registration",
+    "passwordsMismatch": "Passwords do not match",
+    "orContinueWith": "or continue with",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "playAsGuest": "Play as Guest",
+    "guestInfo": "Play without signing in - but without ranking",
+    "invalidCredentials": "Invalid email or password",
+    "loginError": "Error signing in",
+    "benefits": {
+      "title": "Account Benefits",
+      "ranking": "Appear in global rankings",
+      "stats": "Track your statistics over time",
+      "groups": "Play in groups with friends"
+    }
   },
   "join": {
     "title": "Join Group",
@@ -246,6 +275,99 @@
   "celebration": {
     "winner": "Winner",
     "redirecting": "Redirecting to group..."
+  },
+  "landing": {
+    "hero": {
+      "subtitle": "How well do you know our Earth?",
+      "tagline": "5 random places. 30 seconds each. Show what you've got.",
+      "ctaPlay": "Play Now",
+      "ctaLogin": "Sign in with Google",
+      "locations": "Locations",
+      "perLocation": "per location",
+      "maxPoints": "Max Points"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Become a geography pro in 4 simple steps",
+      "step1Title": "Choose Game Type",
+      "step1Desc": "Switzerland, Slovenia or World Quiz",
+      "step2Title": "Place Marker",
+      "step2Desc": "Tap on the map where you think the location is",
+      "step3Title": "Time Bonus",
+      "step3Desc": "The faster you are, the more points you get",
+      "step4Title": "Climb Up",
+      "step4Desc": "Fight for the top spots in the rankings"
+    },
+    "gameTypes": {
+      "title": "Choose Your Game Type",
+      "subtitle": "From local Swiss locations to worldwide challenges"
+    },
+    "leaderboard": {
+      "title": "Today's Top Players",
+      "subtitle": "Can you beat them?",
+      "points": "Points",
+      "viewAll": "View All Rankings"
+    },
+    "stats": {
+      "title": "Your Statistics",
+      "subtitle": "How you've been doing so far",
+      "gamesPlayed": "Games",
+      "bestScore": "Best Score",
+      "avgScore": "Average"
+    },
+    "loginPrompt": {
+      "title": "Sign in and secure your spot!",
+      "subtitle": "Play as a guest anytime - but you need an account for rankings and statistics.",
+      "benefit1": "Appear in the rankings",
+      "benefit2": "Track your statistics",
+      "benefit3": "Play with friends in groups",
+      "cta": "Sign in with Google"
+    }
+  },
+  "ranked": {
+    "title": "Guesser",
+    "subtitle": "Play against others and climb the rankings!",
+    "selectGameType": "Please select a game type!",
+    "loginPrompt": "Log in to appear in the rankings!",
+    "loginDescription": "You can also play as a guest, but only logged-in players appear in the rankings.",
+    "login": "Sign in with Google",
+    "yourStats": "Your Statistics",
+    "totalGames": "Games",
+    "bestScore": "Best Score",
+    "avgScore": "Average",
+    "bestRank": "Best Rank",
+    "startGame": "Start Ranked Game",
+    "creating": "Creating game...",
+    "rankings": "Rankings",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "alltime": "All Time",
+    "rank": "Rank",
+    "player": "Player",
+    "totalScore": "Total",
+    "games": "Games",
+    "noRankings": "No rankings yet. Be the first!",
+    "anonymous": "Anonymous",
+    "you": "You",
+    "leaderboards": "Leaderboards",
+    "leaderboardsSubtitle": "See the best players in all categories",
+    "filterByGameType": "Filter by game type",
+    "overall": "Overall",
+    "gameComplete": "Game Complete!",
+    "resultsNotFound": "Results not found",
+    "points": "Points",
+    "yourRankings": "Your Rankings",
+    "loginToRank": "Log in to appear in the rankings!",
+    "playAgain": "Play Again",
+    "viewLeaderboard": "View Leaderboard",
+    "finishGame": "Finish Game",
+    "noActiveGame": "No active game found",
+    "backToHub": "Back to Overview",
+    "yourRecord": "Your Record",
+    "worldRecord": "World Record",
+    "gamesPlayed": "games played",
+    "by": "by"
   },
   "solo": {
     "title": "Solo Games",

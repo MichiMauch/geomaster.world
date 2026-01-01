@@ -1,6 +1,7 @@
 {
   "header": {
-    "myGroups": "Meine Gruppen",
+    "guesser": "Guesser",
+    "groups": "Gruppen",
     "solo": "Solo",
     "train": "Trainieren",
     "logout": "Abmelden",
@@ -35,6 +36,34 @@
     "testUsers": "Test-Benutzer (nur Entwicklung)",
     "loginFailed": "Login fehlgeschlagen",
     "footer": "Spiele mit Freunden und finde heraus, wer die Geografie am besten kennt!"
+  },
+  "auth": {
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "name": "Name",
+    "namePlaceholder": "Dein Name",
+    "login": "Anmelden",
+    "loggingIn": "Wird angemeldet...",
+    "register": "Registrieren",
+    "registering": "Wird registriert...",
+    "registerTitle": "Konto erstellen",
+    "registerSubtitle": "Registriere dich, um in den Rankings zu erscheinen",
+    "registerError": "Fehler bei der Registrierung",
+    "passwordsMismatch": "Passwörter stimmen nicht überein",
+    "orContinueWith": "oder weiter mit",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "playAsGuest": "Als Gast spielen",
+    "guestInfo": "Ohne Anmeldung spielen - aber ohne Ranking",
+    "invalidCredentials": "E-Mail oder Passwort falsch",
+    "loginError": "Fehler beim Anmelden",
+    "benefits": {
+      "title": "Vorteile eines Kontos",
+      "ranking": "Erscheine in den globalen Rankings",
+      "stats": "Verfolge deine Statistiken über Zeit",
+      "groups": "Spiele in Gruppen mit Freunden"
+    }
   },
   "join": {
     "title": "Gruppe beitreten",
@@ -246,6 +275,99 @@
   "celebration": {
     "winner": "Gewinner",
     "redirecting": "Weiterleitung zur Gruppe..."
+  },
+  "landing": {
+    "hero": {
+      "subtitle": "Wie gut kennst du unsere Erde?",
+      "tagline": "5 zufällige Orte. 30 Sekunden Zeit. Zeig, was du drauf hast.",
+      "ctaPlay": "Jetzt Spielen",
+      "ctaLogin": "Mit Google anmelden",
+      "locations": "Orte",
+      "perLocation": "pro Ort",
+      "maxPoints": "Max Punkte"
+    },
+    "howItWorks": {
+      "title": "So funktioniert's",
+      "subtitle": "In 4 einfachen Schritten zum Geografie-Profi",
+      "step1Title": "Wähle Spieltyp",
+      "step1Desc": "Schweiz, Slowenien oder Welt-Quiz",
+      "step2Title": "Setze Marker",
+      "step2Desc": "Tippe auf die Karte, wo du den Ort vermutest",
+      "step3Title": "Zeitbonus",
+      "step3Desc": "Je schneller du bist, desto mehr Punkte",
+      "step4Title": "Steige auf",
+      "step4Desc": "Kämpfe um die Top-Plätze im Ranking"
+    },
+    "gameTypes": {
+      "title": "Wähle deinen Spieltyp",
+      "subtitle": "Von lokalen Schweizer Orten bis zu weltweiten Herausforderungen"
+    },
+    "leaderboard": {
+      "title": "Heutige Top-Spieler",
+      "subtitle": "Kannst du sie schlagen?",
+      "points": "Punkte",
+      "viewAll": "Alle Rankings anzeigen"
+    },
+    "stats": {
+      "title": "Deine Statistiken",
+      "subtitle": "So hast du bisher abgeschnitten",
+      "gamesPlayed": "Spiele",
+      "bestScore": "Beste Punktzahl",
+      "avgScore": "Durchschnitt"
+    },
+    "loginPrompt": {
+      "title": "Melde dich an und sichere dir deinen Platz!",
+      "subtitle": "Spiele jederzeit als Gast - aber für Rankings und Statistiken brauchst du ein Konto.",
+      "benefit1": "Erscheine in den Rankings",
+      "benefit2": "Verfolge deine Statistiken",
+      "benefit3": "Spiele mit Freunden in Gruppen",
+      "cta": "Mit Google anmelden"
+    }
+  },
+  "ranked": {
+    "title": "Guesser",
+    "subtitle": "Spiele gegen andere und klettere in den Rankings!",
+    "selectGameType": "Bitte wähle einen Spieltyp!",
+    "loginPrompt": "Melde dich an, um in den Rankings zu erscheinen!",
+    "loginDescription": "Du kannst auch als Gast spielen, aber nur angemeldete Spieler erscheinen im Ranking.",
+    "login": "Mit Google anmelden",
+    "yourStats": "Deine Statistik",
+    "totalGames": "Spiele",
+    "bestScore": "Beste Punktzahl",
+    "avgScore": "Durchschnitt",
+    "bestRank": "Bester Rang",
+    "startGame": "Ranked Spiel starten",
+    "creating": "Erstelle Spiel...",
+    "rankings": "Rankings",
+    "daily": "Täglich",
+    "weekly": "Wöchentlich",
+    "monthly": "Monatlich",
+    "alltime": "Gesamt",
+    "rank": "Rang",
+    "player": "Spieler",
+    "totalScore": "Gesamt",
+    "games": "Spiele",
+    "noRankings": "Noch keine Rankings vorhanden. Sei der Erste!",
+    "anonymous": "Anonym",
+    "you": "Du",
+    "leaderboards": "Ranglisten",
+    "leaderboardsSubtitle": "Siehe die besten Spieler in allen Kategorien",
+    "filterByGameType": "Filter nach Spieltyp",
+    "overall": "Gesamt",
+    "gameComplete": "Spiel abgeschlossen!",
+    "resultsNotFound": "Ergebnisse nicht gefunden",
+    "points": "Punkte",
+    "yourRankings": "Deine Rankings",
+    "loginToRank": "Melde dich an, um in den Rankings zu erscheinen!",
+    "playAgain": "Nochmal spielen",
+    "viewLeaderboard": "Rangliste ansehen",
+    "finishGame": "Spiel beenden",
+    "noActiveGame": "Kein aktives Spiel gefunden",
+    "backToHub": "Zurück zur Übersicht",
+    "yourRecord": "Dein Rekord",
+    "worldRecord": "Weltrekord",
+    "gamesPlayed": "Spiele gespielt",
+    "by": "von"
   },
   "solo": {
     "title": "Solo-Spiele",

@@ -1,0 +1,162 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { games, gameRounds, guesses } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextResponse } from "next/server";
+import { calculateScore } from "@/lib/scoring";
+import { RankingService } from "@/lib/services/ranking-service";
+
+export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  try {
+    const body = await request.json();
+    const { gameId, guestId } = body;
+
+    if (!gameId) {
+      return NextResponse.json(
+        { error: "Game ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch the game
+    const game = await db
+      .select()
+      .from(games)
+      .where(eq(games.id, gameId))
+      .get();
+
+    if (!game) {
+      return NextResponse.json({ error: "Game not found" }, { status: 404 });
+    }
+
+    // Verify ownership (user must own the game or provide matching guestId)
+    const userId = session?.user?.id;
+    if (userId && game.userId !== userId) {
+      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    }
+
+    // Fetch all game rounds for this game
+    const rounds = await db
+      .select()
+      .from(gameRounds)
+      .where(eq(gameRounds.gameId, gameId));
+
+    if (rounds.length === 0) {
+      return NextResponse.json(
+        { error: "No rounds found for this game" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch all guesses for this game
+    const userGuesses = await db
+      .select({
+        id: guesses.id,
+        gameRoundId: guesses.gameRoundId,
+        distanceKm: guesses.distanceKm,
+        timeSeconds: guesses.timeSeconds,
+      })
+      .from(guesses)
+      .where(eq(guesses.userId, userId || ""));
+
+    // Filter guesses for this game's rounds
+    const roundIds = rounds.map((r) => r.id);
+    const gameGuesses = userGuesses.filter((g) => roundIds.includes(g.gameRoundId));
+
+    // Verify all 5 locations have been guessed
+    if (gameGuesses.length !== 5) {
+      return NextResponse.json(
+        { error: `Game incomplete. ${gameGuesses.length}/5 locations guessed.` },
+        { status: 400 }
+      );
+    }
+
+    // Calculate total score and distance
+    let totalScore = 0;
+    let totalDistance = 0;
+
+    for (const guess of gameGuesses) {
+      const round = rounds.find((r) => r.id === guess.gameRoundId);
+      if (!round) continue;
+
+      const gameType = round.gameType || game.gameType || "country:switzerland";
+
+      // Use new scoring service with version and time data
+      const score = calculateScore(
+        {
+          distanceKm: guess.distanceKm,
+          timeSeconds: guess.timeSeconds,
+          gameType,
+        },
+        game.scoringVersion || 1 // Use game's scoring version, default to v1 for old games
+      );
+
+      totalScore += score;
+      totalDistance += guess.distanceKm;
+    }
+
+    const averageScore = totalScore / 5;
+
+    // Update game status to completed
+    await db
+      .update(games)
+      .set({ status: "completed" })
+      .where(eq(games.id, gameId));
+
+    // Record in ranked game results and update rankings
+    await RankingService.recordRankedGame({
+      gameId,
+      userId: userId || null,
+      guestId: userId ? null : (guestId || null),
+      gameType: game.gameType || "country:switzerland",
+      totalScore,
+      averageScore,
+      totalDistance,
+    });
+
+    // Get user's current rankings if logged in
+    let rankings = null;
+    if (userId && game.gameType) {
+      rankings = {
+        daily: await RankingService.getUserRank({
+          userId,
+          gameType: game.gameType,
+          period: "daily",
+        }),
+        weekly: await RankingService.getUserRank({
+          userId,
+          gameType: game.gameType,
+          period: "weekly",
+        }),
+        monthly: await RankingService.getUserRank({
+          userId,
+          gameType: game.gameType,
+          period: "monthly",
+        }),
+        alltime: await RankingService.getUserRank({
+          userId,
+          gameType: game.gameType,
+          period: "alltime",
+        }),
+      };
+    }
+
+    return NextResponse.json({
+      success: true,
+      totalScore,
+      averageScore,
+      totalDistance,
+      rankings,
+      message: userId ? "Game completed and ranked!" : "Game completed! Login to appear in rankings.",
+    });
+  } catch (error) {
+    console.error("Error completing ranked game:", error);
+    return NextResponse.json(
+      { error: "Failed to complete ranked game" },
+      { status: 500 }
+    );
+  }
+}

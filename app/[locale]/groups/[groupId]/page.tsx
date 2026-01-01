@@ -244,7 +244,7 @@ export default async function GroupPage({
               {members.map((member) => (
                 <div
                   key={member.userId}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-2 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-2 transition-colors"
                 >
                   <Avatar
                     src={member.image}
