@@ -15,6 +15,13 @@ interface TopPlayer {
   bestScore: number;
 }
 
+interface TotalPlayer {
+  rank: number;
+  userName: string | null;
+  totalScore: number;
+  totalGames: number;
+}
+
 export default function GuesserGameTypePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -28,6 +35,7 @@ export default function GuesserGameTypePage() {
 
   const [weeklyTop5, setWeeklyTop5] = useState<TopPlayer[]>([]);
   const [alltimeTop5, setAlltimeTop5] = useState<TopPlayer[]>([]);
+  const [totalTop5, setTotalTop5] = useState<TotalPlayer[]>([]);
   const [userStats, setUserStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [creatingGame, setCreatingGame] = useState(false);
@@ -57,14 +65,15 @@ export default function GuesserGameTypePage() {
   // Personal best score (from user stats)
   const personalBest = userStats?.gameTypeBreakdown?.[gameType]?.bestScore || 0;
 
-  // Fetch rankings (weekly and alltime top 3)
+  // Fetch rankings (weekly, alltime, and total)
   useEffect(() => {
     const fetchRankings = async () => {
       setLoading(true);
       try {
-        const [weeklyRes, alltimeRes] = await Promise.all([
+        const [weeklyRes, alltimeRes, totalRes] = await Promise.all([
           fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=weekly&limit=5`),
           fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=alltime&limit=5`),
+          fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=alltime&sortBy=total&limit=5`),
         ]);
 
         if (weeklyRes.ok) {
@@ -74,6 +83,15 @@ export default function GuesserGameTypePage() {
         if (alltimeRes.ok) {
           const data = await alltimeRes.json();
           setAlltimeTop5(data.rankings?.slice(0, 5) || []);
+        }
+        if (totalRes.ok) {
+          const data = await totalRes.json();
+          setTotalTop5(data.rankings?.slice(0, 5).map((r: any) => ({
+            rank: r.rank,
+            userName: r.userName,
+            totalScore: r.totalScore,
+            totalGames: r.totalGames,
+          })) || []);
         }
       } catch (error) {
         console.error("Error fetching rankings:", error);
@@ -175,6 +193,42 @@ export default function GuesserGameTypePage() {
     </div>
   );
 
+  const TotalRankingsList = ({ players, title }: { players: TotalPlayer[]; title: string }) => (
+    <div className="mb-4">
+      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+        {title}
+      </h4>
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-6 bg-surface-2 rounded-sm animate-pulse" />
+          ))}
+        </div>
+      ) : players.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {locale === "de" ? "Noch keine Spieler" : locale === "en" ? "No players yet" : "Še brez igralcev"}
+        </p>
+      ) : (
+        <div className="space-y-1">
+          {players.map((player, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm">
+              <span className="w-5 text-center">{getRankDisplay(index)}</span>
+              <span className="text-muted-foreground truncate flex-1">
+                {player.userName || "Anonym"}
+              </span>
+              <span className="text-foreground font-medium tabular-nums">
+                {player.totalScore.toLocaleString()}
+              </span>
+              <span className="text-muted-foreground text-xs">
+                ({player.totalGames})
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="relative min-h-screen">
       {/* Background with world map */}
@@ -239,16 +293,22 @@ export default function GuesserGameTypePage() {
                 {locale === "de" ? "Rangliste" : locale === "en" ? "Leaderboard" : "Lestvica"}
               </h3>
 
-              {/* Weekly Top 3 */}
+              {/* Weekly Top 5 */}
               <RankingsList
                 players={weeklyTop5}
                 title={locale === "de" ? "Diese Woche" : locale === "en" ? "This Week" : "Ta teden"}
               />
 
-              {/* Alltime Top 3 */}
+              {/* Alltime Top 5 (Best Score) */}
               <RankingsList
                 players={alltimeTop5}
-                title={locale === "de" ? "Gesamt" : locale === "en" ? "All Time" : "Skupaj"}
+                title={locale === "de" ? "Bestes Spiel" : locale === "en" ? "Best Game" : "Najboljša igra"}
+              />
+
+              {/* Total Top 5 (Sum of all scores) */}
+              <TotalRankingsList
+                players={totalTop5}
+                title={locale === "de" ? "Total" : locale === "en" ? "Total" : "Skupaj"}
               />
 
               {/* Divider */}

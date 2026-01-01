@@ -13,12 +13,21 @@ export async function GET(request: Request) {
     const periodKey = searchParams.get("periodKey") || undefined;
     const limit = parseInt(searchParams.get("limit") || "100");
     const offset = parseInt(searchParams.get("offset") || "0");
+    const sortBy = (searchParams.get("sortBy") || "best") as "best" | "total";
 
     // Validate period
     const validPeriods: RankingPeriod[] = ["daily", "weekly", "monthly", "alltime"];
     if (!validPeriods.includes(period)) {
       return NextResponse.json(
         { error: "Invalid period. Must be: daily, weekly, monthly, or alltime" },
+        { status: 400 }
+      );
+    }
+
+    // Validate sortBy
+    if (sortBy !== "best" && sortBy !== "total") {
+      return NextResponse.json(
+        { error: "Invalid sortBy. Must be: best or total" },
         { status: 400 }
       );
     }
@@ -30,6 +39,7 @@ export async function GET(request: Request) {
       periodKey,
       limit,
       offset,
+      sortBy,
     });
 
     // Get current user's rank if logged in

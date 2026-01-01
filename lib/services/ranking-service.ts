@@ -22,6 +22,7 @@ export interface GetRankingsParams {
   periodKey?: string; // optional, defaults to current period
   limit?: number;
   offset?: number;
+  sortBy?: "best" | "total"; // "best" = bestScore (default), "total" = totalScore
 }
 
 export interface RankingEntry {
@@ -311,9 +312,10 @@ export class RankingService {
 
   /**
    * Get rankings (leaderboard) for a specific game type and period
+   * sortBy: "best" = by bestScore (default), "total" = by totalScore
    */
   static async getRankings(params: GetRankingsParams): Promise<RankingEntry[]> {
-    const { gameType, period, periodKey, limit = 100, offset = 0 } = params;
+    const { gameType, period, periodKey, limit = 100, offset = 0, sortBy = "best" } = params;
     const key = periodKey || this.getCurrentPeriodKey(period);
 
     const results = await db
@@ -335,12 +337,12 @@ export class RankingService {
           eq(rankings.periodKey, key)
         )
       )
-      .orderBy(rankings.rank)
+      .orderBy(sortBy === "total" ? desc(rankings.totalScore) : rankings.rank)
       .limit(limit)
       .offset(offset);
 
-    return results.map((r) => ({
-      rank: r.rank ?? 9999,
+    return results.map((r, index) => ({
+      rank: sortBy === "total" ? index + 1 : (r.rank ?? 9999),
       userId: r.userId,
       userName: r.userName,
       userImage: r.userImage,
