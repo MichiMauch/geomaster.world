@@ -338,7 +338,7 @@ export default function GuesserPlayPage({
   };
 
   return (
-    <div className="h-[calc(100dvh-52px)] max-w-[1440px] mx-auto relative">
+    <div className="h-dvh max-w-[1440px] mx-auto relative">
       {/* Fullscreen Map */}
       <CountryMap
         gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}

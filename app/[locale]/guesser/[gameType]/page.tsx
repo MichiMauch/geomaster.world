@@ -26,8 +26,8 @@ export default function GuesserGameTypePage() {
   // Validate game type
   const gameConfig = getGameTypeConfig(gameType);
 
-  const [weeklyTop3, setWeeklyTop3] = useState<TopPlayer[]>([]);
-  const [alltimeTop3, setAlltimeTop3] = useState<TopPlayer[]>([]);
+  const [weeklyTop5, setWeeklyTop5] = useState<TopPlayer[]>([]);
+  const [alltimeTop5, setAlltimeTop5] = useState<TopPlayer[]>([]);
   const [userStats, setUserStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [creatingGame, setCreatingGame] = useState(false);
@@ -63,17 +63,17 @@ export default function GuesserGameTypePage() {
       setLoading(true);
       try {
         const [weeklyRes, alltimeRes] = await Promise.all([
-          fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=weekly&limit=3`),
-          fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=alltime&limit=3`),
+          fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=weekly&limit=5`),
+          fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=alltime&limit=5`),
         ]);
 
         if (weeklyRes.ok) {
           const data = await weeklyRes.json();
-          setWeeklyTop3(data.rankings?.slice(0, 3) || []);
+          setWeeklyTop5(data.rankings?.slice(0, 5) || []);
         }
         if (alltimeRes.ok) {
           const data = await alltimeRes.json();
-          setAlltimeTop3(data.rankings?.slice(0, 3) || []);
+          setAlltimeTop5(data.rankings?.slice(0, 5) || []);
         }
       } catch (error) {
         console.error("Error fetching rankings:", error);
@@ -135,11 +135,11 @@ export default function GuesserGameTypePage() {
     return null;
   }
 
-  const getMedalEmoji = (index: number) => {
+  const getRankDisplay = (index: number) => {
     if (index === 0) return "🥇";
     if (index === 1) return "🥈";
     if (index === 2) return "🥉";
-    return "";
+    return `${index + 1}.`;
   };
 
   const RankingsList = ({ players, title }: { players: TopPlayer[]; title: string }) => (
@@ -149,7 +149,7 @@ export default function GuesserGameTypePage() {
       </h4>
       {loading ? (
         <div className="space-y-2">
-          {[...Array(3)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="h-6 bg-surface-2 rounded-sm animate-pulse" />
           ))}
         </div>
@@ -161,7 +161,7 @@ export default function GuesserGameTypePage() {
         <div className="space-y-1">
           {players.map((player, index) => (
             <div key={index} className="flex items-center gap-2 text-sm">
-              <span>{getMedalEmoji(index)}</span>
+              <span className="w-5 text-center">{getRankDisplay(index)}</span>
               <span className="text-muted-foreground truncate flex-1">
                 {player.userName || "Anonym"}
               </span>
@@ -227,7 +227,7 @@ export default function GuesserGameTypePage() {
               >
                 {creatingGame
                   ? t("creating", { defaultValue: "Erstelle Spiel..." })
-                  : `${gameConfig.name[locale as keyof typeof gameConfig.name] || gameConfig.name.de} ${locale === "de" ? "Spiel starten" : locale === "en" ? "Start Game" : "Začni igro"}`}
+                  : locale === "de" ? "Spiel starten" : locale === "en" ? "Start Game" : "Začni igro"}
               </Button>
             </Card>
           </div>
@@ -241,13 +241,13 @@ export default function GuesserGameTypePage() {
 
               {/* Weekly Top 3 */}
               <RankingsList
-                players={weeklyTop3}
+                players={weeklyTop5}
                 title={locale === "de" ? "Diese Woche" : locale === "en" ? "This Week" : "Ta teden"}
               />
 
               {/* Alltime Top 3 */}
               <RankingsList
-                players={alltimeTop3}
+                players={alltimeTop5}
                 title={locale === "de" ? "Gesamt" : locale === "en" ? "All Time" : "Skupaj"}
               />
 
@@ -279,7 +279,7 @@ export default function GuesserGameTypePage() {
                 >
                   {creatingGame
                     ? t("creating", { defaultValue: "Erstelle Spiel..." })
-                    : `${gameConfig.name[locale as keyof typeof gameConfig.name] || gameConfig.name.de} ${locale === "de" ? "Spiel starten" : locale === "en" ? "Start Game" : "Začni igro"}`}
+                    : locale === "de" ? "Spiel starten" : locale === "en" ? "Start Game" : "Začni igro"}
                 </Button>
               </div>
             </Card>

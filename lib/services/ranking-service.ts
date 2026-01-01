@@ -294,7 +294,7 @@ export class RankingService {
         )
       )
       .orderBy(
-        desc(rankings.totalScore),
+        desc(rankings.bestScore), // Rank by best single game score
         rankings.totalGames, // Fewer games is better for ties
         rankings.updatedAt // Earlier is better for ties
       );

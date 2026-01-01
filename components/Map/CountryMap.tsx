@@ -139,13 +139,13 @@ export default function CountryMap({
       .catch((err) => console.error("Error loading GeoJSON:", err));
   }, [gameTypeConfig.geoJsonFile]);
 
-  if (!mounted) {
+  if (!mounted || !geoData) {
     return (
       <div
         className="bg-surface-1 rounded-lg flex items-center justify-center"
         style={{ height }}
       >
-        <span className="text-text-muted">Karte wird geladen...</span>
+        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -219,9 +219,7 @@ export default function CountryMap({
       {interactive && <MapClickHandler key="click-handler" onMarkerPlace={onMarkerPlace} />}
 
       {markerPosition && (
-        <Marker key="user-marker" position={[markerPosition.lat, markerPosition.lng]} icon={defaultIcon}>
-          <Popup>Dein Tipp</Popup>
-        </Marker>
+        <Marker key="user-marker" position={[markerPosition.lat, markerPosition.lng]} icon={defaultIcon} />
       )}
 
       {showTarget && targetPosition && (
