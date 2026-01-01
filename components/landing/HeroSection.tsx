@@ -114,20 +114,20 @@ export default function HeroSection({ locale }: HeroSectionProps) {
             </p>
 
             {/* Stats Bar - Tacho-Style */}
-            <div className="flex justify-center lg:justify-start items-center gap-4 md:gap-6 mb-10">
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl md:text-5xl font-black" style={{ color: "#00D9FF" }}>5</span>
-                <span className="text-sm md:text-base text-muted-foreground font-medium">{t("hero.locations")}</span>
+            <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 sm:gap-4 md:gap-6 mb-10">
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#00D9FF" }}>5</span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.locations")}</span>
               </div>
-              <span className="text-2xl text-muted-foreground/50 font-light">|</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl md:text-5xl font-black" style={{ color: "#FF6B35" }}>30s</span>
-                <span className="text-sm md:text-base text-muted-foreground font-medium">{t("hero.perLocation")}</span>
+              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FF6B35" }}>30s</span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.perLocation")}</span>
               </div>
-              <span className="text-2xl text-muted-foreground/50 font-light">|</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl md:text-5xl font-black" style={{ color: "#FFD700" }}>300</span>
-                <span className="text-sm md:text-base text-muted-foreground font-medium">{t("hero.maxPoints")}</span>
+              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FFD700" }}>300</span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.maxPoints")}</span>
               </div>
             </div>
 

@@ -7,6 +7,23 @@ import "leaflet/dist/leaflet.css";
 import { getGameTypeConfig, DEFAULT_GAME_TYPE, isImageGameType } from "@/lib/game-types";
 import ImageMap from "./ImageMap";
 
+// Hook to detect mobile screen
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 // Fix for default markers
 const defaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -88,6 +105,7 @@ export default function CountryMap({
 }: CountryMapProps) {
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
+  const isMobile = useIsMobile();
 
   // Determine the effective game type
   const effectiveGameType = gameType ?? (country ? `country:${country}` : DEFAULT_GAME_TYPE);
@@ -148,13 +166,16 @@ export default function CountryMap({
     fillOpacity: isWorldMap ? 0.8 : 1,
   };
 
+  // Reduce zoom by 1 on mobile for better overview
+  const mobileZoomOffset = isMobile ? -1 : 0;
+
   // Map container props
   const mapContainerProps: Record<string, unknown> = {
     center: [gameTypeConfig.defaultCenter.lat, gameTypeConfig.defaultCenter.lng],
-    zoom: gameTypeConfig.defaultZoom,
+    zoom: gameTypeConfig.defaultZoom + mobileZoomOffset,
     style: { height, width: "100%", backgroundColor: "#1A1F26" },
     className: "rounded-lg",
-    minZoom: gameTypeConfig.minZoom,
+    minZoom: gameTypeConfig.minZoom + mobileZoomOffset,
   };
 
   // Only add maxBounds for country maps
@@ -164,7 +185,7 @@ export default function CountryMap({
   }
 
   return (
-    <MapContainer {...mapContainerProps} key={effectiveGameType}>
+    <MapContainer {...mapContainerProps} key={`${effectiveGameType}-${isMobile ? 'mobile' : 'desktop'}`}>
       {/* Custom pane for hint circle - must be created before Circle is rendered */}
       <HintCirclePane key="hint-pane" />
 

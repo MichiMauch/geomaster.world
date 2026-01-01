@@ -55,9 +55,24 @@ export default function GuesserResultsPage() {
 
   if (loading) {
     return (
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 -z-10">
+          <div
+            className="absolute inset-0 opacity-50"
+            style={{
+              backgroundImage: 'url("/images/hero-map-bg.jpg")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent" />
+        </div>
+        <div className="container max-w-4xl mx-auto px-4 py-8">
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
         </div>
       </div>
     );
@@ -65,16 +80,47 @@ export default function GuesserResultsPage() {
 
   if (!results) {
     return (
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">{t("resultsNotFound", { defaultValue: "Ergebnisse nicht gefunden" })}</p>
-        </Card>
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 -z-10">
+          <div
+            className="absolute inset-0 opacity-50"
+            style={{
+              backgroundImage: 'url("/images/hero-map-bg.jpg")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent" />
+        </div>
+        <div className="container max-w-4xl mx-auto px-4 py-8">
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">{t("resultsNotFound", { defaultValue: "Ergebnisse nicht gefunden" })}</p>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
+    <div className="relative min-h-screen">
+      {/* Background with world map */}
+      <div className="absolute inset-0 -z-10">
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage: 'url("/images/hero-map-bg.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent" />
+      </div>
+
+      <div className="container max-w-4xl mx-auto px-4 py-8">
       {/* Completion Header */}
       <Card className="p-8 mb-6 text-center bg-gradient-to-br from-primary/10 to-accent/10">
         <h1 className="text-4xl font-bold text-foreground mb-2">
@@ -137,14 +183,15 @@ export default function GuesserResultsPage() {
         </Card>
       )}
 
-      {/* Actions */}
-      <div className="flex gap-4 justify-center">
-        <Button onClick={handlePlayAgain} size="lg" variant="primary">
-          {t("playAgain", { defaultValue: "Nochmal spielen" })}
-        </Button>
-        <Button onClick={handleViewLeaderboard} size="lg" variant="outline">
-          {t("viewLeaderboard", { defaultValue: "Rangliste ansehen" })}
-        </Button>
+        {/* Actions */}
+        <div className="flex gap-4 justify-center">
+          <Button onClick={handlePlayAgain} size="lg" variant="primary">
+            {t("playAgain", { defaultValue: "Nochmal spielen" })}
+          </Button>
+          <Button onClick={handleViewLeaderboard} size="lg" variant="outline">
+            {t("viewLeaderboard", { defaultValue: "Rangliste ansehen" })}
+          </Button>
+        </div>
       </div>
     </div>
   );

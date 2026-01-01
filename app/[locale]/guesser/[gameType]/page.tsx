@@ -7,11 +7,13 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getGameTypeConfig } from "@/lib/game-types";
-import RankingsTable from "@/components/guesser/RankingsTable";
-import PeriodSelector from "@/components/guesser/PeriodSelector";
-import { ArrowLeft } from "lucide-react";
 import { nanoid } from "nanoid";
-import type { RankingPeriod } from "@/lib/services/ranking-service";
+
+interface TopPlayer {
+  rank: number;
+  userName: string | null;
+  bestScore: number;
+}
 
 export default function GuesserGameTypePage() {
   const { data: session, status } = useSession();
@@ -24,10 +26,10 @@ export default function GuesserGameTypePage() {
   // Validate game type
   const gameConfig = getGameTypeConfig(gameType);
 
-  const [selectedPeriod, setSelectedPeriod] = useState<RankingPeriod>("alltime");
-  const [rankings, setRankings] = useState<any[]>([]);
+  const [weeklyTop3, setWeeklyTop3] = useState<TopPlayer[]>([]);
+  const [alltimeTop3, setAlltimeTop3] = useState<TopPlayer[]>([]);
   const [userStats, setUserStats] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [creatingGame, setCreatingGame] = useState(false);
   const [guestId, setGuestId] = useState<string | null>(null);
 
@@ -54,22 +56,24 @@ export default function GuesserGameTypePage() {
 
   // Personal best score (from user stats)
   const personalBest = userStats?.gameTypeBreakdown?.[gameType]?.bestScore || 0;
-  const personalGames = userStats?.gameTypeBreakdown?.[gameType]?.games || 0;
 
-  // Global best score (rank 1 from rankings)
-  const globalBest = rankings[0] || null;
-
-  // Fetch rankings when period or gameType changes
+  // Fetch rankings (weekly and alltime top 3)
   useEffect(() => {
     const fetchRankings = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `/api/ranked/leaderboard?gameType=${gameType}&period=${selectedPeriod}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setRankings(data.rankings || []);
+        const [weeklyRes, alltimeRes] = await Promise.all([
+          fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=weekly&limit=3`),
+          fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=alltime&limit=3`),
+        ]);
+
+        if (weeklyRes.ok) {
+          const data = await weeklyRes.json();
+          setWeeklyTop3(data.rankings?.slice(0, 3) || []);
+        }
+        if (alltimeRes.ok) {
+          const data = await alltimeRes.json();
+          setAlltimeTop3(data.rankings?.slice(0, 3) || []);
         }
       } catch (error) {
         console.error("Error fetching rankings:", error);
@@ -81,7 +85,7 @@ export default function GuesserGameTypePage() {
     if (gameType) {
       fetchRankings();
     }
-  }, [gameType, selectedPeriod]);
+  }, [gameType]);
 
   // Fetch user stats if logged in
   useEffect(() => {
@@ -131,93 +135,157 @@ export default function GuesserGameTypePage() {
     return null;
   }
 
-  return (
-    <div className="container max-w-7xl mx-auto px-4 py-8">
-      {/* Back Button */}
-      <button
-        onClick={() => router.push(`/${locale}/guesser`)}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        {t("backToHub", { defaultValue: "Zurück zur Übersicht" })}
-      </button>
+  const getMedalEmoji = (index: number) => {
+    if (index === 0) return "🥇";
+    if (index === 1) return "🥈";
+    if (index === 2) return "🥉";
+    return "";
+  };
 
-      {/* Header: Game Type Name + Icon */}
-      <div className="mb-8 flex items-center gap-4">
-        <span className="text-6xl">{gameConfig.icon}</span>
-        <div>
-          <h1 className="text-4xl font-bold text-foreground">
-            {gameConfig.name[locale as keyof typeof gameConfig.name] || gameConfig.name.de}
-          </h1>
-          <p className="text-muted-foreground">Guesser Mode</p>
+  const RankingsList = ({ players, title }: { players: TopPlayer[]; title: string }) => (
+    <div className="mb-4">
+      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+        {title}
+      </h4>
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-6 bg-surface-2 rounded-sm animate-pulse" />
+          ))}
         </div>
-      </div>
-
-      {/* Records Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {/* Personal Best */}
-        {session?.user?.id && (
-          <Card className="p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              {t("yourRecord", { defaultValue: "Dein Rekord" })}
-            </h3>
-            <div className="text-3xl font-bold text-primary">
-              {personalBest > 0 ? `${personalBest} Punkte` : "-"}
+      ) : players.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {locale === "de" ? "Noch keine Spieler" : locale === "en" ? "No players yet" : "Še brez igralcev"}
+        </p>
+      ) : (
+        <div className="space-y-1">
+          {players.map((player, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm">
+              <span>{getMedalEmoji(index)}</span>
+              <span className="text-muted-foreground truncate flex-1">
+                {player.userName || "Anonym"}
+              </span>
+              <span className="text-foreground font-medium tabular-nums">
+                {player.bestScore}
+              </span>
             </div>
-            {personalGames > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {personalGames} {t("gamesPlayed", { defaultValue: "Spiele gespielt" })}
-              </p>
-            )}
-          </Card>
-        )}
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
-        {/* Global Best */}
-        <Card className="p-6">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">
-            {t("worldRecord", { defaultValue: "Weltrekord" })}
-          </h3>
-          {globalBest ? (
-            <>
-              <div className="text-3xl font-bold text-primary">
-                {globalBest.bestScore} Punkte
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("by", { defaultValue: "von" })} {globalBest.userName || "Anonym"}
-              </p>
-            </>
-          ) : (
-            <div className="text-3xl font-bold text-muted-foreground">-</div>
-          )}
-        </Card>
+  return (
+    <div className="relative min-h-screen">
+      {/* Background with world map */}
+      <div className="absolute inset-0 -z-10">
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage: 'url("/images/hero-map-bg.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent" />
       </div>
 
-      {/* Leaderboard Section */}
-      <Card className="p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <h3 className="text-lg font-semibold">
-            {t("rankings", { defaultValue: "Rankings" })}
-          </h3>
-          <div className="flex items-center gap-4">
-            <PeriodSelector selected={selectedPeriod} onChange={setSelectedPeriod} />
-            <Button
-              onClick={handleStartGame}
-              disabled={creatingGame}
-              size="lg"
-            >
-              {creatingGame
-                ? t("creating", { defaultValue: "Erstelle Spiel..." })
-                : t("startGame", { defaultValue: "Spiel starten" })}
-            </Button>
+      <div className="container max-w-6xl mx-auto px-4 py-6">
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Game Info */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-surface-1 border border-surface-3 rounded-sm p-6">
+              {/* Header with Icon + Name */}
+              <div className="flex items-center gap-4 mb-6">
+                <span className="text-5xl">{gameConfig.icon}</span>
+                <h1 className="text-3xl font-bold text-foreground">
+                  {gameConfig.name[locale as keyof typeof gameConfig.name] || gameConfig.name.de}
+                </h1>
+              </div>
+
+              {/* Game Description/Info could go here in the future */}
+              <p className="text-muted-foreground">
+                {locale === "de"
+                  ? "Rate 5 Orte so genau wie möglich. 30 Sekunden pro Ort."
+                  : locale === "en"
+                  ? "Guess 5 locations as accurately as possible. 30 seconds per location."
+                  : "Ugani 5 lokacij čim bolj natančno. 30 sekund na lokacijo."}
+              </p>
+            </div>
+
+            {/* Mobile-only Start Button Card */}
+            <Card className="p-4 lg:hidden">
+              <Button
+                onClick={handleStartGame}
+                disabled={creatingGame}
+                size="lg"
+                variant="primary"
+                className="w-full"
+              >
+                {creatingGame
+                  ? t("creating", { defaultValue: "Erstelle Spiel..." })
+                  : `${gameConfig.name[locale as keyof typeof gameConfig.name] || gameConfig.name.de} ${locale === "de" ? "Spiel starten" : locale === "en" ? "Start Game" : "Začni igro"}`}
+              </Button>
+            </Card>
+          </div>
+
+          {/* Right Column: Rankings Card */}
+          <div className="lg:col-span-1">
+            <Card className="p-4">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+                {locale === "de" ? "Rangliste" : locale === "en" ? "Leaderboard" : "Lestvica"}
+              </h3>
+
+              {/* Weekly Top 3 */}
+              <RankingsList
+                players={weeklyTop3}
+                title={locale === "de" ? "Diese Woche" : locale === "en" ? "This Week" : "Ta teden"}
+              />
+
+              {/* Alltime Top 3 */}
+              <RankingsList
+                players={alltimeTop3}
+                title={locale === "de" ? "Gesamt" : locale === "en" ? "All Time" : "Skupaj"}
+              />
+
+              {/* Divider */}
+              <div className="border-t border-surface-3 my-4" />
+
+              {/* User's Best Score */}
+              {session?.user?.id && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {locale === "de" ? "Dein Bester" : locale === "en" ? "Your Best" : "Tvoj najboljši"}
+                    </span>
+                    <span className="text-lg font-bold text-primary tabular-nums">
+                      {personalBest > 0 ? personalBest : "—"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Start Game Button - Desktop only */}
+              <div className="hidden lg:block">
+                <Button
+                  onClick={handleStartGame}
+                  disabled={creatingGame}
+                  size="lg"
+                  variant="primary"
+                  className="w-full"
+                >
+                  {creatingGame
+                    ? t("creating", { defaultValue: "Erstelle Spiel..." })
+                    : `${gameConfig.name[locale as keyof typeof gameConfig.name] || gameConfig.name.de} ${locale === "de" ? "Spiel starten" : locale === "en" ? "Start Game" : "Začni igro"}`}
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
-
-        <RankingsTable
-          rankings={rankings}
-          highlightUserId={session?.user?.id}
-          loading={loading}
-        />
-      </Card>
+      </div>
     </div>
   );
 }

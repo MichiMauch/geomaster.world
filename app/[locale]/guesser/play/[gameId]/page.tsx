@@ -358,10 +358,11 @@ export default function GuesserPlayPage({
       {/* Combined Badge - centered */}
       {currentRound && (
         <div className={cn(
-          "absolute top-4 left-1/2 -translate-x-1/2 z-[500]",
+          "absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-[500]",
           "bg-surface-1 rounded-lg",
-          "flex items-center gap-3 px-4 py-2",
+          "flex items-center gap-1.5 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2",
           "border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.15)]",
+          "max-w-[calc(100vw-80px)] sm:max-w-none",
           !showResult && timeRemaining > 10 && "border-primary",
           !showResult && timeRemaining <= 10 && timeRemaining > 5 && "border-accent",
           !showResult && timeRemaining <= 5 && "border-error",
@@ -369,21 +370,21 @@ export default function GuesserPlayPage({
           showResult && lastResult && lastResult.distanceKm >= 20 && "border-surface-3"
         )}>
           {/* Location */}
-          <div className="flex items-baseline gap-1">
-            <span className="text-[10px] text-text-muted uppercase tracking-widest">
+          <div className="flex items-baseline gap-1 min-w-0">
+            <span className="hidden sm:inline text-[10px] text-text-muted uppercase tracking-widest">
               {t("whereIs")}
             </span>
-            <span className="text-lg font-bold text-text-primary">
+            <span className="text-sm sm:text-lg font-bold text-text-primary truncate">
               {currentRound.locationName}
             </span>
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-surface-3" />
+          <div className="hidden sm:block w-px h-6 bg-surface-3" />
 
           {/* Timer / Result */}
           <span className={cn(
-            "font-mono font-bold text-lg tabular-nums min-w-[60px] text-center",
+            "font-mono font-bold text-sm sm:text-lg tabular-nums min-w-[45px] sm:min-w-[60px] text-center flex-shrink-0",
             showResult ? (
               lastResult && lastResult.distanceKm < 20 ? "text-success" :
               lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 ? "text-accent" :
@@ -398,15 +399,15 @@ export default function GuesserPlayPage({
           </span>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-surface-3" />
+          <div className="hidden sm:block w-px h-6 bg-surface-3" />
 
           {/* Progress */}
-          <span className="text-sm text-text-muted font-mono tabular-nums">
+          <span className="text-xs sm:text-sm text-text-muted font-mono tabular-nums flex-shrink-0">
             {currentRoundIndex + 1}/5
           </span>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-surface-3" />
+          <div className="hidden sm:block w-px h-6 bg-surface-3" />
 
           {/* Action Button */}
           <Button
@@ -415,7 +416,7 @@ export default function GuesserPlayPage({
             onClick={buttonConfig.onClick}
             disabled={buttonConfig.disabled}
             isLoading={submitting}
-            className="whitespace-nowrap"
+            className="whitespace-nowrap text-xs sm:text-sm flex-shrink-0"
           >
             {submitting ? "..." : buttonConfig.text}
           </Button>
