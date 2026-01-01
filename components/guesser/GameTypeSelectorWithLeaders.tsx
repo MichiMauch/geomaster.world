@@ -47,7 +47,7 @@ export default function GameTypeSelectorWithLeaders({
   const countryTypes = allGameTypes.filter((t) => t.type === "country");
   const worldTypes = allGameTypes.filter((t) => t.type === "world");
 
-  // Fetch top 3 for each game type
+  // Fetch top 5 for each game type
   useEffect(() => {
     const fetchTopPlayers = async () => {
       setLoading(true);
@@ -56,7 +56,7 @@ export default function GameTypeSelectorWithLeaders({
       await Promise.all(
         allGameTypes.map(async (config) => {
           try {
-            const res = await fetch(`/api/ranked/leaderboard?gameType=${config.id}&period=alltime&limit=3`);
+            const res = await fetch(`/api/ranked/leaderboard?gameType=${config.id}&mode=games&limit=5`);
             if (res.ok) {
               const data = await res.json();
               results[config.id] = data.rankings.map((r: any) => ({
@@ -100,7 +100,7 @@ export default function GameTypeSelectorWithLeaders({
       <button
         onClick={() => handleClick(config.id)}
         className={cn(
-          "flex flex-col p-4 rounded-sm border transition-all duration-200 text-left",
+          "flex flex-col p-4 rounded-sm border transition-all duration-200 text-left cursor-pointer",
           "min-h-[160px]",
           isSelected
             ? "bg-primary/10 border-primary"
@@ -120,11 +120,11 @@ export default function GameTypeSelectorWithLeaders({
           </span>
         </div>
 
-        {/* Top 3 Players */}
+        {/* Top 5 Players */}
         <div className="flex-1">
           {loading ? (
             <div className="space-y-1.5">
-              {[...Array(3)].map((_, i) => (
+              {[...Array(5)].map((_, i) => (
                 <div key={i} className="h-4 bg-surface-2 rounded-sm animate-pulse w-3/4" />
               ))}
             </div>
@@ -136,8 +136,8 @@ export default function GameTypeSelectorWithLeaders({
             <div className="space-y-1">
               {players.map((player, index) => (
                 <div key={index} className="flex items-center gap-2 text-xs">
-                  <span>
-                    {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
+                  <span className="w-4 text-center">
+                    {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`}
                   </span>
                   <span className="text-muted-foreground truncate flex-1">
                     {player.userName || "Anonym"}

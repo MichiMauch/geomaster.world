@@ -4,6 +4,7 @@
     "groups": "Gruppen",
     "solo": "Solo",
     "train": "Trainieren",
+    "profile": "Profil",
     "logout": "Abmelden",
     "login": "Anmelden"
   },
@@ -43,6 +44,7 @@
     "confirmPassword": "Passwort bestätigen",
     "name": "Name",
     "namePlaceholder": "Dein Name",
+    "nickname": "Nickname (optional)",
     "login": "Anmelden",
     "loggingIn": "Wird angemeldet...",
     "register": "Registrieren",
@@ -396,5 +398,14 @@
     "backToDashboard": "Zurück zur Übersicht",
     "finishGame": "Spiel beenden",
     "noActiveGame": "Kein aktives Spiel gefunden"
+  },
+  "profile": {
+    "title": "Profil",
+    "name": "Name",
+    "nickname": "Nickname",
+    "nicknameHint": "Dein Nickname wird in den Rankings anstelle deines Namens angezeigt.",
+    "displayedAs": "Angezeigt als",
+    "saved": "Gespeichert!",
+    "saveError": "Fehler beim Speichern"
   }
 }

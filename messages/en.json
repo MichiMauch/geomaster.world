@@ -4,6 +4,7 @@
     "groups": "Groups",
     "solo": "Solo",
     "train": "Train",
+    "profile": "Profile",
     "logout": "Logout",
     "login": "Login"
   },
@@ -43,6 +44,7 @@
     "confirmPassword": "Confirm Password",
     "name": "Name",
     "namePlaceholder": "Your name",
+    "nickname": "Nickname (optional)",
     "login": "Sign in",
     "loggingIn": "Signing in...",
     "register": "Register",
@@ -396,5 +398,14 @@
     "backToDashboard": "Back to Dashboard",
     "finishGame": "Finish Game",
     "noActiveGame": "No active game found"
+  },
+  "profile": {
+    "title": "Profile",
+    "name": "Name",
+    "nickname": "Nickname",
+    "nicknameHint": "Your nickname will be displayed in rankings instead of your name.",
+    "displayedAs": "Displayed as",
+    "saved": "Saved!",
+    "saveError": "Error saving"
   }
 }

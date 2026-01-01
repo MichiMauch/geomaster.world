@@ -3,6 +3,7 @@ import { rankings, rankedGameResults, users, games, guesses, gameRounds } from "
 import { eq, and, desc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { calculateScore } from "@/lib/score";
+import { getDisplayName } from "@/lib/utils";
 
 export type RankingPeriod = "daily" | "weekly" | "monthly" | "alltime";
 
@@ -49,6 +50,23 @@ export interface UserRankResult {
   totalGames: number;
   averageScore: number;
   bestScore: number;
+}
+
+export interface TopGameEntry {
+  rank: number;
+  gameId: string;
+  userId: string | null;
+  userName: string | null;
+  userImage: string | null;
+  totalScore: number;
+  completedAt: Date;
+}
+
+export interface GetTopGamesParams {
+  gameType: string;
+  period?: RankingPeriod; // optional filter by period (weekly, daily, monthly)
+  limit?: number;
+  offset?: number;
 }
 
 export class RankingService {
@@ -322,7 +340,8 @@ export class RankingService {
       .select({
         rank: rankings.rank,
         userId: rankings.userId,
-        userName: rankings.userName,
+        userName: users.name,
+        nickname: users.nickname,
         userImage: rankings.userImage,
         totalScore: rankings.totalScore,
         totalGames: rankings.totalGames,
@@ -330,6 +349,7 @@ export class RankingService {
         bestScore: rankings.bestScore,
       })
       .from(rankings)
+      .leftJoin(users, eq(rankings.userId, users.id))
       .where(
         and(
           eq(rankings.gameType, gameType),
@@ -344,7 +364,7 @@ export class RankingService {
     return results.map((r, index) => ({
       rank: sortBy === "total" ? index + 1 : (r.rank ?? 9999),
       userId: r.userId,
-      userName: r.userName,
+      userName: getDisplayName(r.userName, r.nickname),
       userImage: r.userImage,
       totalScore: r.totalScore,
       totalGames: r.totalGames,
@@ -485,5 +505,67 @@ export class RankingService {
       bestRank: bestRank === Infinity ? null : bestRank,
       gameTypeBreakdown,
     };
+  }
+
+  /**
+   * Get top individual games (not aggregated by user)
+   * A player can appear multiple times if they have multiple top scores
+   */
+  static async getTopGames(params: GetTopGamesParams): Promise<TopGameEntry[]> {
+    const { gameType, period, limit = 10, offset = 0 } = params;
+
+    // Build date filter for period
+    let startDate: Date | undefined;
+    if (period && period !== "alltime") {
+      const now = new Date();
+      startDate = new Date(now);
+
+      if (period === "daily") {
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === "weekly") {
+        // Start of week (Monday)
+        const day = now.getDay();
+        const diff = day === 0 ? 6 : day - 1; // Monday = 0
+        startDate.setDate(now.getDate() - diff);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === "monthly") {
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+      }
+    }
+
+    // Build conditions
+    const conditions = [eq(rankedGameResults.gameType, gameType)];
+    if (startDate) {
+      // SQLite stores timestamp as seconds, getTime() returns milliseconds
+      conditions.push(sql`${rankedGameResults.completedAt} >= ${Math.floor(startDate.getTime() / 1000)}`);
+    }
+
+    const results = await db
+      .select({
+        gameId: rankedGameResults.gameId,
+        userId: rankedGameResults.userId,
+        userName: users.name,
+        nickname: users.nickname,
+        userImage: users.image,
+        totalScore: rankedGameResults.totalScore,
+        completedAt: rankedGameResults.completedAt,
+      })
+      .from(rankedGameResults)
+      .leftJoin(users, eq(rankedGameResults.userId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(rankedGameResults.totalScore), rankedGameResults.completedAt)
+      .limit(limit)
+      .offset(offset);
+
+    return results.map((r, index) => ({
+      rank: offset + index + 1,
+      gameId: r.gameId,
+      userId: r.userId,
+      userName: getDisplayName(r.userName, r.nickname),
+      userImage: r.userImage,
+      totalScore: r.totalScore,
+      completedAt: r.completedAt,
+    }));
   }
 }

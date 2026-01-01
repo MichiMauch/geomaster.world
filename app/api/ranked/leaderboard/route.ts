@@ -9,12 +9,38 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const gameType = searchParams.get("gameType") || "overall";
+    const mode = searchParams.get("mode") || "rankings"; // "rankings" or "games"
     const period = (searchParams.get("period") || "alltime") as RankingPeriod;
     const periodKey = searchParams.get("periodKey") || undefined;
     const limit = parseInt(searchParams.get("limit") || "100");
     const offset = parseInt(searchParams.get("offset") || "0");
     const sortBy = (searchParams.get("sortBy") || "best") as "best" | "total";
 
+    // Mode "games": Return individual game results (player can appear multiple times)
+    if (mode === "games") {
+      const topGames = await RankingService.getTopGames({
+        gameType,
+        period, // Pass period for filtering (weekly, daily, monthly)
+        limit,
+        offset,
+      });
+
+      return NextResponse.json({
+        rankings: topGames.map((g) => ({
+          rank: g.rank,
+          userName: g.userName,
+          userImage: g.userImage,
+          bestScore: g.totalScore, // use bestScore field for consistency
+          gameId: g.gameId,
+          completedAt: g.completedAt,
+        })),
+        gameType,
+        mode: "games",
+        total: topGames.length,
+      });
+    }
+
+    // Mode "rankings": Return aggregated player rankings (default)
     // Validate period
     const validPeriods: RankingPeriod[] = ["daily", "weekly", "monthly", "alltime"];
     if (!validPeriods.includes(period)) {
@@ -66,6 +92,7 @@ export async function GET(request: Request) {
         label: periodLabel,
       },
       gameType,
+      mode: "rankings",
       total: rankings.length,
     });
   } catch (error) {

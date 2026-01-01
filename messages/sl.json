@@ -4,6 +4,7 @@
     "groups": "Skupine",
     "solo": "Solo",
     "train": "Treniraj",
+    "profile": "Profil",
     "logout": "Odjava",
     "login": "Prijava"
   },
@@ -43,6 +44,7 @@
     "confirmPassword": "Potrdi geslo",
     "name": "Ime",
     "namePlaceholder": "Tvoje ime",
+    "nickname": "Vzdevek (neobvezno)",
     "login": "Prijava",
     "loggingIn": "Prijavljanje...",
     "register": "Registracija",
@@ -396,5 +398,14 @@
     "backToDashboard": "Nazaj na pregled",
     "finishGame": "Končaj igro",
     "noActiveGame": "Aktivna igra ni najdena"
+  },
+  "profile": {
+    "title": "Profil",
+    "name": "Ime",
+    "nickname": "Vzdevek",
+    "nicknameHint": "Vaš vzdevek bo prikazan na lestvicah namesto vašega imena.",
+    "displayedAs": "Prikazano kot",
+    "saved": "Shranjeno!",
+    "saveError": "Napaka pri shranjevanju"
   }
 }

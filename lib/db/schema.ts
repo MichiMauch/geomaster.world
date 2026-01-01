@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 export const users = sqliteTable("users", {
   id: text("id").primaryKey().$defaultFn(() => nanoid()),
   name: text("name"),
+  nickname: text("nickname"), // Display name for rankings (optional)
   email: text("email").unique(),
   emailVerified: integer("emailVerified", { mode: "timestamp" }),
   image: text("image"),

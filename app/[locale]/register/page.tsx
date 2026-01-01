@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const locale = (params.locale as string) || "de";
 
   const [name, setName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,7 +41,7 @@ export default function RegisterPage() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, nickname, email, password }),
       });
 
       const data = await response.json();
@@ -111,6 +112,14 @@ export default function RegisterPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+          />
+
+          <FloatingInput
+            id="nickname"
+            type="text"
+            label={t("nickname")}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
           />
 
           <FloatingInput
