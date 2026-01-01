@@ -153,6 +153,8 @@
     "submit": "Oddaj ugibanje",
     "submitting": "Pošiljanje...",
     "placeMarker": "Postavi oznako na zemljevid",
+    "setMarker": "Postavi oznako",
+    "finish": "Končaj",
     "placeMarkerHint": "Tapni na zemljevid, da postaviš oznako",
     "roundComplete": "Krog {number} končan!",
     "toLeaderboard": "Na lestvico",

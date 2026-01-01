@@ -153,6 +153,8 @@
     "submit": "Submit guess",
     "submitting": "Submitting...",
     "placeMarker": "Place a marker on the map",
+    "setMarker": "Set marker",
+    "finish": "Finish",
     "placeMarkerHint": "Tap on the map to place a marker",
     "roundComplete": "Round {number} complete!",
     "toLeaderboard": "To leaderboard",

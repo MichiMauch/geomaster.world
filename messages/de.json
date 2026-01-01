@@ -153,6 +153,8 @@
     "submit": "Tipp abgeben",
     "submitting": "Wird gesendet...",
     "placeMarker": "Setze einen Marker auf der Karte",
+    "setMarker": "Marker setzen",
+    "finish": "Beenden",
     "placeMarkerHint": "Tippe auf die Karte, um einen Marker zu setzen",
     "roundComplete": "Runde {number} beendet!",
     "toLeaderboard": "Zur Rangliste",

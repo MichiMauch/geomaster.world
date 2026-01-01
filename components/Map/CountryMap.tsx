@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, Marker, Popup, useMapEvents, useMap, GeoJSON, Circle, Polyline } from "react-leaflet";
+import { MapContainer, Marker, Popup, useMapEvents, useMap, GeoJSON, Circle, Polyline, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getGameTypeConfig, DEFAULT_GAME_TYPE, isImageGameType } from "@/lib/game-types";
@@ -176,6 +176,7 @@ export default function CountryMap({
     style: { height, width: "100%", backgroundColor: "#1A1F26" },
     className: "rounded-lg",
     minZoom: gameTypeConfig.minZoom + mobileZoomOffset,
+    zoomControl: false, // We'll add custom positioned zoom control
   };
 
   // Only add maxBounds for country maps
@@ -186,6 +187,9 @@ export default function CountryMap({
 
   return (
     <MapContainer {...mapContainerProps} key={`${effectiveGameType}-${isMobile ? 'mobile' : 'desktop'}`}>
+      {/* Zoom controls - positioned bottom left to avoid badge bar */}
+      <ZoomControl position="bottomleft" />
+
       {/* Custom pane for hint circle - must be created before Circle is rendered */}
       <HintCirclePane key="hint-pane" />
 

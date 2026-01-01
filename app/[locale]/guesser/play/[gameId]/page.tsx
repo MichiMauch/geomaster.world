@@ -128,20 +128,20 @@ export default function GuesserPlayPage({
     }
   }, [currentRoundIndex, showResult, loading, currentRound, userGuesses]);
 
-  // Countdown timer
+  // Countdown timer with centiseconds (updates every 10ms)
   useEffect(() => {
     if (!timerActive || showResult) return;
 
     const interval = setInterval(() => {
       setTimeRemaining((prev) => {
-        if (prev <= 1) {
+        if (prev <= 0.01) {
           // Time's up! Auto-submit timeout
           handleTimeout();
           return 0;
         }
-        return prev - 1;
+        return prev - 0.01;
       });
-    }, 1000);
+    }, 10);
 
     return () => clearInterval(interval);
   }, [timerActive, showResult]);
@@ -314,14 +314,14 @@ export default function GuesserPlayPage({
       const isLastRound = currentRoundIndex >= rounds.length - 1;
       const resultVariant = lastResult && lastResult.distanceKm < 20 ? "success" : "primary";
       return {
-        text: isLastRound ? tRanked("finishGame", { defaultValue: "Spiel beenden" }) : t("next"),
+        text: isLastRound ? t("finish", { defaultValue: "Beenden" }) : t("next", { defaultValue: "Weiter" }),
         variant: resultVariant as "success" | "primary",
         onClick: handleNextRound,
         disabled: false,
       };
     }
     return {
-      text: markerPosition ? t("submit") : t("placeMarker"),
+      text: markerPosition ? t("submit", { defaultValue: "Senden" }) : t("setMarker", { defaultValue: "Marker setzen" }),
       variant: "primary" as const,
       onClick: handleGuess,
       disabled: !markerPosition,
@@ -332,7 +332,7 @@ export default function GuesserPlayPage({
 
   // Timer color based on time remaining
   const getTimerColor = () => {
-    if (timeRemaining > 10) return "text-primary";
+    if (timeRemaining > 10) return "text-text-primary";
     if (timeRemaining > 5) return "text-accent";
     return "text-error animate-pulse";
   };
@@ -355,36 +355,30 @@ export default function GuesserPlayPage({
         height="100%"
       />
 
-      {/* Combined Badge - centered */}
+      {/* Badge Bar - simplified: Location | Timer | Button */}
       {currentRound && (
         <div className={cn(
           "absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-[500]",
           "bg-surface-1 rounded-lg",
-          "flex items-center gap-1.5 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2",
+          "flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2",
           "border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.15)]",
-          "max-w-[calc(100vw-80px)] sm:max-w-none",
           !showResult && timeRemaining > 10 && "border-primary",
           !showResult && timeRemaining <= 10 && timeRemaining > 5 && "border-accent",
           !showResult && timeRemaining <= 5 && "border-error",
           showResult && lastResult && lastResult.distanceKm < 20 && "border-success",
           showResult && lastResult && lastResult.distanceKm >= 20 && "border-surface-3"
         )}>
-          {/* Location */}
-          <div className="flex items-baseline gap-1 min-w-0">
-            <span className="hidden sm:inline text-[10px] text-text-muted uppercase tracking-widest">
-              {t("whereIs")}
-            </span>
-            <span className="text-sm sm:text-lg font-bold text-text-primary truncate">
-              {currentRound.locationName}
-            </span>
-          </div>
+          {/* Location Name */}
+          <span className="text-sm sm:text-base font-bold text-text-primary">
+            {currentRound.locationName}
+          </span>
 
           {/* Divider */}
-          <div className="hidden sm:block w-px h-6 bg-surface-3" />
+          <div className="w-px h-5 bg-surface-3" />
 
           {/* Timer / Result */}
           <span className={cn(
-            "font-mono font-bold text-sm sm:text-lg tabular-nums min-w-[45px] sm:min-w-[60px] text-center flex-shrink-0",
+            "font-mono font-bold text-sm sm:text-base tabular-nums min-w-[55px] text-center",
             showResult ? (
               lastResult && lastResult.distanceKm < 20 ? "text-success" :
               lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 ? "text-accent" :
@@ -394,20 +388,12 @@ export default function GuesserPlayPage({
             {showResult && lastResult ? (
               <>{lastResult.distanceKm.toFixed(1)} km</>
             ) : (
-              <>{timeRemaining}s</>
+              <>{timeRemaining.toFixed(2)}</>
             )}
           </span>
 
           {/* Divider */}
-          <div className="hidden sm:block w-px h-6 bg-surface-3" />
-
-          {/* Progress */}
-          <span className="text-xs sm:text-sm text-text-muted font-mono tabular-nums flex-shrink-0">
-            {currentRoundIndex + 1}/5
-          </span>
-
-          {/* Divider */}
-          <div className="hidden sm:block w-px h-6 bg-surface-3" />
+          <div className="w-px h-5 bg-surface-3" />
 
           {/* Action Button */}
           <Button
@@ -416,23 +402,21 @@ export default function GuesserPlayPage({
             onClick={buttonConfig.onClick}
             disabled={buttonConfig.disabled}
             isLoading={submitting}
-            className="whitespace-nowrap text-xs sm:text-sm flex-shrink-0"
+            className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3"
           >
             {submitting ? "..." : buttonConfig.text}
           </Button>
         </div>
       )}
 
-      {/* Back Link */}
-      <Link
-        href={`/${locale}/guesser`}
-        className="absolute top-4 left-4 z-[500] bg-surface-1 rounded-lg px-3 py-2 flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors border border-surface-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        <span className="text-sm">{tCommon("back")}</span>
-      </Link>
+      {/* Progress indicator - bottom center */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500]">
+        <div className="bg-surface-1/90 backdrop-blur-sm rounded-full px-4 py-1.5 border border-surface-3 shadow-lg">
+          <span className="text-sm text-text-muted font-mono tabular-nums">
+            {currentRoundIndex + 1} / 5
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
