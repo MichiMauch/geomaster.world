@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { cn } from "@/lib/utils";
+import type { OverviewStats } from "@/app/api/stats/overview/route";
 
 interface HeroSectionProps {
   locale: string;
@@ -19,6 +20,14 @@ export default function HeroSection({ locale }: HeroSectionProps) {
   const t = useTranslations("landing");
   const tAuth = useTranslations("auth");
   const sectionRef = useRef<HTMLElement>(null);
+  const [stats, setStats] = useState<OverviewStats | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stats/overview")
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch(console.error);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -64,6 +73,31 @@ export default function HeroSection({ locale }: HeroSectionProps) {
             <p className="text-xl md:text-2xl text-muted-foreground mb-8">
               {t("hero.tagline")}
             </p>
+
+            {/* Stats Bar - Dynamic Quiz Counts */}
+            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 mb-10">
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#00D9FF" }}>
+                  {stats?.countryCount ?? "–"}
+                </span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.countries")}</span>
+              </div>
+              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FF6B35" }}>
+                  {stats?.worldQuizCount ?? "–"}
+                </span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.worldQuizzes")}</span>
+              </div>
+              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FFD700" }}>
+                  {stats?.locationCount ? `${stats.locationCount}+` : "–"}
+                </span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.locations")}</span>
+              </div>
+            </div>
+
             <Button onClick={handlePlay} size="xl" variant="primary" className="rounded-lg">
               {t("hero.ctaPlay")}
             </Button>
@@ -113,21 +147,27 @@ export default function HeroSection({ locale }: HeroSectionProps) {
               {t("hero.tagline")}
             </p>
 
-            {/* Stats Bar - Tacho-Style */}
+            {/* Stats Bar - Dynamic Quiz Counts */}
             <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 sm:gap-4 md:gap-6 mb-10">
               <div className="flex items-baseline gap-1 sm:gap-2">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#00D9FF" }}>5</span>
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#00D9FF" }}>
+                  {stats?.countryCount ?? "–"}
+                </span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.countries")}</span>
+              </div>
+              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FF6B35" }}>
+                  {stats?.worldQuizCount ?? "–"}
+                </span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.worldQuizzes")}</span>
+              </div>
+              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <div className="flex items-baseline gap-1 sm:gap-2">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FFD700" }}>
+                  {stats?.locationCount ? `${stats.locationCount}+` : "–"}
+                </span>
                 <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.locations")}</span>
-              </div>
-              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
-              <div className="flex items-baseline gap-1 sm:gap-2">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FF6B35" }}>30s</span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.perLocation")}</span>
-              </div>
-              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
-              <div className="flex items-baseline gap-1 sm:gap-2">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FFD700" }}>300</span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.maxPoints")}</span>
               </div>
             </div>
 

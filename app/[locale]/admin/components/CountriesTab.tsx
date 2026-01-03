@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import ConfirmModal from "@/components/ConfirmModal";
 import type { Country } from "../types";
 
@@ -564,16 +565,11 @@ export function CountriesTab({ countries, onAdd, onDelete, onUpdate }: Countries
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => toggleActive(country)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                          country.isActive
-                            ? "bg-success/20 text-success hover:bg-success/30"
-                            : "bg-surface-3 text-text-muted hover:bg-surface-2"
-                        }`}
-                      >
-                        {country.isActive ? "Aktiv" : "Inaktiv"}
-                      </button>
+                      <ToggleSwitch
+                        checked={country.isActive}
+                        onChange={() => toggleActive(country)}
+                        size="md"
+                      />
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <Button

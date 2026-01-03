@@ -1,10 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, gameRounds, locations, worldLocations } from "@/lib/db/schema";
+import { games, gameRounds, locations, worldLocations, countries, worldQuizTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getLocalizedName } from "@/lib/location-utils";
+import { GAME_TYPES, isWorldGameType, getWorldCategory } from "@/lib/game-types";
 
 export async function GET(
   request: Request,
@@ -92,9 +93,41 @@ export async function GET(
       };
     });
 
+    // Check if this is a dynamic country (not in static GAME_TYPES)
+    let dynamicCountry = null;
+    if (game.gameType?.startsWith("country:") && !GAME_TYPES[game.gameType]) {
+      const countryId = game.gameType.split(":")[1];
+      const countryResult = await db
+        .select()
+        .from(countries)
+        .where(eq(countries.id, countryId));
+
+      if (countryResult.length > 0) {
+        dynamicCountry = countryResult[0];
+      }
+    }
+
+    // Check if this is a world quiz type (always dynamic now - loaded from DB)
+    let dynamicWorldQuiz = null;
+    if (isWorldGameType(game.gameType)) {
+      const category = getWorldCategory(game.gameType!);
+      if (category) {
+        const worldQuizResult = await db
+          .select()
+          .from(worldQuizTypes)
+          .where(eq(worldQuizTypes.id, category));
+
+        if (worldQuizResult.length > 0) {
+          dynamicWorldQuiz = worldQuizResult[0];
+        }
+      }
+    }
+
     return NextResponse.json({
       game,
       rounds,
+      dynamicCountry,
+      dynamicWorldQuiz,
     });
   } catch (error) {
     console.error("Error fetching ranked game:", error);

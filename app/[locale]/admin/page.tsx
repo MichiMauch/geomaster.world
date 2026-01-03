@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAdminData } from "./hooks/useAdminData";
-import { GroupsTab, UsersTab, CountriesTab, LocationsTab, ImageLocationsTab } from "./components";
+import { GroupsTab, UsersTab, CountriesTab, WorldQuizTypesTab, LocationsTab, WorldLocationsTab, ImageLocationsTab } from "./components";
 import type { AdminTab } from "./types";
 
 export default function AdminPage() {
@@ -22,7 +22,9 @@ export default function AdminPage() {
     groups,
     users,
     countries,
+    worldQuizTypes,
     locations,
+    worldLocations,
     imageLocations,
     loading,
     deleteGroup,
@@ -32,6 +34,13 @@ export default function AdminPage() {
     addCountry,
     deleteCountry,
     updateCountry,
+    addWorldQuizType,
+    deleteWorldQuizType,
+    updateWorldQuizType,
+    addWorldLocation,
+    deleteWorldLocation,
+    importWorldLocations,
+    fetchWorldLocationsByCategory,
     addLocation,
     deleteLocation,
     importLocations,
@@ -96,9 +105,19 @@ export default function AdminPage() {
             label={`Länder (${countries.length})`}
           />
           <TabButton
+            active={activeTab === "world-quiz-types"}
+            onClick={() => setActiveTab("world-quiz-types")}
+            label={`Welt-Quizze (${worldQuizTypes.length})`}
+          />
+          <TabButton
             active={activeTab === "locations"}
             onClick={() => setActiveTab("locations")}
             label="Orte"
+          />
+          <TabButton
+            active={activeTab === "world-locations"}
+            onClick={() => setActiveTab("world-locations")}
+            label={`Welt-Orte (${worldLocations.length})`}
           />
           <TabButton
             active={activeTab === "image-locations"}
@@ -136,6 +155,15 @@ export default function AdminPage() {
           />
         )}
 
+        {activeTab === "world-quiz-types" && (
+          <WorldQuizTypesTab
+            worldQuizTypes={worldQuizTypes}
+            onAdd={addWorldQuizType}
+            onDelete={deleteWorldQuizType}
+            onUpdate={updateWorldQuizType}
+          />
+        )}
+
         {activeTab === "locations" && (
           <LocationsTab
             locations={locations}
@@ -146,6 +174,17 @@ export default function AdminPage() {
             onFetchByCountry={fetchLocationsByCountry}
             onTranslate={translateLocations}
             onFetchTranslationStatus={fetchTranslationStatus}
+          />
+        )}
+
+        {activeTab === "world-locations" && (
+          <WorldLocationsTab
+            worldLocations={worldLocations}
+            worldQuizTypes={worldQuizTypes}
+            onDelete={deleteWorldLocation}
+            onAdd={addWorldLocation}
+            onImport={importWorldLocations}
+            onFetchByCategory={fetchWorldLocationsByCategory}
           />
         )}
 

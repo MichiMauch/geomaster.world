@@ -9,6 +9,8 @@ import {
   locations,
   worldLocations,
   imageLocations,
+  countries,
+  worldQuizTypes,
 } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -17,6 +19,28 @@ import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
 import { getTimeoutPenalty } from "@/lib/countries";
 import { calculateScore } from "@/lib/score";
 import { isImageGameType, getImageMapId, getGameTypeConfig } from "@/lib/game-types";
+
+// Helper function to get scoreScaleFactor from DB for dynamic game types
+async function getScoreScaleFactorFromDB(gameType: string): Promise<number | undefined> {
+  if (gameType.startsWith("world:")) {
+    const worldQuizId = gameType.split(":")[1];
+    const worldQuiz = await db
+      .select({ scoreScaleFactor: worldQuizTypes.scoreScaleFactor })
+      .from(worldQuizTypes)
+      .where(eq(worldQuizTypes.id, worldQuizId))
+      .get();
+    return worldQuiz?.scoreScaleFactor;
+  } else if (gameType.startsWith("country:")) {
+    const countryId = gameType.split(":")[1];
+    const country = await db
+      .select({ scoreScaleFactor: countries.scoreScaleFactor })
+      .from(countries)
+      .where(eq(countries.id, countryId))
+      .get();
+    return country?.scoreScaleFactor;
+  }
+  return undefined;
+}
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -155,13 +179,16 @@ export async function GET(request: Request) {
           locationData = loc || null;
         }
 
+        // Get scoreScaleFactor from DB for dynamic game types
+        const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);
+
         return {
           id: guess.id,
           gameRoundId: guess.gameRoundId,
           latitude: guess.latitude,
           longitude: guess.longitude,
           distanceKm: guess.distanceKm,
-          score: calculateScore(guess.distanceKm, effectiveGameType),
+          score: calculateScore(guess.distanceKm, effectiveGameType, dbScoreScaleFactor),
           roundNumber: guess.roundNumber,
           locationIndex: guess.locationIndex,
           targetLatitude: locationData?.latitude || 0,
@@ -354,8 +381,9 @@ export async function POST(request: Request) {
       createdAt: new Date(),
     });
 
-    // Calculate score based on game type
-    const score = calculateScore(distanceKm, effectiveGameType);
+    // Calculate score based on game type (get scoreScaleFactor from DB for dynamic types)
+    const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);
+    const score = calculateScore(distanceKm, effectiveGameType, dbScoreScaleFactor);
 
     return NextResponse.json({
       id: guessId,

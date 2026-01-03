@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, gameRounds, guesses } from "@/lib/db/schema";
+import { games, gameRounds, guesses, worldQuizTypes, countries } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/scoring";
@@ -30,6 +30,32 @@ export async function POST(request: Request) {
 
     if (!game) {
       return NextResponse.json({ error: "Game not found" }, { status: 404 });
+    }
+
+    // Fetch scoreScaleFactor from DB for dynamic game types (countries and world quizzes)
+    let dbScoreScaleFactor: number | undefined;
+    if (game.gameType?.startsWith("world:")) {
+      const worldQuizId = game.gameType.split(":")[1];
+      const worldQuiz = await db
+        .select({ scoreScaleFactor: worldQuizTypes.scoreScaleFactor })
+        .from(worldQuizTypes)
+        .where(eq(worldQuizTypes.id, worldQuizId))
+        .get();
+
+      if (worldQuiz) {
+        dbScoreScaleFactor = worldQuiz.scoreScaleFactor;
+      }
+    } else if (game.gameType?.startsWith("country:")) {
+      const countryId = game.gameType.split(":")[1];
+      const country = await db
+        .select({ scoreScaleFactor: countries.scoreScaleFactor })
+        .from(countries)
+        .where(eq(countries.id, countryId))
+        .get();
+
+      if (country) {
+        dbScoreScaleFactor = country.scoreScaleFactor;
+      }
     }
 
     // Verify ownership (user must own the game or provide matching guestId)
@@ -90,6 +116,7 @@ export async function POST(request: Request) {
           distanceKm: guess.distanceKm,
           timeSeconds: guess.timeSeconds,
           gameType,
+          scoreScaleFactor: dbScoreScaleFactor, // Pass DB value for dynamic game types
         },
         game.scoringVersion || 1 // Use game's scoring version, default to v1 for old games
       );

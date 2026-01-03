@@ -43,6 +43,26 @@ interface Game {
   timeLimitSeconds?: number | null;
 }
 
+interface DynamicCountry {
+  id: string;
+  centerLat: number;
+  centerLng: number;
+  boundsNorth: number | null;
+  boundsSouth: number | null;
+  boundsEast: number | null;
+  boundsWest: number | null;
+  defaultZoom: number;
+  minZoom: number;
+}
+
+interface DynamicWorldQuiz {
+  id: string;
+  centerLat: number;
+  centerLng: number;
+  defaultZoom: number;
+  minZoom: number;
+}
+
 const FIXED_TIME_LIMIT = 30; // 30 seconds per location for ranked
 
 export default function GuesserPlayPage({
@@ -62,6 +82,8 @@ export default function GuesserPlayPage({
   const [game, setGame] = useState<Game | null>(null);
   const [rounds, setRounds] = useState<GameRound[]>([]);
   const [userGuesses, setUserGuesses] = useState<Guess[]>([]);
+  const [dynamicCountry, setDynamicCountry] = useState<DynamicCountry | null>(null);
+  const [dynamicWorldQuiz, setDynamicWorldQuiz] = useState<DynamicWorldQuiz | null>(null);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -98,6 +120,12 @@ export default function GuesserPlayPage({
         const gameData = await gameRes.json();
         setGame(gameData.game);
         setRounds(gameData.rounds);
+        if (gameData.dynamicCountry) {
+          setDynamicCountry(gameData.dynamicCountry);
+        }
+        if (gameData.dynamicWorldQuiz) {
+          setDynamicWorldQuiz(gameData.dynamicWorldQuiz);
+        }
       }
 
       if (guessesRes.ok) {
@@ -343,6 +371,8 @@ export default function GuesserPlayPage({
       <CountryMap
         gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
         country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
+        dynamicCountry={dynamicCountry ?? undefined}
+        dynamicWorldQuiz={dynamicWorldQuiz ?? undefined}
         onMarkerPlace={showResult ? undefined : setMarkerPosition}
         markerPosition={markerPosition}
         targetPosition={

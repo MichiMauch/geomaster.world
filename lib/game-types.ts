@@ -46,72 +46,7 @@ export const GAME_TYPES: Record<string, GameTypeConfig> = {
     minZoom: 7,
     defaultCenter: COUNTRIES.slovenia.bounds.center,
   },
-  // World-based game types
-  "world:highest-mountains": {
-    id: "world:highest-mountains",
-    type: "world",
-    name: { de: "Höchste Berge", en: "Highest Mountains", sl: "Najvišje gore" },
-    icon: "🏔️",
-    geoJsonFile: "/world.geojson",
-    bounds: null,
-    timeoutPenalty: 5000,
-    scoreScaleFactor: 3000, // World map
-    defaultZoom: 2,
-    minZoom: 1,
-    defaultCenter: { lat: 20, lng: 0 },
-  },
-  "world:capitals": {
-    id: "world:capitals",
-    type: "world",
-    name: { de: "Hauptstädte", en: "World Capitals", sl: "Prestolnice" },
-    icon: "🏛️",
-    geoJsonFile: "/world.geojson",
-    bounds: null,
-    timeoutPenalty: 5000,
-    scoreScaleFactor: 3000, // World map
-    defaultZoom: 2,
-    minZoom: 1,
-    defaultCenter: { lat: 20, lng: 0 },
-  },
-  "world:famous-places": {
-    id: "world:famous-places",
-    type: "world",
-    name: { de: "Berühmte Orte", en: "Famous Places", sl: "Znamenite lokacije" },
-    icon: "🗺️",
-    geoJsonFile: "/world.geojson",
-    bounds: null,
-    timeoutPenalty: 5000,
-    scoreScaleFactor: 3000, // World map
-    defaultZoom: 2,
-    minZoom: 1,
-    defaultCenter: { lat: 20, lng: 0 },
-  },
-  "world:unesco": {
-    id: "world:unesco",
-    type: "world",
-    name: { de: "UNESCO Welterbe", en: "UNESCO World Heritage", sl: "UNESCO svetovna dediščina" },
-    icon: "🏛️",
-    geoJsonFile: "/world.geojson",
-    bounds: null,
-    timeoutPenalty: 5000,
-    scoreScaleFactor: 3000, // World map
-    defaultZoom: 2,
-    minZoom: 1,
-    defaultCenter: { lat: 20, lng: 0 },
-  },
-  "world:airports": {
-    id: "world:airports",
-    type: "world",
-    name: { de: "Internationale Flughäfen", en: "International Airports", sl: "Mednarodna letališča" },
-    icon: "✈️",
-    geoJsonFile: "/world.geojson",
-    bounds: null,
-    timeoutPenalty: 5000,
-    scoreScaleFactor: 3000, // World map
-    defaultZoom: 2,
-    minZoom: 1,
-    defaultCenter: { lat: 20, lng: 0 },
-  },
+  // World-based game types are now loaded dynamically from the database (worldQuizTypes table)
   // Image-based game types
   // Scale: 92 pixels = 10 meters, image is 2330x2229 pixels ≈ 253m x 242m
   "image:garten": {

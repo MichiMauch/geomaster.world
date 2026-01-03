@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import type { Group, User, Location, ImageLocation, Country, TranslationStatus, TranslationResult } from "../types";
+import type { Group, User, Location, ImageLocation, Country, WorldQuizType, WorldLocation, TranslationStatus, TranslationResult } from "../types";
 
 interface UseAdminDataReturn {
   groups: Group[];
   users: User[];
   countries: Country[];
+  worldQuizTypes: WorldQuizType[];
   locations: Location[];
+  worldLocations: WorldLocation[];
   imageLocations: ImageLocation[];
   loading: boolean;
   // Group actions
@@ -20,6 +22,16 @@ interface UseAdminDataReturn {
   deleteCountry: (countryId: string) => Promise<void>;
   updateCountry: (countryId: string, data: Partial<Country>) => Promise<boolean>;
   refreshCountries: () => Promise<void>;
+  // World Quiz Type actions
+  addWorldQuizType: (quizType: Omit<WorldQuizType, "createdAt" | "locationCount">) => Promise<boolean>;
+  deleteWorldQuizType: (quizTypeId: string) => Promise<void>;
+  updateWorldQuizType: (quizTypeId: string, data: Partial<WorldQuizType>) => Promise<boolean>;
+  refreshWorldQuizTypes: () => Promise<void>;
+  // World Location actions
+  addWorldLocation: (category: string, name: string, lat: number, lng: number, countryCode: string, difficulty: string) => Promise<boolean>;
+  deleteWorldLocation: (locationId: string) => Promise<void>;
+  importWorldLocations: (locations: unknown[], category: string) => Promise<{ imported: number; duplicatesSkipped: number }>;
+  fetchWorldLocationsByCategory: (category: string) => Promise<void>;
   // Location actions
   addLocation: (country: string, name: string, lat: number, lng: number, difficulty: string) => Promise<boolean>;
   deleteLocation: (locationId: string) => Promise<void>;
@@ -39,7 +51,9 @@ export function useAdminData(): UseAdminDataReturn {
   const [groups, setGroups] = useState<Group[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
+  const [worldQuizTypes, setWorldQuizTypes] = useState<WorldQuizType[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [worldLocations, setWorldLocations] = useState<WorldLocation[]>([]);
   const [imageLocations, setImageLocations] = useState<ImageLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,10 +62,11 @@ export function useAdminData(): UseAdminDataReturn {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [groupsRes, usersRes, countriesRes, locationsRes] = await Promise.all([
+        const [groupsRes, usersRes, countriesRes, worldQuizTypesRes, locationsRes] = await Promise.all([
           fetch("/api/admin/groups"),
           fetch("/api/admin/users"),
           fetch("/api/countries"),
+          fetch("/api/world-quiz-types"),
           fetch("/api/locations"),
         ]);
 
@@ -68,6 +83,11 @@ export function useAdminData(): UseAdminDataReturn {
         if (countriesRes.ok) {
           const data = await countriesRes.json();
           setCountries(data);
+        }
+
+        if (worldQuizTypesRes.ok) {
+          const data = await worldQuizTypesRes.json();
+          setWorldQuizTypes(data);
         }
 
         if (locationsRes.ok) {
@@ -252,6 +272,160 @@ export function useAdminData(): UseAdminDataReturn {
     }
   }, [refreshCountries]);
 
+  // World Quiz Type actions
+  const refreshWorldQuizTypes = useCallback(async () => {
+    try {
+      const res = await fetch("/api/world-quiz-types");
+      if (res.ok) {
+        const data = await res.json();
+        setWorldQuizTypes(data);
+      }
+    } catch (error) {
+      console.error("Error refreshing world quiz types:", error);
+    }
+  }, []);
+
+  const addWorldQuizType = useCallback(async (quizType: Omit<WorldQuizType, "createdAt" | "locationCount">): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/world-quiz-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(quizType),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error(data.error || "Fehler beim Erstellen");
+        return false;
+      }
+
+      toast.success("Welt-Quiz-Typ hinzugefügt");
+      await refreshWorldQuizTypes();
+      return true;
+    } catch {
+      toast.error("Fehler beim Erstellen");
+      return false;
+    }
+  }, [refreshWorldQuizTypes]);
+
+  const deleteWorldQuizType = useCallback(async (quizTypeId: string) => {
+    try {
+      const response = await fetch(`/api/world-quiz-types/${quizTypeId}`, { method: "DELETE" });
+
+      if (response.ok) {
+        toast.success("Welt-Quiz-Typ gelöscht");
+        setWorldQuizTypes((prev) => prev.filter((t) => t.id !== quizTypeId));
+      } else {
+        toast.error("Fehler beim Löschen");
+      }
+    } catch {
+      toast.error("Fehler beim Löschen");
+    }
+  }, []);
+
+  const updateWorldQuizType = useCallback(async (quizTypeId: string, data: Partial<WorldQuizType>): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/world-quiz-types/${quizTypeId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        toast.error("Fehler beim Aktualisieren");
+        return false;
+      }
+
+      toast.success("Welt-Quiz-Typ aktualisiert");
+      await refreshWorldQuizTypes();
+      return true;
+    } catch {
+      toast.error("Fehler beim Aktualisieren");
+      return false;
+    }
+  }, [refreshWorldQuizTypes]);
+
+  // World Location actions
+  const fetchWorldLocationsByCategory = useCallback(async (category: string) => {
+    try {
+      const res = await fetch(`/api/world-locations?category=${encodeURIComponent(category)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setWorldLocations(data);
+      }
+    } catch (error) {
+      console.error("Error fetching world locations by category:", error);
+    }
+  }, []);
+
+  const addWorldLocation = useCallback(async (
+    category: string,
+    name: string,
+    lat: number,
+    lng: number,
+    countryCode: string,
+    difficulty: string
+  ): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/world-locations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, name, latitude: lat, longitude: lng, countryCode, difficulty }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error(data.error || "Fehler beim Speichern");
+        return false;
+      }
+
+      toast.success("Welt-Ort hinzugefügt");
+      await fetchWorldLocationsByCategory(category);
+      return true;
+    } catch {
+      toast.error("Fehler beim Speichern des Ortes");
+      return false;
+    }
+  }, [fetchWorldLocationsByCategory]);
+
+  const deleteWorldLocation = useCallback(async (locationId: string) => {
+    try {
+      const response = await fetch(`/api/world-locations?id=${locationId}`, { method: "DELETE" });
+
+      if (response.ok) {
+        toast.success("Welt-Ort gelöscht");
+        setWorldLocations((prev) => prev.filter((l) => l.id !== locationId));
+      } else {
+        toast.error("Fehler beim Löschen");
+      }
+    } catch {
+      toast.error("Fehler beim Löschen");
+    }
+  }, []);
+
+  const importWorldLocations = useCallback(async (locationsData: unknown[], category: string) => {
+    const response = await fetch("/api/world-locations/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locations: locationsData, category }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.details?.join("\n") || result.error || "Import fehlgeschlagen");
+    }
+
+    let message = `${result.imported} Welt-Orte importiert`;
+    if (result.duplicatesSkipped > 0) {
+      message += `, ${result.duplicatesSkipped} Duplikate übersprungen`;
+    }
+    toast.success(message);
+
+    await fetchWorldLocationsByCategory(category);
+    return { imported: result.imported, duplicatesSkipped: result.duplicatesSkipped };
+  }, [fetchWorldLocationsByCategory]);
+
   // Location actions
   const refreshLocations = useCallback(async () => {
     try {
@@ -430,7 +604,9 @@ export function useAdminData(): UseAdminDataReturn {
     groups,
     users,
     countries,
+    worldQuizTypes,
     locations,
+    worldLocations,
     imageLocations,
     loading,
     deleteGroup,
@@ -441,6 +617,14 @@ export function useAdminData(): UseAdminDataReturn {
     deleteCountry,
     updateCountry,
     refreshCountries,
+    addWorldQuizType,
+    deleteWorldQuizType,
+    updateWorldQuizType,
+    refreshWorldQuizTypes,
+    addWorldLocation,
+    deleteWorldLocation,
+    importWorldLocations,
+    fetchWorldLocationsByCategory,
     addLocation,
     deleteLocation,
     importLocations,

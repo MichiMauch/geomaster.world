@@ -1,13 +1,14 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, gameRounds, locations, worldLocations } from "@/lib/db/schema";
+import { games, gameRounds, locations, worldLocations, countries, worldQuizTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
-import { getGameTypeConfig, isWorldGameType, getWorldCategory, GAME_TYPES } from "@/lib/game-types";
+import { getGameTypeConfig, isWorldGameType, getWorldCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
 import { getLocationCountryName } from "@/lib/countries";
 import { getCurrentScoringVersion } from "@/lib/scoring";
+import { countryToGameTypeConfig, worldQuizToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType } from "@/lib/utils/country-converter";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -16,8 +17,42 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { gameType, guestId } = body;
 
-    // Validate gameType
-    if (!gameType || !GAME_TYPES[gameType]) {
+    // Validate gameType - check static GAME_TYPES first
+    let config: GameTypeConfig | null = GAME_TYPES[gameType] || null;
+    let dbCountry: DatabaseCountry | null = null;
+    let dbWorldQuiz: DatabaseWorldQuizType | null = null;
+
+    // If not in static GAME_TYPES, check for dynamic country in database
+    if (!config && gameType?.startsWith("country:")) {
+      const countryId = gameType.split(":")[1];
+      const countryResult = await db
+        .select()
+        .from(countries)
+        .where(eq(countries.id, countryId));
+
+      if (countryResult.length > 0 && countryResult[0].isActive) {
+        dbCountry = countryResult[0] as DatabaseCountry;
+        config = countryToGameTypeConfig(dbCountry);
+      }
+    }
+
+    // If not in static GAME_TYPES, check for dynamic world quiz type in database
+    if (!config && gameType?.startsWith("world:")) {
+      const category = getWorldCategory(gameType);
+      if (category) {
+        const worldQuizResult = await db
+          .select()
+          .from(worldQuizTypes)
+          .where(eq(worldQuizTypes.id, category));
+
+        if (worldQuizResult.length > 0 && worldQuizResult[0].isActive) {
+          dbWorldQuiz = worldQuizResult[0] as DatabaseWorldQuizType;
+          config = worldQuizToGameTypeConfig(dbWorldQuiz);
+        }
+      }
+    }
+
+    if (!gameType || !config) {
       return NextResponse.json(
         { error: "Invalid game type" },
         { status: 400 }
@@ -31,8 +66,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    const config = getGameTypeConfig(gameType);
 
     // Ranked games have fixed settings: 5 locations, 30 seconds per location
     const locationsPerRound = 5;
@@ -64,7 +97,11 @@ export async function POST(request: Request) {
     } else {
       // Country game type - extract country from gameType
       const countryKey = gameType.split(":")[1]; // e.g., "country:switzerland" → "switzerland"
-      const countryName = getLocationCountryName(countryKey); // "switzerland" → "Switzerland"
+
+      // Use DB country name if available, otherwise fall back to static lookup
+      const countryName = dbCountry
+        ? (dbCountry.nameEn || dbCountry.name) // Use English name from DB (matches locations.country)
+        : getLocationCountryName(countryKey); // "switzerland" → "Switzerland"
 
       const countryLocs = await db
         .select()

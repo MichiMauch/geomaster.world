@@ -4,6 +4,7 @@ export interface ScoringParams {
   distanceKm: number;
   timeSeconds: number | null;
   gameType: string;
+  scoreScaleFactor?: number; // Optional override for dynamic game types (e.g., world quizzes from DB)
 }
 
 export interface ScoringStrategy {
@@ -22,10 +23,10 @@ export const DistanceOnlyScoringStrategy: ScoringStrategy = {
   name: "Distance Only",
   description: "Score based on distance accuracy only",
 
-  calculateRoundScore({ distanceKm, gameType }: ScoringParams): number {
+  calculateRoundScore({ distanceKm, gameType, scoreScaleFactor }: ScoringParams): number {
     const maxPoints = 100;
     const config = getGameTypeConfig(gameType);
-    const scaleFactor = config.scoreScaleFactor;
+    const scaleFactor = scoreScaleFactor ?? config.scoreScaleFactor;
 
     const score = maxPoints * Math.exp(-distanceKm / scaleFactor);
     return Math.round(score);
@@ -43,10 +44,10 @@ export const TimeBasedScoringStrategy: ScoringStrategy = {
   name: "Time-Based Scoring",
   description: "Score based on both distance accuracy and response time",
 
-  calculateRoundScore({ distanceKm, timeSeconds, gameType }: ScoringParams): number {
+  calculateRoundScore({ distanceKm, timeSeconds, gameType, scoreScaleFactor }: ScoringParams): number {
     const maxPoints = 100;
     const config = getGameTypeConfig(gameType);
-    const scaleFactor = config.scoreScaleFactor;
+    const scaleFactor = scoreScaleFactor ?? config.scoreScaleFactor;
 
     // Calculate base distance score
     const distanceScore = maxPoints * Math.exp(-distanceKm / scaleFactor);

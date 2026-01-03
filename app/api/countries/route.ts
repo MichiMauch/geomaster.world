@@ -4,11 +4,16 @@ import { countries, locations } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { TranslationService } from "@/lib/services/translation-service";
 
 // GET /api/countries - List all countries with location counts
-export async function GET() {
+// Optional query param: ?active=true to only get active countries
+export async function GET(req: NextRequest) {
   try {
-    const allCountries = await db
+    const { searchParams } = new URL(req.url);
+    const activeOnly = searchParams.get("active") === "true";
+
+    let query = db
       .select({
         id: countries.id,
         name: countries.name,
@@ -28,8 +33,13 @@ export async function GET() {
         isActive: countries.isActive,
         createdAt: countries.createdAt,
       })
-      .from(countries)
-      .orderBy(countries.name);
+      .from(countries);
+
+    if (activeOnly) {
+      query = query.where(eq(countries.isActive, true)) as typeof query;
+    }
+
+    const allCountries = await query.orderBy(countries.name);
 
     // Get location counts for each country
     const locationCounts = await db
@@ -97,11 +107,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Country with this ID already exists" }, { status: 409 });
     }
 
+    // Auto-translate name (DE → EN, SL) if not provided
+    let finalNameEn = nameEn || name;
+    let finalNameSl = nameSl || name;
+
+    if (!nameEn || !nameSl) {
+      try {
+        const translations = await TranslationService.translateBatch([name]);
+        if (translations.length > 0) {
+          finalNameEn = translations[0].nameEn || name;
+          finalNameSl = translations[0].nameSl || name;
+        }
+      } catch (translationError) {
+        console.error("Translation failed, using original name:", translationError);
+        // Continue with original name if translation fails
+      }
+    }
+
     await db.insert(countries).values({
       id,
       name,
-      nameEn,
-      nameSl,
+      nameEn: finalNameEn,
+      nameSl: finalNameSl,
       icon,
       geoJsonData,
       centerLat,
@@ -118,7 +145,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date(),
     });
 
-    return NextResponse.json({ success: true, id });
+    return NextResponse.json({ success: true, id, nameEn: finalNameEn, nameSl: finalNameSl });
   } catch (error) {
     console.error("Error creating country:", error);
     return NextResponse.json({ error: "Failed to create country" }, { status: 500 });

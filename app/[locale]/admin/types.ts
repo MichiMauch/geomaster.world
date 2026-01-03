@@ -60,7 +60,37 @@ export interface Country {
   locationCount: number;
 }
 
-export type AdminTab = "groups" | "users" | "countries" | "locations" | "image-locations";
+export interface WorldQuizType {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  nameSl: string | null;
+  icon: string;
+  centerLat: number;
+  centerLng: number;
+  defaultZoom: number;
+  minZoom: number;
+  timeoutPenalty: number;
+  scoreScaleFactor: number;
+  isActive: boolean;
+  createdAt: Date;
+  locationCount: number;
+}
+
+export type AdminTab = "groups" | "users" | "countries" | "world-quiz-types" | "locations" | "world-locations" | "image-locations";
+
+export interface WorldLocation {
+  id: string;
+  category: string;
+  name: string;
+  nameDe: string | null;
+  nameEn: string | null;
+  nameSl: string | null;
+  latitude: number;
+  longitude: number;
+  countryCode: string | null;
+  difficulty: string;
+}
 
 export interface TranslationStatus {
   untranslatedCount: number;

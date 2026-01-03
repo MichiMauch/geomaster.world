@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import {
+  countriesToGameTypeConfigs,
+  getActiveCountries,
+  worldQuizToGameTypeConfig,
+  type DatabaseCountry,
+  type DatabaseWorldQuizType,
+} from "@/lib/utils/country-converter";
 
 interface GameTypeSelectorWithLeadersProps {
   selected?: string | null;
@@ -35,20 +42,75 @@ export default function GameTypeSelectorWithLeaders({
   const router = useRouter();
   const [topPlayers, setTopPlayers] = useState<TopPlayersMap>({});
   const [loading, setLoading] = useState(true);
+  const [dbCountries, setDbCountries] = useState<DatabaseCountry[]>([]);
+  const [dbWorldQuizTypes, setDbWorldQuizTypes] = useState<DatabaseWorldQuizType[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(true);
+  const [worldQuizTypesLoading, setWorldQuizTypesLoading] = useState(true);
 
-  // Filter and group game types
-  const allGameTypes = Object.values(GAME_TYPES).filter((config) => {
-    if (excludeImageTypes && config.type === "image") {
-      return false;
-    }
-    return true;
-  });
-
-  const countryTypes = allGameTypes.filter((t) => t.type === "country");
-  const worldTypes = allGameTypes.filter((t) => t.type === "world");
-
-  // Fetch top 5 for each game type
+  // Fetch active countries from database
   useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await fetch("/api/countries?active=true");
+        if (res.ok) {
+          const data = await res.json();
+          setDbCountries(data);
+        }
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      } finally {
+        setCountriesLoading(false);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  // Fetch active world quiz types from database
+  useEffect(() => {
+    const fetchWorldQuizTypes = async () => {
+      try {
+        const res = await fetch("/api/world-quiz-types?active=true");
+        if (res.ok) {
+          const data = await res.json();
+          setDbWorldQuizTypes(data);
+        }
+      } catch (error) {
+        console.error("Error fetching world quiz types:", error);
+      } finally {
+        setWorldQuizTypesLoading(false);
+      }
+    };
+    fetchWorldQuizTypes();
+  }, []);
+
+  // Convert DB countries and world quiz types to GameTypeConfig
+  const { countryTypes, worldTypes, allGameTypes } = useMemo(() => {
+    // Get country types from database
+    const activeCountries = getActiveCountries(dbCountries);
+    const countryConfigs = countriesToGameTypeConfigs(activeCountries);
+
+    // Get world quiz types from database
+    const activeWorldQuizTypes = dbWorldQuizTypes.filter(w => w.isActive);
+    const worldConfigs = activeWorldQuizTypes.map(worldQuizToGameTypeConfig);
+
+    // Optionally include image types from static GAME_TYPES
+    const imageTypes = excludeImageTypes
+      ? []
+      : Object.values(GAME_TYPES).filter((config) => config.type === "image");
+
+    const all = [...countryConfigs, ...worldConfigs, ...imageTypes];
+
+    return {
+      countryTypes: countryConfigs,
+      worldTypes: worldConfigs,
+      allGameTypes: all,
+    };
+  }, [dbCountries, dbWorldQuizTypes, excludeImageTypes]);
+
+  // Fetch top 3 for each game type (wait for data to load first)
+  useEffect(() => {
+    if (countriesLoading || worldQuizTypesLoading || allGameTypes.length === 0) return;
+
     const fetchTopPlayers = async () => {
       setLoading(true);
       const results: TopPlayersMap = {};
@@ -56,10 +118,10 @@ export default function GameTypeSelectorWithLeaders({
       await Promise.all(
         allGameTypes.map(async (config) => {
           try {
-            const res = await fetch(`/api/ranked/leaderboard?gameType=${config.id}&mode=games&limit=5`);
+            const res = await fetch(`/api/ranked/leaderboard?gameType=${config.id}&mode=games&limit=3`);
             if (res.ok) {
               const data = await res.json();
-              results[config.id] = data.rankings.map((r: any) => ({
+              results[config.id] = data.rankings.map((r: { rank: number; userName: string | null; bestScore: number }) => ({
                 rank: r.rank,
                 userName: r.userName,
                 bestScore: r.bestScore
@@ -76,7 +138,7 @@ export default function GameTypeSelectorWithLeaders({
     };
 
     fetchTopPlayers();
-  }, []);
+  }, [countriesLoading, worldQuizTypesLoading, allGameTypes]);
 
   const getGameTypeName = (config: GameTypeConfig) => {
     const localeKey = locale as "de" | "en" | "sl";
@@ -120,11 +182,11 @@ export default function GameTypeSelectorWithLeaders({
           </span>
         </div>
 
-        {/* Top 5 Players */}
+        {/* Top 3 Players */}
         <div className="flex-1">
           {loading ? (
             <div className="space-y-1.5">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 <div key={i} className="h-4 bg-surface-2 rounded-sm animate-pulse w-3/4" />
               ))}
             </div>

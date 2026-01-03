@@ -70,10 +70,20 @@ interface DynamicCountryConfig {
   minZoom: number;
 }
 
+// Dynamic world quiz config for database-stored world quiz types
+interface DynamicWorldQuizConfig {
+  id: string;
+  centerLat: number;
+  centerLng: number;
+  defaultZoom: number;
+  minZoom: number;
+}
+
 interface CountryMapProps {
   gameType?: string;
   country?: string; // Legacy support - will be converted to gameType
   dynamicCountry?: DynamicCountryConfig; // For database-stored countries (overrides gameType)
+  dynamicWorldQuiz?: DynamicWorldQuizConfig; // For database-stored world quiz types
   onMarkerPlace?: (position: MarkerPosition) => void;
   markerPosition?: MarkerPosition | null;
   targetPosition?: MarkerPosition | null;
@@ -110,6 +120,7 @@ export default function CountryMap({
   gameType,
   country,
   dynamicCountry,
+  dynamicWorldQuiz,
   onMarkerPlace,
   markerPosition,
   targetPosition,
@@ -122,15 +133,17 @@ export default function CountryMap({
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
   const isMobile = useIsMobile();
 
-  // For dynamic countries, we use a different approach
+  // For dynamic countries/world quizzes, we use a different approach
   const useDynamicCountry = !!dynamicCountry;
+  const useDynamicWorldQuiz = !!dynamicWorldQuiz;
 
   // Determine the effective game type (only used if not dynamic)
   const effectiveGameType = gameType ?? (country ? `country:${country}` : DEFAULT_GAME_TYPE);
-  const gameTypeConfig = useDynamicCountry ? null : getGameTypeConfig(effectiveGameType);
+  const gameTypeConfig = (useDynamicCountry || useDynamicWorldQuiz) ? null : getGameTypeConfig(effectiveGameType);
 
-  const isWorldMap = useDynamicCountry ? false : (gameTypeConfig?.bounds === null);
-  const isImageMap = useDynamicCountry ? false : isImageGameType(effectiveGameType);
+  // World maps: either dynamicWorldQuiz or static config with bounds === null
+  const isWorldMap = useDynamicWorldQuiz || (!useDynamicCountry && gameTypeConfig?.bounds === null);
+  const isImageMap = (useDynamicCountry || useDynamicWorldQuiz) ? false : isImageGameType(effectiveGameType);
 
   // If this is an image-based map, delegate to ImageMap component
   if (isImageMap && gameTypeConfig) {
@@ -148,9 +161,11 @@ export default function CountryMap({
   }
 
   // Determine GeoJSON URL
-  const geoJsonUrl = useDynamicCountry
-    ? `/api/countries/${dynamicCountry.id}/geojson`
-    : gameTypeConfig?.geoJsonFile;
+  const geoJsonUrl = useDynamicWorldQuiz
+    ? "/world.geojson"  // All world quiz types use the same world map
+    : useDynamicCountry
+      ? `/api/countries/${dynamicCountry.id}/geojson`
+      : gameTypeConfig?.geoJsonFile;
 
   useEffect(() => {
     setMounted(true);
@@ -203,17 +218,23 @@ export default function CountryMap({
   const mobileZoomOffset = isMobile ? -1 : 0;
 
   // Determine center and zoom
-  const center: [number, number] = useDynamicCountry
-    ? [dynamicCountry.centerLat, dynamicCountry.centerLng]
-    : [gameTypeConfig!.defaultCenter.lat, gameTypeConfig!.defaultCenter.lng];
+  const center: [number, number] = useDynamicWorldQuiz
+    ? [dynamicWorldQuiz.centerLat, dynamicWorldQuiz.centerLng]
+    : useDynamicCountry
+      ? [dynamicCountry.centerLat, dynamicCountry.centerLng]
+      : [gameTypeConfig!.defaultCenter.lat, gameTypeConfig!.defaultCenter.lng];
 
-  const zoom = useDynamicCountry
-    ? dynamicCountry.defaultZoom + mobileZoomOffset
-    : gameTypeConfig!.defaultZoom + mobileZoomOffset;
+  const zoom = useDynamicWorldQuiz
+    ? dynamicWorldQuiz.defaultZoom + mobileZoomOffset
+    : useDynamicCountry
+      ? dynamicCountry.defaultZoom + mobileZoomOffset
+      : gameTypeConfig!.defaultZoom + mobileZoomOffset;
 
-  const minZoom = useDynamicCountry
-    ? dynamicCountry.minZoom + mobileZoomOffset
-    : gameTypeConfig!.minZoom + mobileZoomOffset;
+  const minZoom = useDynamicWorldQuiz
+    ? dynamicWorldQuiz.minZoom + mobileZoomOffset
+    : useDynamicCountry
+      ? dynamicCountry.minZoom + mobileZoomOffset
+      : gameTypeConfig!.minZoom + mobileZoomOffset;
 
   // Map container props
   const mapContainerProps: Record<string, unknown> = {
