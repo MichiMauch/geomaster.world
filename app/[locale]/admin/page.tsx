@@ -3,516 +3,65 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
-import toast from "react-hot-toast";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
-import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
-import SwitzerlandMap from "@/components/Map";
-import ConfirmModal from "@/components/ConfirmModal";
-import { getGameTypesByTypeExtended } from "@/lib/game-types";
-
-// Dynamic import for ImageMap to avoid SSR issues with Leaflet
-const ImageMap = dynamic(() => import("@/components/Map/ImageMap"), { ssr: false });
-
-interface Group {
-  id: string;
-  name: string;
-  inviteCode: string;
-  createdAt: string;
-  memberCount: number;
-  gameCount: number;
-}
-
-interface User {
-  id: string;
-  name: string | null;
-  email: string | null;
-  image: string | null;
-  hintEnabled: boolean | null;
-  isSuperAdmin: boolean | null;
-  createdAt: string;
-  groupCount: number;
-  guessCount: number;
-}
-
-interface Location {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  difficulty: string;
-}
-
-interface ImageLocation {
-  id: string;
-  imageMapId: string;
-  name: string;
-  x: number;
-  y: number;
-  difficulty: string;
-}
+import { useAdminData } from "./hooks/useAdminData";
+import { GroupsTab, UsersTab, CountriesTab, LocationsTab, ImageLocationsTab } from "./components";
+import type { AdminTab } from "./types";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string;
-  const [activeTab, setActiveTab] = useState<"groups" | "users" | "locations" | "image-locations">("groups");
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
-
-  // Location form state
-  const [locationName, setLocationName] = useState("");
-  const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const [difficulty, setDifficulty] = useState("medium");
-  const [savingLocation, setSavingLocation] = useState(false);
-  const [locationError, setLocationError] = useState("");
-  const [importing, setImporting] = useState(false);
-  const [importError, setImportError] = useState("");
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean;
-    locationId: string | null;
-    locationName: string;
-  }>({
-    isOpen: false,
-    locationId: null,
-    locationName: "",
-  });
-  const [importModal, setImportModal] = useState<{
-    isOpen: boolean;
-    country: string;
-    fileData: unknown[] | null;
-    fileName: string;
-  }>({
-    isOpen: false,
-    country: "Switzerland",
-    fileData: null,
-    fileName: "",
-  });
-
-  // Image location states
-  const [imageLocations, setImageLocations] = useState<ImageLocation[]>([]);
-  const [selectedImageMap, setSelectedImageMap] = useState<string>("");
-  const [imageMarkerPosition, setImageMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const [imageLocationName, setImageLocationName] = useState("");
-  const [imageLocationDifficulty, setImageLocationDifficulty] = useState("medium");
-  const [savingImageLocation, setSavingImageLocation] = useState(false);
-  const [imageLocationError, setImageLocationError] = useState("");
-  const [deleteImageLocationModal, setDeleteImageLocationModal] = useState<{
-    isOpen: boolean;
-    locationId: string | null;
-    locationName: string;
-  }>({
-    isOpen: false,
-    locationId: null,
-    locationName: "",
-  });
-
-  // Get available image maps
-  const imageGameTypes = getGameTypesByTypeExtended().image;
+  const [activeTab, setActiveTab] = useState<AdminTab>("groups");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const isSuperAdmin = session?.user?.email === "michi.mauch@netnode.ch";
+
+  const {
+    groups,
+    users,
+    countries,
+    locations,
+    imageLocations,
+    loading,
+    deleteGroup,
+    deleteUser,
+    toggleHint,
+    toggleSuperAdmin,
+    addCountry,
+    deleteCountry,
+    updateCountry,
+    addLocation,
+    deleteLocation,
+    importLocations,
+    fetchLocationsByCountry,
+    fetchImageLocations,
+    addImageLocation,
+    deleteImageLocation,
+    translateLocations,
+    fetchTranslationStatus,
+  } = useAdminData();
 
   useEffect(() => {
     if (status === "loading") return;
     if (!session || !isSuperAdmin) {
       router.push(`/${locale}`);
-      return;
     }
-    fetchData();
   }, [session, status, isSuperAdmin, router, locale]);
 
-  // Fetch image locations when selected map changes
-  useEffect(() => {
-    if (selectedImageMap) {
-      fetchImageLocations(selectedImageMap);
-    }
-  }, [selectedImageMap]);
-
-  const fetchImageLocations = async (imageMapId: string) => {
-    try {
-      const res = await fetch(`/api/image-locations?imageMapId=${imageMapId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setImageLocations(data.locations);
-      }
-    } catch (error) {
-      console.error("Error fetching image locations:", error);
-    }
-  };
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [groupsRes, usersRes, locationsRes] = await Promise.all([
-        fetch("/api/admin/groups"),
-        fetch("/api/admin/users"),
-        fetch("/api/locations"),
-      ]);
-
-      if (groupsRes.ok) {
-        const data = await groupsRes.json();
-        setGroups(data.groups);
-      }
-
-      if (usersRes.ok) {
-        const data = await usersRes.json();
-        setUsers(data.users);
-      }
-
-      if (locationsRes.ok) {
-        const data = await locationsRes.json();
-        setLocations(data);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Fehler beim Laden der Daten");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Wrapper functions to handle deletingId state
   const handleDeleteGroup = async (groupId: string, groupName: string) => {
-    if (!confirm(`Gruppe "${groupName}" wirklich löschen? Alle Spiele, Runden und Guesses werden ebenfalls gelöscht!`)) {
-      return;
-    }
-
-    setDeleting(groupId);
-    try {
-      const response = await fetch("/api/admin/groups", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ groupId }),
-      });
-
-      if (response.ok) {
-        toast.success("Gruppe gelöscht");
-        setGroups(groups.filter((g) => g.id !== groupId));
-      } else {
-        toast.error("Fehler beim Löschen");
-      }
-    } catch {
-      toast.error("Fehler beim Löschen");
-    } finally {
-      setDeleting(null);
-    }
+    setDeletingId(groupId);
+    await deleteGroup(groupId, groupName);
+    setDeletingId(null);
   };
 
   const handleDeleteUser = async (userId: string, userName: string | null) => {
-    if (!confirm(`User "${userName || 'Unbenannt'}" wirklich löschen? Alle Guesses und Gruppenmitgliedschaften werden ebenfalls gelöscht!`)) {
-      return;
-    }
-
-    setDeleting(userId);
-    try {
-      const response = await fetch("/api/admin/users", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-
-      if (response.ok) {
-        toast.success("User gelöscht");
-        setUsers(users.filter((u) => u.id !== userId));
-      } else {
-        const data = await response.json();
-        toast.error(data.error || "Fehler beim Löschen");
-      }
-    } catch {
-      toast.error("Fehler beim Löschen");
-    } finally {
-      setDeleting(null);
-    }
+    setDeletingId(userId);
+    await deleteUser(userId, userName);
+    setDeletingId(null);
   };
-
-  const handleToggleHint = async (userId: string, currentState: boolean | null) => {
-    const newState = !currentState;
-    try {
-      const response = await fetch("/api/admin/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, hintEnabled: newState }),
-      });
-
-      if (response.ok) {
-        toast.success(newState ? "Hilfskreis aktiviert" : "Hilfskreis deaktiviert");
-        setUsers(users.map((u) =>
-          u.id === userId ? { ...u, hintEnabled: newState } : u
-        ));
-      } else {
-        toast.error("Fehler beim Ändern");
-      }
-    } catch {
-      toast.error("Fehler beim Ändern");
-    }
-  };
-
-  const handleToggleSuperAdmin = async (userId: string, currentState: boolean | null) => {
-    const newState = !currentState;
-    try {
-      const response = await fetch("/api/admin/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, isSuperAdmin: newState }),
-      });
-
-      if (response.ok) {
-        toast.success(newState ? "Admin-Rechte erteilt" : "Admin-Rechte entzogen");
-        setUsers(users.map((u) =>
-          u.id === userId ? { ...u, isSuperAdmin: newState } : u
-        ));
-      } else {
-        const data = await response.json();
-        toast.error(data.error || "Fehler beim Ändern");
-      }
-    } catch {
-      toast.error("Fehler beim Ändern");
-    }
-  };
-
-  // Location handlers
-  const handleAddLocation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!markerPosition) {
-      setLocationError("Bitte setze einen Marker auf der Karte");
-      return;
-    }
-
-    setSavingLocation(true);
-    setLocationError("");
-
-    try {
-      const response = await fetch("/api/locations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: locationName,
-          latitude: markerPosition.lat,
-          longitude: markerPosition.lng,
-          difficulty,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create location");
-      }
-
-      toast.success("Ort hinzugefügt");
-      setLocationName("");
-      setMarkerPosition(null);
-      setDifficulty("medium");
-
-      // Refresh locations
-      const locationsRes = await fetch("/api/locations");
-      if (locationsRes.ok) {
-        const data = await locationsRes.json();
-        setLocations(data);
-      }
-    } catch {
-      setLocationError("Fehler beim Speichern des Ortes");
-    } finally {
-      setSavingLocation(false);
-    }
-  };
-
-  const openDeleteLocationModal = (locationId: string, name: string) => {
-    setDeleteModal({ isOpen: true, locationId, locationName: name });
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModal({ isOpen: false, locationId: null, locationName: "" });
-  };
-
-  const handleDeleteLocation = async () => {
-    if (!deleteModal.locationId) return;
-
-    try {
-      const response = await fetch(
-        `/api/locations?id=${deleteModal.locationId}`,
-        { method: "DELETE" }
-      );
-
-      if (response.ok) {
-        toast.success("Ort gelöscht");
-        setLocations(locations.filter((l) => l.id !== deleteModal.locationId));
-      } else {
-        toast.error("Fehler beim Löschen");
-      }
-    } catch {
-      toast.error("Fehler beim Löschen");
-    } finally {
-      closeDeleteModal();
-    }
-  };
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-
-      if (!Array.isArray(data)) {
-        setImportError("Die Datei muss ein JSON-Array enthalten");
-        return;
-      }
-
-      // Open modal with file data
-      setImportModal({
-        isOpen: true,
-        country: "Switzerland",
-        fileData: data,
-        fileName: file.name,
-      });
-    } catch {
-      setImportError("Fehler beim Lesen der Datei");
-    } finally {
-      e.target.value = "";
-    }
-  };
-
-  const handleImportConfirm = async () => {
-    if (!importModal.fileData) return;
-
-    setImporting(true);
-    setImportError("");
-
-    try {
-      const response = await fetch("/api/locations/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          locations: importModal.fileData,
-          country: importModal.country,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.details?.join("\n") || result.error || "Import fehlgeschlagen"
-        );
-      }
-
-      let message = `${result.imported} Orte importiert`;
-      if (result.duplicatesSkipped > 0) {
-        message += `, ${result.duplicatesSkipped} Duplikate übersprungen`;
-      }
-      toast.success(message);
-
-      // Refresh locations
-      const locationsRes = await fetch("/api/locations");
-      if (locationsRes.ok) {
-        const locData = await locationsRes.json();
-        setLocations(locData);
-      }
-
-      // Close modal
-      setImportModal({ isOpen: false, country: "Switzerland", fileData: null, fileName: "" });
-    } catch (err) {
-      setImportError(
-        err instanceof Error ? err.message : "Fehler beim Import"
-      );
-    } finally {
-      setImporting(false);
-    }
-  };
-
-  const closeImportModal = () => {
-    setImportModal({ isOpen: false, country: "Switzerland", fileData: null, fileName: "" });
-  };
-
-  // Image location handlers
-  const handleAddImageLocation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!imageMarkerPosition) {
-      setImageLocationError("Bitte setze einen Marker auf dem Bild");
-      return;
-    }
-    if (!selectedImageMap) {
-      setImageLocationError("Bitte wähle eine Bild-Karte aus");
-      return;
-    }
-
-    setSavingImageLocation(true);
-    setImageLocationError("");
-
-    try {
-      const response = await fetch("/api/image-locations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageMapId: selectedImageMap,
-          name: imageLocationName,
-          x: imageMarkerPosition.lng, // lng = x
-          y: imageMarkerPosition.lat, // lat = y
-          difficulty: imageLocationDifficulty,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create image location");
-      }
-
-      toast.success("Bild-Ort hinzugefügt");
-      setImageLocationName("");
-      setImageMarkerPosition(null);
-      setImageLocationDifficulty("medium");
-
-      // Refresh image locations
-      await fetchImageLocations(selectedImageMap);
-    } catch {
-      setImageLocationError("Fehler beim Speichern des Ortes");
-    } finally {
-      setSavingImageLocation(false);
-    }
-  };
-
-  const openDeleteImageLocationModal = (locationId: string, name: string) => {
-    setDeleteImageLocationModal({ isOpen: true, locationId, locationName: name });
-  };
-
-  const closeDeleteImageLocationModal = () => {
-    setDeleteImageLocationModal({ isOpen: false, locationId: null, locationName: "" });
-  };
-
-  const handleDeleteImageLocation = async () => {
-    if (!deleteImageLocationModal.locationId) return;
-
-    try {
-      const response = await fetch(
-        `/api/image-locations?id=${deleteImageLocationModal.locationId}`,
-        { method: "DELETE" }
-      );
-
-      if (response.ok) {
-        toast.success("Bild-Ort gelöscht");
-        setImageLocations(imageLocations.filter((l) => l.id !== deleteImageLocationModal.locationId));
-      } else {
-        toast.error("Fehler beim Löschen");
-      }
-    } catch {
-      toast.error("Fehler beim Löschen");
-    } finally {
-      closeDeleteImageLocationModal();
-    }
-  };
-
-  const difficultyOptions = [
-    { value: "easy", label: "Einfach" },
-    { value: "medium", label: "Mittel" },
-    { value: "hard", label: "Schwer" },
-  ];
 
   if (status === "loading" || loading) {
     return (
@@ -530,590 +79,102 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-lg bg-surface-2 border border-glass-border w-fit">
-          <button
+        <div className="flex flex-wrap gap-1 p-1 rounded-lg bg-surface-2 border border-glass-border w-fit">
+          <TabButton
+            active={activeTab === "groups"}
             onClick={() => setActiveTab("groups")}
-            className={cn(
-              "px-4 py-2 rounded-md font-medium transition-all duration-200",
-              activeTab === "groups"
-                ? "bg-primary text-white shadow-sm"
-                : "text-text-secondary hover:text-text-primary hover:bg-surface-3"
-            )}
-          >
-            Gruppen ({groups.length})
-          </button>
-          <button
+            label={`Gruppen (${groups.length})`}
+          />
+          <TabButton
+            active={activeTab === "users"}
             onClick={() => setActiveTab("users")}
-            className={cn(
-              "px-4 py-2 rounded-md font-medium transition-all duration-200",
-              activeTab === "users"
-                ? "bg-primary text-white shadow-sm"
-                : "text-text-secondary hover:text-text-primary hover:bg-surface-3"
-            )}
-          >
-            User ({users.length})
-          </button>
-          <button
+            label={`User (${users.length})`}
+          />
+          <TabButton
+            active={activeTab === "countries"}
+            onClick={() => setActiveTab("countries")}
+            label={`Länder (${countries.length})`}
+          />
+          <TabButton
+            active={activeTab === "locations"}
             onClick={() => setActiveTab("locations")}
-            className={cn(
-              "px-4 py-2 rounded-md font-medium transition-all duration-200",
-              activeTab === "locations"
-                ? "bg-primary text-white shadow-sm"
-                : "text-text-secondary hover:text-text-primary hover:bg-surface-3"
-            )}
-          >
-            Orte ({locations.length})
-          </button>
-          <button
+            label="Orte"
+          />
+          <TabButton
+            active={activeTab === "image-locations"}
             onClick={() => setActiveTab("image-locations")}
-            className={cn(
-              "px-4 py-2 rounded-md font-medium transition-all duration-200",
-              activeTab === "image-locations"
-                ? "bg-primary text-white shadow-sm"
-                : "text-text-secondary hover:text-text-primary hover:bg-surface-3"
-            )}
-          >
-            Bild-Orte ({imageLocations.length})
-          </button>
+            label={`Bild-Orte (${imageLocations.length})`}
+          />
         </div>
 
         {/* Content */}
         {activeTab === "groups" && (
-          <Card variant="surface" padding="none" className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-surface-2 border-b border-glass-border">
-                  <tr>
-                    <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">Name</th>
-                    <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">Invite Code</th>
-                    <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Mitglieder</th>
-                    <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Spiele</th>
-                    <th className="text-right px-6 py-3 text-caption font-medium text-text-secondary">Aktionen</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-glass-border">
-                  {groups.map((group) => (
-                    <tr key={group.id} className="hover:bg-surface-2/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <Link
-                          href={`/${locale}/groups/${group.id}`}
-                          className="font-medium text-text-primary hover:text-primary transition-colors"
-                        >
-                          {group.name}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-text-muted font-mono text-sm">
-                        {group.inviteCode}
-                      </td>
-                      <td className="px-6 py-4 text-center text-text-secondary">
-                        {group.memberCount}
-                      </td>
-                      <td className="px-6 py-4 text-center text-text-secondary">
-                        {group.gameCount}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDeleteGroup(group.id, group.name)}
-                          disabled={deleting === group.id}
-                          isLoading={deleting === group.id}
-                        >
-                          Löschen
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                  {groups.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-text-muted">
-                        Keine Gruppen vorhanden
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <GroupsTab
+            groups={groups}
+            locale={locale}
+            onDelete={handleDeleteGroup}
+            deletingId={deletingId}
+          />
         )}
 
         {activeTab === "users" && (
-          <Card variant="surface" padding="none" className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-surface-2 border-b border-glass-border">
-                  <tr>
-                    <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">User</th>
-                    <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">Email</th>
-                    <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Gruppen</th>
-                    <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Guesses</th>
-                    <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Admin</th>
-                    <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Hilfskreis</th>
-                    <th className="text-right px-6 py-3 text-caption font-medium text-text-secondary">Aktionen</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-glass-border">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-surface-2/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar src={user.image} name={user.name} size="sm" />
-                          <span className="font-medium text-text-primary">
-                            {user.name || "Unbenannt"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-text-muted text-sm">
-                        {user.email}
-                      </td>
-                      <td className="px-6 py-4 text-center text-text-secondary">
-                        {user.groupCount}
-                      </td>
-                      <td className="px-6 py-4 text-center text-text-secondary">
-                        {user.guessCount}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleToggleSuperAdmin(user.id, user.isSuperAdmin)}
-                          className={cn(
-                            "px-3 py-1 rounded-lg text-sm font-medium transition-colors",
-                            user.isSuperAdmin
-                              ? "bg-error/20 text-error hover:bg-error/30"
-                              : "bg-surface-3 text-text-muted hover:bg-surface-2"
-                          )}
-                        >
-                          {user.isSuperAdmin ? "Admin" : "User"}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleToggleHint(user.id, user.hintEnabled)}
-                          className={cn(
-                            "px-3 py-1 rounded-lg text-sm font-medium transition-colors",
-                            user.hintEnabled
-                              ? "bg-primary/20 text-primary hover:bg-primary/30"
-                              : "bg-surface-3 text-text-muted hover:bg-surface-2"
-                          )}
-                        >
-                          {user.hintEnabled ? "An" : "Aus"}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {!user.isSuperAdmin ? (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDeleteUser(user.id, user.name)}
-                            disabled={deleting === user.id}
-                            isLoading={deleting === user.id}
-                          >
-                            Löschen
-                          </Button>
-                        ) : (
-                          <span className="text-text-muted text-sm">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {users.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-text-muted">
-                        Keine User vorhanden
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <UsersTab
+            users={users}
+            onDelete={handleDeleteUser}
+            onToggleHint={toggleHint}
+            onToggleSuperAdmin={toggleSuperAdmin}
+            deletingId={deletingId}
+          />
+        )}
+
+        {activeTab === "countries" && (
+          <CountriesTab
+            countries={countries}
+            onAdd={addCountry}
+            onDelete={deleteCountry}
+            onUpdate={updateCountry}
+          />
         )}
 
         {activeTab === "locations" && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Add new location */}
-            <Card variant="surface" padding="lg">
-              <h2 className="text-h3 text-text-primary mb-6">Neuen Ort hinzufügen</h2>
-              <form onSubmit={handleAddLocation} className="space-y-6">
-                <Input
-                  label="Ortsname"
-                  value={locationName}
-                  onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="z.B. Matterhorn"
-                  required
-                />
-
-                <div>
-                  <label className="block text-body-small font-medium text-text-primary mb-2">
-                    Position auf der Karte setzen
-                  </label>
-                  <div className="rounded-lg overflow-hidden border border-glass-border">
-                    <SwitzerlandMap
-                      onMarkerPlace={setMarkerPosition}
-                      markerPosition={markerPosition}
-                      height="300px"
-                    />
-                  </div>
-                  {markerPosition && (
-                    <p className="text-caption text-text-muted mt-2">
-                      Koordinaten: {markerPosition.lat.toFixed(4)}, {markerPosition.lng.toFixed(4)}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-body-small font-medium text-text-primary">
-                    Schwierigkeit
-                  </label>
-                  <div className="flex gap-2">
-                    {difficultyOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setDifficulty(option.value)}
-                        className={cn(
-                          "flex-1 py-3 rounded-lg border-2 font-medium transition-all",
-                          difficulty === option.value
-                            ? option.value === "easy"
-                              ? "border-success bg-success/10 text-success"
-                              : option.value === "medium"
-                              ? "border-warning bg-warning/10 text-warning"
-                              : "border-error bg-error/10 text-error"
-                            : "border-glass-border bg-surface-2 text-text-secondary hover:border-primary/50"
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {locationError && <p className="text-error text-body-small">{locationError}</p>}
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  disabled={!locationName || !markerPosition}
-                  isLoading={savingLocation}
-                >
-                  Ort hinzufügen
-                </Button>
-              </form>
-            </Card>
-
-            {/* Location list */}
-            <Card variant="surface" padding="lg">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-h3 text-text-primary">
-                  Vorhandene Orte ({locations.length})
-                </h2>
-                <label className="relative inline-block cursor-pointer">
-                  <span className={cn(
-                    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg",
-                    "font-semibold transition-all duration-200 ease-out h-9 px-3 text-sm",
-                    "bg-surface-2 text-text-primary border border-glass-border",
-                    "hover:bg-surface-3 hover:border-glass-border-elevated"
-                  )}>
-                    JSON importieren
-                  </span>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileSelect}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </label>
-              </div>
-
-              {importError && (
-                <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-lg">
-                  <p className="text-error text-body-small whitespace-pre-line">
-                    {importError}
-                  </p>
-                </div>
-              )}
-
-              {locations.length === 0 ? (
-                <p className="text-text-muted text-center py-8">
-                  Noch keine Orte vorhanden. Füge den ersten Ort hinzu!
-                </p>
-              ) : (
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {locations.map((location) => (
-                    <div
-                      key={location.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors"
-                    >
-                      <div>
-                        <p className="font-medium text-text-primary">
-                          {location.name}
-                        </p>
-                        <Badge
-                          variant={
-                            location.difficulty === "easy"
-                              ? "success"
-                              : location.difficulty === "medium"
-                              ? "warning"
-                              : "error"
-                          }
-                          size="sm"
-                        >
-                          {location.difficulty === "easy"
-                            ? "Einfach"
-                            : location.difficulty === "medium"
-                            ? "Mittel"
-                            : "Schwer"}
-                        </Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDeleteLocationModal(location.id, location.name)}
-                        className="text-error hover:text-error hover:bg-error/10"
-                      >
-                        Löschen
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
+          <LocationsTab
+            locations={locations}
+            countries={countries}
+            onDelete={deleteLocation}
+            onAdd={addLocation}
+            onImport={importLocations}
+            onFetchByCountry={fetchLocationsByCountry}
+            onTranslate={translateLocations}
+            onFetchTranslationStatus={fetchTranslationStatus}
+          />
         )}
 
-        {/* Image Locations Tab */}
         {activeTab === "image-locations" && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Add new image location */}
-            <Card variant="surface" padding="lg">
-              <h2 className="text-h3 text-text-primary mb-6">Neuen Bild-Ort hinzufügen</h2>
-              <form onSubmit={handleAddImageLocation} className="space-y-6">
-                <div>
-                  <label className="block text-body-small font-medium text-text-primary mb-2">
-                    Bild-Karte auswählen
-                  </label>
-                  <select
-                    value={selectedImageMap}
-                    onChange={(e) => {
-                      setSelectedImageMap(e.target.value);
-                      setImageMarkerPosition(null);
-                    }}
-                    className="w-full px-4 py-3 rounded-lg bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">-- Bild wählen --</option>
-                    {imageGameTypes.map((gt) => (
-                      <option key={gt.id} value={gt.id.replace("image:", "")}>
-                        {gt.icon} {gt.name.de}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {selectedImageMap && (
-                  <>
-                    <div>
-                      <label className="block text-body-small font-medium text-text-primary mb-2">
-                        Position auf dem Bild setzen
-                      </label>
-                      <div className="rounded-lg overflow-hidden border border-glass-border">
-                        <ImageMap
-                          gameType={`image:${selectedImageMap}`}
-                          onMarkerPlace={setImageMarkerPosition}
-                          markerPosition={imageMarkerPosition}
-                          height="300px"
-                        />
-                      </div>
-                      {imageMarkerPosition && (
-                        <p className="text-caption text-text-muted mt-2">
-                          Koordinaten: x={Math.round(imageMarkerPosition.lng)}, y={Math.round(imageMarkerPosition.lat)}
-                        </p>
-                      )}
-                    </div>
-
-                    <Input
-                      label="Ortsname"
-                      value={imageLocationName}
-                      onChange={(e) => setImageLocationName(e.target.value)}
-                      placeholder="z.B. Gewächshaus"
-                      required
-                    />
-
-                    <div className="space-y-2">
-                      <label className="block text-body-small font-medium text-text-primary">
-                        Schwierigkeit
-                      </label>
-                      <div className="flex gap-2">
-                        {difficultyOptions.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setImageLocationDifficulty(option.value)}
-                            className={cn(
-                              "flex-1 py-3 rounded-lg border-2 font-medium transition-all",
-                              imageLocationDifficulty === option.value
-                                ? option.value === "easy"
-                                  ? "border-success bg-success/10 text-success"
-                                  : option.value === "medium"
-                                  ? "border-warning bg-warning/10 text-warning"
-                                  : "border-error bg-error/10 text-error"
-                                : "border-glass-border bg-surface-2 text-text-secondary hover:border-primary/50"
-                            )}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {imageLocationError && <p className="text-error text-body-small">{imageLocationError}</p>}
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  disabled={!selectedImageMap || !imageLocationName || !imageMarkerPosition}
-                  isLoading={savingImageLocation}
-                >
-                  Bild-Ort hinzufügen
-                </Button>
-              </form>
-            </Card>
-
-            {/* Image location list */}
-            <Card variant="surface" padding="lg">
-              <h2 className="text-h3 text-text-primary mb-6">
-                Vorhandene Bild-Orte ({imageLocations.length})
-              </h2>
-
-              {!selectedImageMap ? (
-                <p className="text-text-muted text-center py-8">
-                  Wähle eine Bild-Karte aus, um die Orte zu sehen.
-                </p>
-              ) : imageLocations.length === 0 ? (
-                <p className="text-text-muted text-center py-8">
-                  Noch keine Orte für diese Karte vorhanden.
-                </p>
-              ) : (
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {imageLocations.map((location) => (
-                    <div
-                      key={location.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors"
-                    >
-                      <div>
-                        <p className="font-medium text-text-primary">
-                          {location.name}
-                        </p>
-                        <p className="text-caption text-text-muted">
-                          x={Math.round(location.x)}, y={Math.round(location.y)}
-                        </p>
-                        <Badge
-                          variant={
-                            location.difficulty === "easy"
-                              ? "success"
-                              : location.difficulty === "medium"
-                              ? "warning"
-                              : "error"
-                          }
-                          size="sm"
-                        >
-                          {location.difficulty === "easy"
-                            ? "Einfach"
-                            : location.difficulty === "medium"
-                            ? "Mittel"
-                            : "Schwer"}
-                        </Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDeleteImageLocationModal(location.id, location.name)}
-                        className="text-error hover:text-error hover:bg-error/10"
-                      >
-                        Löschen
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
+          <ImageLocationsTab
+            imageLocations={imageLocations}
+            onFetch={fetchImageLocations}
+            onAdd={addImageLocation}
+            onDelete={deleteImageLocation}
+          />
         )}
       </main>
-
-      <ConfirmModal
-        isOpen={deleteModal.isOpen}
-        title="Ort löschen"
-        message={`Möchtest du "${deleteModal.locationName}" wirklich löschen?`}
-        onConfirm={handleDeleteLocation}
-        onCancel={closeDeleteModal}
-      />
-
-      <ConfirmModal
-        isOpen={deleteImageLocationModal.isOpen}
-        title="Bild-Ort löschen"
-        message={`Möchtest du "${deleteImageLocationModal.locationName}" wirklich löschen?`}
-        onConfirm={handleDeleteImageLocation}
-        onCancel={closeDeleteImageLocationModal}
-      />
-
-      {/* Import Modal */}
-      {importModal.isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-          <Card variant="elevated" padding="lg" className="w-full max-w-md mx-4">
-            <h2 className="text-h3 text-text-primary mb-4">Orte importieren</h2>
-            <p className="text-body-small text-text-secondary mb-4">
-              Datei: <span className="font-mono text-primary">{importModal.fileName}</span>
-              <br />
-              {importModal.fileData?.length} Orte gefunden
-            </p>
-
-            <div className="mb-6">
-              <label className="block text-body-small font-medium text-text-primary mb-2">
-                Land auswählen
-              </label>
-              <select
-                value={importModal.country}
-                onChange={(e) => setImportModal({ ...importModal, country: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="Switzerland">Schweiz</option>
-              </select>
-            </div>
-
-            {importError && (
-              <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-lg">
-                <p className="text-error text-body-small whitespace-pre-line">{importError}</p>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={closeImportModal}
-                disabled={importing}
-                className="flex-1"
-              >
-                Abbrechen
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={handleImportConfirm}
-                isLoading={importing}
-                className="flex-1"
-              >
-                Importieren
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
+  );
+}
+
+// Tab button component
+function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "px-4 py-2 rounded-md font-medium transition-all duration-200",
+        active
+          ? "bg-primary text-white shadow-sm"
+          : "text-text-secondary hover:text-text-primary hover:bg-surface-3"
+      )}
+    >
+      {label}
+    </button>
   );
 }

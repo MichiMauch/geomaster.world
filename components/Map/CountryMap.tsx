@@ -57,9 +57,23 @@ interface HintCircle {
   radiusKm: number;
 }
 
+// Dynamic country config for database-stored countries
+interface DynamicCountryConfig {
+  id: string;
+  centerLat: number;
+  centerLng: number;
+  boundsNorth: number | null;
+  boundsSouth: number | null;
+  boundsEast: number | null;
+  boundsWest: number | null;
+  defaultZoom: number;
+  minZoom: number;
+}
+
 interface CountryMapProps {
   gameType?: string;
   country?: string; // Legacy support - will be converted to gameType
+  dynamicCountry?: DynamicCountryConfig; // For database-stored countries (overrides gameType)
   onMarkerPlace?: (position: MarkerPosition) => void;
   markerPosition?: MarkerPosition | null;
   targetPosition?: MarkerPosition | null;
@@ -95,6 +109,7 @@ function HintCirclePane() {
 export default function CountryMap({
   gameType,
   country,
+  dynamicCountry,
   onMarkerPlace,
   markerPosition,
   targetPosition,
@@ -107,15 +122,18 @@ export default function CountryMap({
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
   const isMobile = useIsMobile();
 
-  // Determine the effective game type
-  const effectiveGameType = gameType ?? (country ? `country:${country}` : DEFAULT_GAME_TYPE);
-  const gameTypeConfig = getGameTypeConfig(effectiveGameType);
+  // For dynamic countries, we use a different approach
+  const useDynamicCountry = !!dynamicCountry;
 
-  const isWorldMap = gameTypeConfig.bounds === null;
-  const isImageMap = isImageGameType(effectiveGameType);
+  // Determine the effective game type (only used if not dynamic)
+  const effectiveGameType = gameType ?? (country ? `country:${country}` : DEFAULT_GAME_TYPE);
+  const gameTypeConfig = useDynamicCountry ? null : getGameTypeConfig(effectiveGameType);
+
+  const isWorldMap = useDynamicCountry ? false : (gameTypeConfig?.bounds === null);
+  const isImageMap = useDynamicCountry ? false : isImageGameType(effectiveGameType);
 
   // If this is an image-based map, delegate to ImageMap component
-  if (isImageMap) {
+  if (isImageMap && gameTypeConfig) {
     return (
       <ImageMap
         gameType={effectiveGameType}
@@ -129,15 +147,23 @@ export default function CountryMap({
     );
   }
 
+  // Determine GeoJSON URL
+  const geoJsonUrl = useDynamicCountry
+    ? `/api/countries/${dynamicCountry.id}/geojson`
+    : gameTypeConfig?.geoJsonFile;
+
   useEffect(() => {
     setMounted(true);
     setGeoData(null); // Reset geoData to ensure fresh load on gameType change
-    // Load GeoJSON data for the selected game type
-    fetch(gameTypeConfig.geoJsonFile)
+
+    if (!geoJsonUrl) return;
+
+    // Load GeoJSON data
+    fetch(geoJsonUrl)
       .then((res) => res.json())
       .then((data) => setGeoData(data))
       .catch((err) => console.error("Error loading GeoJSON:", err));
-  }, [gameTypeConfig.geoJsonFile]);
+  }, [geoJsonUrl]);
 
   if (!mounted || !geoData) {
     return (
@@ -150,13 +176,20 @@ export default function CountryMap({
     );
   }
 
-  // Build bounds only for country maps
-  const bounds = isWorldMap
-    ? undefined
-    : L.latLngBounds(
-        [gameTypeConfig.bounds!.southWest.lat, gameTypeConfig.bounds!.southWest.lng],
-        [gameTypeConfig.bounds!.northEast.lat, gameTypeConfig.bounds!.northEast.lng]
-      );
+  // Build bounds - handle both dynamic and static configs
+  let bounds: L.LatLngBounds | undefined;
+  if (useDynamicCountry && dynamicCountry.boundsNorth !== null && dynamicCountry.boundsSouth !== null &&
+      dynamicCountry.boundsEast !== null && dynamicCountry.boundsWest !== null) {
+    bounds = L.latLngBounds(
+      [dynamicCountry.boundsSouth, dynamicCountry.boundsWest],
+      [dynamicCountry.boundsNorth, dynamicCountry.boundsEast]
+    );
+  } else if (!isWorldMap && gameTypeConfig?.bounds) {
+    bounds = L.latLngBounds(
+      [gameTypeConfig.bounds.southWest.lat, gameTypeConfig.bounds.southWest.lng],
+      [gameTypeConfig.bounds.northEast.lat, gameTypeConfig.bounds.northEast.lng]
+    );
+  }
 
   // Style for country GeoJSON - Dark Gaming Theme
   const geoStyle = {
@@ -169,26 +202,44 @@ export default function CountryMap({
   // Reduce zoom by 1 on mobile for better overview
   const mobileZoomOffset = isMobile ? -1 : 0;
 
+  // Determine center and zoom
+  const center: [number, number] = useDynamicCountry
+    ? [dynamicCountry.centerLat, dynamicCountry.centerLng]
+    : [gameTypeConfig!.defaultCenter.lat, gameTypeConfig!.defaultCenter.lng];
+
+  const zoom = useDynamicCountry
+    ? dynamicCountry.defaultZoom + mobileZoomOffset
+    : gameTypeConfig!.defaultZoom + mobileZoomOffset;
+
+  const minZoom = useDynamicCountry
+    ? dynamicCountry.minZoom + mobileZoomOffset
+    : gameTypeConfig!.minZoom + mobileZoomOffset;
+
   // Map container props
   const mapContainerProps: Record<string, unknown> = {
-    center: [gameTypeConfig.defaultCenter.lat, gameTypeConfig.defaultCenter.lng],
-    zoom: gameTypeConfig.defaultZoom + mobileZoomOffset,
+    center,
+    zoom,
     style: { height, width: "100%", backgroundColor: "#1A1F26" },
     className: "rounded-lg",
-    minZoom: gameTypeConfig.minZoom + mobileZoomOffset,
+    minZoom,
     zoomControl: false, // We'll add custom positioned zoom control
   };
 
   // Only add maxBounds for country maps
-  if (!isWorldMap && bounds) {
+  if (bounds) {
     mapContainerProps.maxBounds = bounds;
     mapContainerProps.maxBoundsViscosity = 1.0;
   }
 
+  // Create a unique key for the map container
+  const mapKey = useDynamicCountry
+    ? `dynamic-${dynamicCountry.id}-${isMobile ? 'mobile' : 'desktop'}`
+    : `${effectiveGameType}-${isMobile ? 'mobile' : 'desktop'}`;
+
   return (
-    <MapContainer {...mapContainerProps} key={`${effectiveGameType}-${isMobile ? 'mobile' : 'desktop'}`}>
+    <MapContainer {...mapContainerProps} key={mapKey}>
       {/* Zoom controls - positioned bottom left to avoid badge bar */}
-      <ZoomControl position="bottomleft" />
+      <ZoomControl key="zoom-control" position="bottomleft" />
 
       {/* Custom pane for hint circle - must be created before Circle is rendered */}
       <HintCirclePane key="hint-pane" />

@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { locations } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 
@@ -38,8 +39,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get existing location names for duplicate check
-    const existingLocations = await db.select({ name: locations.name }).from(locations);
+    // Get existing location names for duplicate check (per country)
+    const existingLocations = await db.select({ name: locations.name })
+      .from(locations)
+      .where(eq(locations.country, country));
     const existingNames = new Set(existingLocations.map(l => l.name.toLowerCase()));
 
     // Validate all locations
