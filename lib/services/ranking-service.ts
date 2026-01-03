@@ -69,6 +69,19 @@ export interface GetTopGamesParams {
   offset?: number;
 }
 
+export interface GetUserBestGameRankParams {
+  userId: string;
+  gameType: string;
+  period?: RankingPeriod;
+}
+
+export interface UserGameStats {
+  gamesCount: number;
+  bestScore: number;
+  totalScore: number;
+  rank: number | null;
+}
+
 export class RankingService {
   /**
    * Get the period key for a given date and period type
@@ -439,9 +452,10 @@ export class RankingService {
   static async getUserStats(userId: string): Promise<{
     totalGames: number;
     bestScore: number;
+    totalScore: number;
     averageScore: number;
     bestRank: number | null;
-    gameTypeBreakdown: Record<string, { games: number; bestScore: number; avgScore: number }>;
+    gameTypeBreakdown: Record<string, { games: number; bestScore: number; totalScore: number; avgScore: number }>;
   }> {
     const allRankings = await db
       .select()
@@ -457,6 +471,7 @@ export class RankingService {
       return {
         totalGames: 0,
         bestScore: 0,
+        totalScore: 0,
         averageScore: 0,
         bestRank: null,
         gameTypeBreakdown: {},
@@ -464,7 +479,7 @@ export class RankingService {
     }
 
     let overall = allRankings.find((r) => r.gameType === "overall");
-    const gameTypeBreakdown: Record<string, { games: number; bestScore: number; avgScore: number }> = {};
+    const gameTypeBreakdown: Record<string, { games: number; bestScore: number; totalScore: number; avgScore: number }> = {};
 
     // Build game type breakdown from non-"overall" rankings
     const gameTypeRankings = allRankings.filter((r) => r.gameType !== "overall");
@@ -472,6 +487,7 @@ export class RankingService {
       gameTypeBreakdown[ranking.gameType] = {
         games: ranking.totalGames,
         bestScore: ranking.bestScore,
+        totalScore: ranking.totalScore,
         avgScore: ranking.averageScore,
       };
     }
@@ -480,6 +496,7 @@ export class RankingService {
     if (!overall && gameTypeRankings.length > 0) {
       const totalGames = gameTypeRankings.reduce((sum, r) => sum + r.totalGames, 0);
       const bestScore = Math.max(...gameTypeRankings.map((r) => r.bestScore));
+      const totalScore = gameTypeRankings.reduce((sum, r) => sum + r.totalScore, 0);
 
       // Calculate weighted average score
       const totalScorePoints = gameTypeRankings.reduce(
@@ -491,6 +508,7 @@ export class RankingService {
       overall = {
         totalGames,
         bestScore,
+        totalScore,
         averageScore,
         rank: null,
       } as any;
@@ -501,6 +519,7 @@ export class RankingService {
     return {
       totalGames: overall?.totalGames ?? 0,
       bestScore: overall?.bestScore ?? 0,
+      totalScore: overall?.totalScore ?? 0,
       averageScore: overall?.averageScore ?? 0,
       bestRank: bestRank === Infinity ? null : bestRank,
       gameTypeBreakdown,
@@ -567,5 +586,145 @@ export class RankingService {
       totalScore: r.totalScore,
       completedAt: r.completedAt,
     }));
+  }
+
+  /**
+   * Get user's best game rank in the games list (not aggregated)
+   * Returns the position of the user's highest-scoring game among all games
+   */
+  static async getUserBestGameRank(params: GetUserBestGameRankParams): Promise<number | null> {
+    const { userId, gameType, period } = params;
+
+    // Build date filter for period
+    let startDate: Date | undefined;
+    if (period && period !== "alltime") {
+      const now = new Date();
+      startDate = new Date(now);
+
+      if (period === "daily") {
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === "weekly") {
+        const day = now.getDay();
+        const diff = day === 0 ? 6 : day - 1;
+        startDate.setDate(now.getDate() - diff);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === "monthly") {
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+      }
+    }
+
+    // Build conditions for user's games
+    const userConditions = [
+      eq(rankedGameResults.gameType, gameType),
+      eq(rankedGameResults.userId, userId),
+    ];
+    if (startDate) {
+      userConditions.push(sql`${rankedGameResults.completedAt} >= ${Math.floor(startDate.getTime() / 1000)}`);
+    }
+
+    // Get user's best score for this game type and period
+    const userBestGame = await db
+      .select({ totalScore: rankedGameResults.totalScore })
+      .from(rankedGameResults)
+      .where(and(...userConditions))
+      .orderBy(desc(rankedGameResults.totalScore))
+      .limit(1)
+      .get();
+
+    if (!userBestGame) {
+      return null; // User has no games for this type/period
+    }
+
+    // Count how many games have a higher score
+    const allConditions = [eq(rankedGameResults.gameType, gameType)];
+    if (startDate) {
+      allConditions.push(sql`${rankedGameResults.completedAt} >= ${Math.floor(startDate.getTime() / 1000)}`);
+    }
+    allConditions.push(sql`${rankedGameResults.totalScore} > ${userBestGame.totalScore}`);
+
+    const higherScoreCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(rankedGameResults)
+      .where(and(...allConditions))
+      .get();
+
+    // Rank = number of games with higher score + 1
+    return (higherScoreCount?.count ?? 0) + 1;
+  }
+
+  /**
+   * Get user's game stats for a specific game type and period
+   * Returns: games count, best score, and rank in the games list
+   */
+  static async getUserGameStats(params: GetUserBestGameRankParams): Promise<UserGameStats | null> {
+    const { userId, gameType, period } = params;
+
+    // Build date filter for period
+    let startDate: Date | undefined;
+    if (period && period !== "alltime") {
+      const now = new Date();
+      startDate = new Date(now);
+
+      if (period === "daily") {
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === "weekly") {
+        const day = now.getDay();
+        const diff = day === 0 ? 6 : day - 1;
+        startDate.setDate(now.getDate() - diff);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === "monthly") {
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+      }
+    }
+
+    // Build conditions for user's games
+    const userConditions = [
+      eq(rankedGameResults.gameType, gameType),
+      eq(rankedGameResults.userId, userId),
+    ];
+    if (startDate) {
+      userConditions.push(sql`${rankedGameResults.completedAt} >= ${Math.floor(startDate.getTime() / 1000)}`);
+    }
+
+    // Get user's games for this game type and period
+    const userGames = await db
+      .select({
+        totalScore: rankedGameResults.totalScore,
+      })
+      .from(rankedGameResults)
+      .where(and(...userConditions))
+      .orderBy(desc(rankedGameResults.totalScore));
+
+    if (userGames.length === 0) {
+      return null; // User has no games for this type/period
+    }
+
+    const gamesCount = userGames.length;
+    const bestScore = userGames[0].totalScore;
+    const totalScore = userGames.reduce((sum, g) => sum + g.totalScore, 0);
+
+    // Count how many games have a higher score than user's best
+    const allConditions = [eq(rankedGameResults.gameType, gameType)];
+    if (startDate) {
+      allConditions.push(sql`${rankedGameResults.completedAt} >= ${Math.floor(startDate.getTime() / 1000)}`);
+    }
+    allConditions.push(sql`${rankedGameResults.totalScore} > ${bestScore}`);
+
+    const higherScoreCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(rankedGameResults)
+      .where(and(...allConditions))
+      .get();
+
+    const rank = (higherScoreCount?.count ?? 0) + 1;
+
+    return {
+      gamesCount,
+      bestScore,
+      totalScore,
+      rank,
+    };
   }
 }

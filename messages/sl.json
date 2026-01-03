@@ -2,7 +2,6 @@
   "header": {
     "guesser": "Guesser",
     "groups": "Skupine",
-    "solo": "Solo",
     "train": "Treniraj",
     "profile": "Profil",
     "logout": "Odjava",
@@ -287,6 +286,8 @@
       "ctaPlay": "Igraj zdaj",
       "ctaLogin": "Prijava z Google",
       "locations": "Lokacije",
+      "countries": "Države",
+      "worldQuizzes": "Svetovni kvizi",
       "perLocation": "na lokacijo",
       "maxPoints": "Maks točk"
     },
@@ -373,31 +374,6 @@
     "gamesPlayed": "odigrane igre",
     "by": "od",
     "shareWhatsApp": "Deli na WhatsApp"
-  },
-  "solo": {
-    "title": "Solo igre",
-    "loginRequired": "Prijavite se za igranje solo iger in shranjevanje napredka.",
-    "activeGame": "Aktivna igra",
-    "round": "Krog",
-    "continueGame": "Nadaljuj",
-    "startNewGame": "Začni novo solo igro",
-    "newGame": "Nova igra",
-    "gameSettings": "Nastavitve igre",
-    "totalRounds": "Število krogov",
-    "startGame": "Začni igro",
-    "yourStats": "Vaša statistika",
-    "gamesPlayed": "Igre",
-    "bestScore": "Najboljši rezultat",
-    "completedGames": "Končane igre",
-    "rounds": "Krogi",
-    "wantQuickPractice": "Hitra vadba brez točk?",
-    "goToTraining": "Na trening",
-    "gameComplete": "Igra končana!",
-    "totalScore": "Skupna ocena",
-    "totalDistance": "Skupna razdalja",
-    "backToDashboard": "Nazaj na pregled",
-    "finishGame": "Končaj igro",
-    "noActiveGame": "Aktivna igra ni najdena"
   },
   "profile": {
     "title": "Profil",

@@ -25,6 +25,16 @@ export async function GET(request: Request) {
         offset,
       });
 
+      // Get user's game stats (games count, best score, rank) if logged in
+      let userGameStats = null;
+      if (session?.user?.id) {
+        userGameStats = await RankingService.getUserGameStats({
+          userId: session.user.id,
+          gameType,
+          period,
+        });
+      }
+
       return NextResponse.json({
         rankings: topGames.map((g) => ({
           rank: g.rank,
@@ -34,6 +44,7 @@ export async function GET(request: Request) {
           gameId: g.gameId,
           completedAt: g.completedAt,
         })),
+        userGameStats,
         gameType,
         mode: "games",
         total: topGames.length,

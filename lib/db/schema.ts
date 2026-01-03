@@ -117,10 +117,10 @@ export const worldLocations = sqliteTable("worldLocations", {
 export const games = sqliteTable("games", {
   id: text("id").primaryKey(),
   groupId: text("groupId")
-    .references(() => groups.id, { onDelete: "cascade" }), // NULLABLE for solo/training games
+    .references(() => groups.id, { onDelete: "cascade" }), // NULLABLE for training games
   userId: text("userId")
-    .references(() => users.id, { onDelete: "cascade" }), // Owner for solo/training games
-  mode: text("mode", { enum: ["group", "solo", "training", "ranked"] }).notNull().default("group"), // Game mode
+    .references(() => users.id, { onDelete: "cascade" }), // Owner for training games
+  mode: text("mode", { enum: ["group", "training", "ranked"] }).notNull().default("group"), // Game mode
   name: text("name"), // Game name (optional, set by admin)
   country: text("country").notNull().default("switzerland"), // Country key (switzerland, slovenia) - legacy
   gameType: text("gameType"), // New: "country:switzerland", "world:capitals" etc. null = use country field
@@ -259,6 +259,26 @@ export const countries = sqliteTable("countries", {
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 
+// World Quiz Types (for dynamic world quiz categories)
+export const worldQuizTypes = sqliteTable("worldQuizTypes", {
+  id: text("id").primaryKey(), // z.B. "capitals", "highest-mountains"
+  name: text("name").notNull(), // "Hauptstädte"
+  nameEn: text("name_en"), // "World Capitals"
+  nameSl: text("name_sl"), // "Prestolnice"
+  icon: text("icon").notNull(), // "🏛️"
+  // Karteneinstellungen (World Map defaults)
+  centerLat: real("center_lat").notNull().default(20),
+  centerLng: real("center_lng").notNull().default(0),
+  defaultZoom: integer("default_zoom").notNull().default(2),
+  minZoom: integer("min_zoom").notNull().default(1),
+  // Scoring
+  timeoutPenalty: integer("timeout_penalty").notNull().default(5000), // km
+  scoreScaleFactor: integer("score_scale_factor").notNull().default(3000), // km
+  // Status
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
@@ -273,3 +293,4 @@ export type UserStats = typeof userStats.$inferSelect;
 export type RankedGameResult = typeof rankedGameResults.$inferSelect;
 export type Ranking = typeof rankings.$inferSelect;
 export type Country = typeof countries.$inferSelect;
+export type WorldQuizType = typeof worldQuizTypes.$inferSelect;

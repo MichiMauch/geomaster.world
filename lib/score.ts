@@ -5,19 +5,24 @@ import { getGameTypeConfig } from "./game-types";
  * Uses exponential decay formula normalized by map size.
  *
  * @deprecated For ranked games, use calculateScore from @/lib/scoring instead.
- * This function is kept for backward compatibility with group games, solo games, and training mode.
+ * This function is kept for backward compatibility with group games and training mode.
  *
  * @param distanceKm - Distance in kilometers
  * @param gameType - Game type ID (e.g., "country:switzerland", "world:capitals")
+ * @param scoreScaleFactor - Optional override for dynamic game types (from DB)
  * @returns Score from 0-100
  */
-export function calculateScore(distanceKm: number, gameType: string): number {
+export function calculateScore(
+  distanceKm: number,
+  gameType: string,
+  scoreScaleFactor?: number
+): number {
   const maxPoints = 100;
   const config = getGameTypeConfig(gameType);
 
-  // Scale factor from config: at this distance you get ~37% of max points (e^-1)
-  // Each game type has its own scale factor based on map/country size
-  const scaleFactor = config.scoreScaleFactor;
+  // Scale factor: use override if provided, otherwise from config
+  // Override is needed for dynamic game types (countries/world quizzes from DB)
+  const scaleFactor = scoreScaleFactor ?? config.scoreScaleFactor;
 
   const score = maxPoints * Math.exp(-distanceKm / scaleFactor);
   return Math.round(score);

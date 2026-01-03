@@ -2,7 +2,6 @@
   "header": {
     "guesser": "Guesser",
     "groups": "Groups",
-    "solo": "Solo",
     "train": "Train",
     "profile": "Profile",
     "logout": "Logout",
@@ -287,6 +286,8 @@
       "ctaPlay": "Play Now",
       "ctaLogin": "Sign in with Google",
       "locations": "Locations",
+      "countries": "Countries",
+      "worldQuizzes": "World Quizzes",
       "perLocation": "per location",
       "maxPoints": "Max Points"
     },
@@ -373,31 +374,6 @@
     "gamesPlayed": "games played",
     "by": "by",
     "shareWhatsApp": "Share on WhatsApp"
-  },
-  "solo": {
-    "title": "Solo Games",
-    "loginRequired": "Log in to play solo games and save your progress.",
-    "activeGame": "Active Game",
-    "round": "Round",
-    "continueGame": "Continue",
-    "startNewGame": "Start a new solo game",
-    "newGame": "New Game",
-    "gameSettings": "Game Settings",
-    "totalRounds": "Number of Rounds",
-    "startGame": "Start Game",
-    "yourStats": "Your Statistics",
-    "gamesPlayed": "Games",
-    "bestScore": "Best Score",
-    "completedGames": "Completed Games",
-    "rounds": "Rounds",
-    "wantQuickPractice": "Quick practice without scores?",
-    "goToTraining": "Go to Training",
-    "gameComplete": "Game Complete!",
-    "totalScore": "Total Score",
-    "totalDistance": "Total Distance",
-    "backToDashboard": "Back to Dashboard",
-    "finishGame": "Finish Game",
-    "noActiveGame": "No active game found"
   },
   "profile": {
     "title": "Profile",

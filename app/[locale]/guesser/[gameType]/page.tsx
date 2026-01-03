@@ -6,9 +6,10 @@ import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { getGameTypeConfig } from "@/lib/game-types";
+import { getGameTypeConfig, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
 import { nanoid } from "nanoid";
 import { cn } from "@/lib/utils";
+import { countryToGameTypeConfig, worldQuizToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType } from "@/lib/utils/country-converter";
 
 interface RankingEntry {
   rank: number;
@@ -30,8 +31,65 @@ export default function GuesserGameTypePage() {
   const gameType = decodeURIComponent(params.gameType as string);
   const t = useTranslations("ranked");
 
-  // Validate game type
-  const gameConfig = getGameTypeConfig(gameType);
+  // Game config state - may be loaded from static GAME_TYPES or fetched from DB
+  const [gameConfig, setGameConfig] = useState<GameTypeConfig | null>(null);
+  const [configLoading, setConfigLoading] = useState(true);
+
+  // Load game config - check static first, then fetch from DB if needed
+  useEffect(() => {
+    const loadConfig = async () => {
+      // Check static GAME_TYPES first
+      if (GAME_TYPES[gameType]) {
+        setGameConfig(GAME_TYPES[gameType]);
+        setConfigLoading(false);
+        return;
+      }
+
+      // If it's a country type, try to fetch from database
+      if (gameType.startsWith("country:")) {
+        const countryId = gameType.split(":")[1];
+        try {
+          const res = await fetch(`/api/countries?active=true`);
+          if (res.ok) {
+            const countries: DatabaseCountry[] = await res.json();
+            const country = countries.find((c) => c.id === countryId);
+            if (country) {
+              setGameConfig(countryToGameTypeConfig(country));
+              setConfigLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching country config:", error);
+        }
+      }
+
+      // If it's a world quiz type, try to fetch from database
+      if (gameType.startsWith("world:")) {
+        const worldQuizId = gameType.split(":")[1];
+        try {
+          const res = await fetch(`/api/world-quiz-types?active=true`);
+          if (res.ok) {
+            const worldQuizTypes: DatabaseWorldQuizType[] = await res.json();
+            const worldQuiz = worldQuizTypes.find((w) => w.id === worldQuizId);
+            if (worldQuiz) {
+              setGameConfig(worldQuizToGameTypeConfig(worldQuiz));
+              setConfigLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching world quiz config:", error);
+        }
+      }
+
+      // Invalid game type - will trigger redirect
+      setGameConfig(null);
+      setConfigLoading(false);
+    };
+
+    loadConfig();
+  }, [gameType]);
 
   // Tab and pagination state
   const [activeTab, setActiveTab] = useState<TabType>("best");
@@ -42,7 +100,12 @@ export default function GuesserGameTypePage() {
 
   // User stats state
   const [userStats, setUserStats] = useState<any>(null);
-  const [userRank, setUserRank] = useState<number | null>(null);
+  const [userGameStats, setUserGameStats] = useState<{
+    gamesCount: number;
+    bestScore: number;
+    totalScore: number;
+    rank: number | null;
+  } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
   // Game creation state
@@ -63,12 +126,12 @@ export default function GuesserGameTypePage() {
     }
   }, [session]);
 
-  // Redirect if invalid game type
+  // Redirect if invalid game type (only after loading is complete)
   useEffect(() => {
-    if (!gameConfig) {
+    if (!configLoading && !gameConfig) {
       router.push(`/${locale}/guesser`);
     }
-  }, [gameConfig, router, locale]);
+  }, [configLoading, gameConfig, router, locale]);
 
   // Fetch rankings based on active tab and page
   useEffect(() => {
@@ -99,6 +162,12 @@ export default function GuesserGameTypePage() {
           setRankings(data.rankings || []);
           // For now, estimate total count - API should return this
           setTotalCount(data.total || data.rankings?.length || 0);
+          // Store user's game stats for mode=games tabs (weekly/best)
+          if (data.userGameStats !== undefined) {
+            setUserGameStats(data.userGameStats);
+          } else {
+            setUserGameStats(null);
+          }
         }
       } catch (error) {
         console.error("Error fetching rankings:", error);
@@ -118,21 +187,10 @@ export default function GuesserGameTypePage() {
       const fetchUserStats = async () => {
         setLoadingStats(true);
         try {
-          const [statsRes, rankRes] = await Promise.all([
-            fetch("/api/ranked/stats"),
-            fetch(`/api/ranked/leaderboard?gameType=${gameType}&period=alltime&limit=1`),
-          ]);
-
+          const statsRes = await fetch("/api/ranked/stats");
           if (statsRes.ok) {
             const data = await statsRes.json();
             setUserStats(data.stats);
-          }
-
-          if (rankRes.ok) {
-            const data = await rankRes.json();
-            if (data.userRank) {
-              setUserRank(data.userRank.rank);
-            }
           }
         } catch (error) {
           console.error("Error fetching user stats:", error);
@@ -178,7 +236,7 @@ export default function GuesserGameTypePage() {
   };
 
   // Show loading or nothing while validating/redirecting
-  if (!gameConfig) {
+  if (configLoading || !gameConfig) {
     return null;
   }
 
@@ -192,9 +250,17 @@ export default function GuesserGameTypePage() {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  // Personal stats for this game type
-  const personalBest = userStats?.gameTypeBreakdown?.[gameType]?.bestScore || 0;
-  const personalGames = userStats?.gameTypeBreakdown?.[gameType]?.games || 0;
+  // Personal stats - use period-specific stats for weekly/best tabs, alltime for total tab
+  const isGamesMode = activeTab === "weekly" || activeTab === "best";
+  const personalGames = isGamesMode
+    ? (userGameStats?.gamesCount || 0)
+    : (userStats?.gameTypeBreakdown?.[gameType]?.games || 0);
+  const personalBest = isGamesMode
+    ? (userGameStats?.bestScore || 0)
+    : (userStats?.gameTypeBreakdown?.[gameType]?.bestScore || 0);
+  const personalTotalScore = isGamesMode
+    ? (userGameStats?.totalScore || 0)
+    : (userStats?.gameTypeBreakdown?.[gameType]?.totalScore || 0);
 
   // Tab labels
   const tabLabels = {
@@ -222,11 +288,11 @@ export default function GuesserGameTypePage() {
     </Button>
   );
 
-  // My Rankings Component
-  const MyRankings = () => (
+  // My Stats Component
+  const MyStats = () => (
     <>
       <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-        {locale === "de" ? "Deine Rankings" : locale === "en" ? "Your Rankings" : "Tvoje uvrstitve"}
+        {locale === "de" ? "Deine Stats" : locale === "en" ? "Your Stats" : "Tvoje statistike"}
       </h3>
 
       {loadingStats ? (
@@ -251,10 +317,10 @@ export default function GuesserGameTypePage() {
           </div>
           <div className="text-center p-2 bg-surface-2 rounded-sm">
             <div className="text-lg font-bold text-primary">
-              {userRank ? `#${userRank}` : "—"}
+              {personalTotalScore.toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">
-              {locale === "de" ? "Rang" : locale === "en" ? "Rank" : "Uvrstitev"}
+              {locale === "de" ? "Total" : locale === "en" ? "Total" : "Skupaj"}
             </div>
           </div>
         </div>
@@ -407,7 +473,7 @@ export default function GuesserGameTypePage() {
           <div className="hidden lg:block lg:col-span-1">
             <Card className="p-4">
               {session?.user ? (
-                <MyRankings />
+                <MyStats />
               ) : (
                 <p className="text-sm text-muted-foreground mb-4">
                   {locale === "de"
@@ -425,7 +491,7 @@ export default function GuesserGameTypePage() {
         {/* Mobile Only: My Rankings at Bottom */}
         {session?.user && (
           <Card className="p-4 mt-4 lg:hidden">
-            <MyRankings />
+            <MyStats />
           </Card>
         )}
       </div>
