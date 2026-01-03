@@ -233,6 +233,32 @@ export const rankings = sqliteTable("rankings", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });
 
+// Countries (for dynamic country game types)
+export const countries = sqliteTable("countries", {
+  id: text("id").primaryKey(), // z.B. "switzerland", "germany"
+  name: text("name").notNull(), // "Schweiz"
+  nameEn: text("name_en"), // "Switzerland"
+  nameSl: text("name_sl"), // "Švica"
+  icon: text("icon").notNull(), // "🇨🇭"
+  geoJsonData: text("geojson_data"), // GeoJSON als JSON-String
+  // Karteneinstellungen
+  centerLat: real("center_lat").notNull(),
+  centerLng: real("center_lng").notNull(),
+  defaultZoom: integer("default_zoom").notNull().default(8),
+  minZoom: integer("min_zoom").notNull().default(7),
+  // Bounds
+  boundsNorth: real("bounds_north"),
+  boundsSouth: real("bounds_south"),
+  boundsEast: real("bounds_east"),
+  boundsWest: real("bounds_west"),
+  // Scoring
+  timeoutPenalty: integer("timeout_penalty").notNull().default(300), // km
+  scoreScaleFactor: integer("score_scale_factor").notNull().default(80), // km
+  // Status
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
@@ -246,3 +272,4 @@ export type Guess = typeof guesses.$inferSelect;
 export type UserStats = typeof userStats.$inferSelect;
 export type RankedGameResult = typeof rankedGameResults.$inferSelect;
 export type Ranking = typeof rankings.$inferSelect;
+export type Country = typeof countries.$inferSelect;
