@@ -22,6 +22,9 @@ export interface User {
 export interface Location {
   id: string;
   name: string;
+  nameDe: string | null;
+  nameEn: string | null;
+  nameSl: string | null;
   latitude: number;
   longitude: number;
   difficulty: string;

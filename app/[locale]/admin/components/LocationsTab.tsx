@@ -58,6 +58,9 @@ export function LocationsTab({ locations, countries, onDelete, onAdd, onImport, 
   const [translating, setTranslating] = useState(false);
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus | null>(null);
 
+  // Expanded locations state (for showing translations)
+  const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
+
   // Single location form state
   const [locationName, setLocationName] = useState("");
   const [latitude, setLatitude] = useState("");
@@ -258,6 +261,19 @@ export function LocationsTab({ locations, countries, onDelete, onAdd, onImport, 
     } finally {
       setTranslating(false);
     }
+  };
+
+  // Toggle expanded state for a location
+  const toggleExpanded = (locationId: string) => {
+    setExpandedLocations((prev) => {
+      const next = new Set(prev);
+      if (next.has(locationId)) {
+        next.delete(locationId);
+      } else {
+        next.add(locationId);
+      }
+      return next;
+    });
   };
 
   return (
@@ -511,51 +527,91 @@ export function LocationsTab({ locations, countries, onDelete, onAdd, onImport, 
             </p>
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
-              {locations.map((location) => (
-                <div
-                  key={location.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <p className="font-medium text-text-primary">{location.name}</p>
-                      <p className="text-caption text-text-muted">
-                        {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        location.difficulty === "easy"
-                          ? "success"
-                          : location.difficulty === "medium"
-                          ? "warning"
-                          : "error"
-                      }
-                      size="sm"
-                    >
-                      {location.difficulty === "easy"
-                        ? "Einfach"
-                        : location.difficulty === "medium"
-                        ? "Mittel"
-                        : "Schwer"}
-                    </Badge>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setDeleteModal({
-                        isOpen: true,
-                        locationId: location.id,
-                        locationName: location.name,
-                      })
-                    }
-                    className="text-error hover:text-error hover:bg-error/10"
+              {locations.map((location) => {
+                const isExpanded = expandedLocations.has(location.id);
+                return (
+                  <div
+                    key={location.id}
+                    className="rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors"
                   >
-                    Löschen
-                  </Button>
-                </div>
-              ))}
+                    {/* Main row - clickable to expand */}
+                    <div
+                      className="flex items-center justify-between p-3 cursor-pointer"
+                      onClick={() => toggleExpanded(location.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Expand/Collapse indicator */}
+                        <span className="text-text-muted text-sm w-4">
+                          {isExpanded ? "▼" : "▶"}
+                        </span>
+                        <div>
+                          <p className="font-medium text-text-primary">{location.name}</p>
+                          <p className="text-caption text-text-muted">
+                            {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            location.difficulty === "easy"
+                              ? "success"
+                              : location.difficulty === "medium"
+                              ? "warning"
+                              : "error"
+                          }
+                          size="sm"
+                        >
+                          {location.difficulty === "easy"
+                            ? "Einfach"
+                            : location.difficulty === "medium"
+                            ? "Mittel"
+                            : "Schwer"}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteModal({
+                            isOpen: true,
+                            locationId: location.id,
+                            locationName: location.name,
+                          });
+                        }}
+                        className="text-error hover:text-error hover:bg-error/10"
+                      >
+                        Löschen
+                      </Button>
+                    </div>
+
+                    {/* Expanded translation details */}
+                    {isExpanded && (
+                      <div className="px-3 pb-3 pt-0 ml-7 border-t border-glass-border">
+                        <div className="pt-3 space-y-1 text-body-small">
+                          <p className="text-text-secondary">
+                            <span className="inline-block w-16">🇩🇪 DE:</span>
+                            <span className={location.nameDe ? "text-text-primary" : "text-text-muted"}>
+                              {location.nameDe || "—"}
+                            </span>
+                          </p>
+                          <p className="text-text-secondary">
+                            <span className="inline-block w-16">🇬🇧 EN:</span>
+                            <span className={location.nameEn ? "text-text-primary" : "text-text-muted"}>
+                              {location.nameEn || "—"}
+                            </span>
+                          </p>
+                          <p className="text-text-secondary">
+                            <span className="inline-block w-16">🇸🇮 SL:</span>
+                            <span className={location.nameSl ? "text-text-primary" : "text-text-muted"}>
+                              {location.nameSl || "—"}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </Card>
