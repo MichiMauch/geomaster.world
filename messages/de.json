@@ -76,7 +76,15 @@
       "ranking": "Erscheine in den globalen Rankings",
       "stats": "Verfolge deine Statistiken über Zeit",
       "groups": "Spiele in Gruppen mit Freunden"
-    }
+    },
+    "magicLink": "Mit E-Mail-Link anmelden",
+    "magicLinkTitle": "Magic Link",
+    "magicLinkDescription": "Wir senden dir einen Link zum Anmelden an deine E-Mail-Adresse.",
+    "magicLinkSend": "Link senden",
+    "magicLinkSending": "Wird gesendet...",
+    "magicLinkSent": "Link gesendet!",
+    "magicLinkSentDescription": "Wir haben dir einen Anmeldelink gesendet. Bitte prüfe dein E-Mail-Postfach.",
+    "magicLinkError": "Fehler beim Senden des Links"
   },
   "join": {
     "title": "Gruppe beitreten",

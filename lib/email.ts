@@ -86,3 +86,59 @@ export async function sendVerificationEmail(email: string, token: string, locale
     html,
   });
 }
+
+export async function sendMagicLinkEmail(email: string, url: string, locale: string = "de") {
+  const translations = {
+    de: {
+      subject: "Dein Login-Link für PinPoint",
+      greeting: "Login-Link angefordert",
+      message: "Klicke auf den folgenden Link, um dich bei PinPoint anzumelden:",
+      button: "Jetzt anmelden",
+      expiry: "Dieser Link ist 24 Stunden gültig und kann nur einmal verwendet werden.",
+      ignore: "Falls du diesen Link nicht angefordert hast, kannst du diese E-Mail ignorieren.",
+    },
+    en: {
+      subject: "Your login link for PinPoint",
+      greeting: "Login link requested",
+      message: "Click the following link to sign in to PinPoint:",
+      button: "Sign in now",
+      expiry: "This link is valid for 24 hours and can only be used once.",
+      ignore: "If you did not request this link, you can ignore this email.",
+    },
+    sl: {
+      subject: "Vaša povezava za prijavo v PinPoint",
+      greeting: "Zahtevana povezava za prijavo",
+      message: "Kliknite na naslednjo povezavo, da se prijavite v PinPoint:",
+      button: "Prijava",
+      expiry: "Ta povezava velja 24 ur in jo lahko uporabite samo enkrat.",
+      ignore: "Če niste zahtevali te povezave, lahko to e-pošto ignorirate.",
+    },
+  };
+
+  const t = translations[locale as keyof typeof translations] || translations.de;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0a0a0f; color: #e5e5e5; padding: 40px 20px; margin: 0;">
+      <div style="max-width: 480px; margin: 0 auto; background-color: #1a1a24; border-radius: 12px; padding: 40px; border: 1px solid rgba(255,255,255,0.1);">
+        <h1 style="color: #00d9ff; margin: 0 0 24px 0; font-size: 24px;">${t.greeting}</h1>
+        <p style="color: #a3a3a3; line-height: 1.6; margin: 0 0 24px 0;">${t.message}</p>
+        <a href="${url}" style="display: inline-block; background: linear-gradient(135deg, #00d9ff, #00b8d9); color: #000; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none; margin: 0 0 24px 0;">${t.button}</a>
+        <p style="color: #666; font-size: 14px; margin: 24px 0 0 0;">${t.expiry}</p>
+        <p style="color: #666; font-size: 12px; margin: 16px 0 0 0;">${t.ignore}</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: t.subject,
+    html,
+  });
+}

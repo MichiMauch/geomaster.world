@@ -2,10 +2,12 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
+import EmailProvider from "next-auth/providers/email";
 import { compare } from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "./db/schema";
+import { sendMagicLinkEmail } from "./email";
 
 // Re-export für Rückwärtskompatibilität
 export { isSuperAdmin } from "./super-admin";
@@ -22,6 +24,22 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       allowDangerousEmailAccountLinking: true,
+    }),
+    EmailProvider({
+      server: {
+        host: process.env.MANDRILL_SERVER_HOST,
+        port: parseInt(process.env.MANDRILL_SERVER_PORT || "587"),
+        auth: {
+          user: process.env.MANDRILL_FROM_EMAIL,
+          pass: process.env.MANDRILL_API_KEY,
+        },
+      },
+      from: `"${process.env.MANDRILL_FROM_NAME || "PinPoint"}" <${process.env.MANDRILL_FROM_EMAIL}>`,
+      sendVerificationRequest: async ({ identifier: email, url }) => {
+        // Extract locale from the callback URL if present, default to "de"
+        const locale = url.includes("/en/") ? "en" : url.includes("/sl/") ? "sl" : "de";
+        await sendMagicLinkEmail(email, url, locale);
+      },
     }),
     CredentialsProvider({
       name: "credentials",

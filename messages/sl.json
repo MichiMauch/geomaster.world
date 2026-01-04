@@ -76,7 +76,15 @@
       "ranking": "Pojavi se na globalnih lestvicah",
       "stats": "Spremljaj svojo statistiko skozi čas",
       "groups": "Igraj v skupinah s prijatelji"
-    }
+    },
+    "magicLink": "Prijava z e-poštno povezavo",
+    "magicLinkTitle": "Čarobna povezava",
+    "magicLinkDescription": "Poslali vam bomo povezavo za prijavo na vaš e-poštni naslov.",
+    "magicLinkSend": "Pošlji povezavo",
+    "magicLinkSending": "Pošiljanje...",
+    "magicLinkSent": "Povezava poslana!",
+    "magicLinkSentDescription": "Poslali smo vam povezavo za prijavo. Prosimo, preverite vašo e-pošto.",
+    "magicLinkError": "Napaka pri pošiljanju povezave"
   },
   "join": {
     "title": "Pridruži se skupini",

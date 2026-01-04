@@ -16,7 +16,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("groups");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const isSuperAdmin = session?.user?.email === "michi.mauch@netnode.ch";
+  const isSuperAdmin = session?.user?.isSuperAdmin ?? false;
 
   const {
     groups,

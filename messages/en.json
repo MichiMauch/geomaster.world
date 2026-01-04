@@ -76,7 +76,15 @@
       "ranking": "Appear in global rankings",
       "stats": "Track your statistics over time",
       "groups": "Play in groups with friends"
-    }
+    },
+    "magicLink": "Sign in with Email Link",
+    "magicLinkTitle": "Magic Link",
+    "magicLinkDescription": "We'll send you a link to sign in to your email address.",
+    "magicLinkSend": "Send Link",
+    "magicLinkSending": "Sending...",
+    "magicLinkSent": "Link sent!",
+    "magicLinkSentDescription": "We've sent you a sign-in link. Please check your email inbox.",
+    "magicLinkError": "Error sending the link"
   },
   "join": {
     "title": "Join Group",
