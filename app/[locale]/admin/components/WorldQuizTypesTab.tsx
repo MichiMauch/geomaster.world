@@ -61,6 +61,9 @@ const ICON_OPTIONS = [
   { emoji: "🐧", label: "Pinguine" },
   { emoji: "🌸", label: "Blumen" },
   { emoji: "🌴", label: "Palmen" },
+  // Sonstige
+  { emoji: "🎯", label: "Zielscheibe" },
+  { emoji: "🏳️", label: "Flaggen" },
 ];
 
 // Icon picker component
