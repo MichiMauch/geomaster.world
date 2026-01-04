@@ -67,10 +67,10 @@ export default function HeroSection({ locale }: HeroSectionProps) {
               <span className="text-foreground">Pin</span>
               <span className="text-primary">Point</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-4">
+            <p className="text-xl md:text-2xl text-white mb-4">
               {t("hero.subtitle")}
             </p>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8">
+            <p className="text-xl md:text-2xl text-white/90 mb-8">
               {t("hero.tagline")}
             </p>
 
@@ -80,21 +80,21 @@ export default function HeroSection({ locale }: HeroSectionProps) {
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#00D9FF" }}>
                   {stats?.countryCount ?? "–"}
                 </span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.countries")}</span>
+                <span className="text-xs sm:text-sm md:text-base text-white font-medium">{t("hero.countries")}</span>
               </div>
-              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <span className="hidden sm:block text-2xl text-white/50 font-light">|</span>
               <div className="flex items-baseline gap-1 sm:gap-2">
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FF6B35" }}>
                   {stats?.worldQuizCount ?? "–"}
                 </span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.worldQuizzes")}</span>
+                <span className="text-xs sm:text-sm md:text-base text-white font-medium">{t("hero.worldQuizzes")}</span>
               </div>
-              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <span className="hidden sm:block text-2xl text-white/50 font-light">|</span>
               <div className="flex items-baseline gap-1 sm:gap-2">
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FFD700" }}>
                   {stats?.locationCount ? `${stats.locationCount}+` : "–"}
                 </span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.locations")}</span>
+                <span className="text-xs sm:text-sm md:text-base text-white font-medium">{t("hero.locations")}</span>
               </div>
             </div>
 
@@ -138,12 +138,12 @@ export default function HeroSection({ locale }: HeroSectionProps) {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-4 max-w-xl mx-auto lg:mx-0">
+            <p className="text-xl md:text-2xl text-white mb-4 max-w-xl mx-auto lg:mx-0">
               {t("hero.subtitle")}
             </p>
 
             {/* Tagline */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-xl mx-auto lg:mx-0">
               {t("hero.tagline")}
             </p>
 
@@ -153,30 +153,30 @@ export default function HeroSection({ locale }: HeroSectionProps) {
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#00D9FF" }}>
                   {stats?.countryCount ?? "–"}
                 </span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.countries")}</span>
+                <span className="text-xs sm:text-sm md:text-base text-white font-medium">{t("hero.countries")}</span>
               </div>
-              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <span className="hidden sm:block text-2xl text-white/50 font-light">|</span>
               <div className="flex items-baseline gap-1 sm:gap-2">
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FF6B35" }}>
                   {stats?.worldQuizCount ?? "–"}
                 </span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.worldQuizzes")}</span>
+                <span className="text-xs sm:text-sm md:text-base text-white font-medium">{t("hero.worldQuizzes")}</span>
               </div>
-              <span className="hidden sm:block text-2xl text-muted-foreground/50 font-light">|</span>
+              <span className="hidden sm:block text-2xl text-white/50 font-light">|</span>
               <div className="flex items-baseline gap-1 sm:gap-2">
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black" style={{ color: "#FFD700" }}>
                   {stats?.locationCount ? `${stats.locationCount}+` : "–"}
                 </span>
-                <span className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">{t("hero.locations")}</span>
+                <span className="text-xs sm:text-sm md:text-base text-white font-medium">{t("hero.locations")}</span>
               </div>
             </div>
 
             {/* Benefits */}
             <div className="space-y-3 max-w-md mx-auto lg:mx-0">
-              <h3 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-4">
+              <h3 className="text-sm font-medium text-white uppercase tracking-wider mb-4">
                 {tAuth("benefits.title")}
               </h3>
-              <div className="flex items-center gap-3 text-text-secondary">
+              <div className="flex items-center gap-3 text-white">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -184,7 +184,7 @@ export default function HeroSection({ locale }: HeroSectionProps) {
                 </div>
                 <span>{tAuth("benefits.ranking")}</span>
               </div>
-              <div className="flex items-center gap-3 text-text-secondary">
+              <div className="flex items-center gap-3 text-white">
                 <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -192,7 +192,7 @@ export default function HeroSection({ locale }: HeroSectionProps) {
                 </div>
                 <span>{tAuth("benefits.stats")}</span>
               </div>
-              <div className="flex items-center gap-3 text-text-secondary">
+              <div className="flex items-center gap-3 text-white">
                 <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
