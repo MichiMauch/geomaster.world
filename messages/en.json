@@ -5,7 +5,9 @@
     "train": "Train",
     "profile": "Profile",
     "logout": "Logout",
-    "login": "Login"
+    "login": "Login",
+    "profilePrompt": "Please enter your name!",
+    "goToProfile": "Go to profile"
   },
   "common": {
     "back": "Back",

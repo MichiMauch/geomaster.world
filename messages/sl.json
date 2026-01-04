@@ -5,7 +5,9 @@
     "train": "Treniraj",
     "profile": "Profil",
     "logout": "Odjava",
-    "login": "Prijava"
+    "login": "Prijava",
+    "profilePrompt": "Prosimo, vnesite svoje ime!",
+    "goToProfile": "Na profil"
   },
   "common": {
     "back": "Nazaj",

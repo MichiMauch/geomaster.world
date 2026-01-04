@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { usePageTitle } from "@/contexts/PageTitleContext";
+import toast from "react-hot-toast";
 
 export function Header() {
   const { data: session, status } = useSession();
@@ -60,6 +61,41 @@ export function Header() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
+
+  // Show profile prompt toast for users without a name
+  useEffect(() => {
+    if (status === "authenticated" && session?.user && !session.user.name) {
+      const dismissed = localStorage.getItem("profilePromptDismissed");
+      if (!dismissed) {
+        toast(
+          (toastInstance) => (
+            <div className="flex items-center gap-3">
+              <span>{t("profilePrompt")}</span>
+              <Link
+                href={`/${locale}/profile`}
+                className="text-primary hover:text-primary-light underline whitespace-nowrap"
+                onClick={() => toast.dismiss(toastInstance.id)}
+              >
+                {t("goToProfile")}
+              </Link>
+              <button
+                onClick={() => {
+                  localStorage.setItem("profilePromptDismissed", "true");
+                  toast.dismiss(toastInstance.id);
+                }}
+                className="text-text-muted hover:text-text-primary ml-1"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ),
+          { duration: 10000, id: "profile-prompt" }
+        );
+      }
+    }
+  }, [status, session, locale, t]);
 
   const user = session?.user;
   const initials = user?.name

@@ -5,7 +5,9 @@
     "train": "Trainieren",
     "profile": "Profil",
     "logout": "Abmelden",
-    "login": "Anmelden"
+    "login": "Anmelden",
+    "profilePrompt": "Bitte trage deinen Namen ein!",
+    "goToProfile": "Zum Profil"
   },
   "common": {
     "back": "Zurück",
