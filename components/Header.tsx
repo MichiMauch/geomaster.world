@@ -6,7 +6,6 @@ import { useParams, useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { isSuperAdmin } from "@/lib/super-admin";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export function Header() {
@@ -180,7 +179,7 @@ export function Header() {
                     {t("profile")}
                   </Link>
 
-                  {isSuperAdmin(user.email) && (
+                  {session?.user?.isSuperAdmin && (
                     <Link
                       href={`/${locale}/admin`}
                       onClick={() => setDropdownOpen(false)}

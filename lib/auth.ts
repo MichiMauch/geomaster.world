@@ -59,6 +59,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           image: user.image,
+          isSuperAdmin: user.isSuperAdmin ?? false,
         };
       },
     }),
@@ -71,15 +72,24 @@ export const authOptions: NextAuthOptions = {
       // Explicitly allow all sign-ins (OAuth and credentials)
       return true;
     },
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, trigger }) => {
       if (user) {
         token.id = user.id;
+        token.isSuperAdmin = (user as { isSuperAdmin?: boolean }).isSuperAdmin ?? false;
+      }
+      // For OAuth logins: load isSuperAdmin from DB on sign in
+      if (trigger === "signIn" && token.id && !token.isSuperAdmin) {
+        const dbUser = await db.query.users.findFirst({
+          where: eq(users.id, token.id as string),
+        });
+        token.isSuperAdmin = dbUser?.isSuperAdmin ?? false;
       }
       return token;
     },
     session: async ({ session, token }) => {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+        session.user.isSuperAdmin = token.isSuperAdmin ?? false;
       }
       return session;
     },
