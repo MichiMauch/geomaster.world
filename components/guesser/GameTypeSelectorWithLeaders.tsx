@@ -297,7 +297,7 @@ export default function GameTypeSelectorWithLeaders({
           <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
             {locale === "de" ? "Welt-Quiz" : locale === "en" ? "World Quiz" : "Svetovni kviz"}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {worldTypes.map((config) => (
               <GameTypeCard key={config.id} config={config} />
             ))}
