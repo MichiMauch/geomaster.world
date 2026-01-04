@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Play, Trophy } from "lucide-react";
+import { nanoid } from "nanoid";
 import {
   countriesToGameTypeConfigs,
   getActiveCountries,
@@ -40,8 +43,10 @@ export default function GameTypeSelectorWithLeaders({
 }: GameTypeSelectorWithLeadersProps) {
   const locale = useLocale();
   const router = useRouter();
+  const { data: session } = useSession();
   const [topPlayers, setTopPlayers] = useState<TopPlayersMap>({});
   const [loading, setLoading] = useState(true);
+  const [startingGame, setStartingGame] = useState<string | null>(null);
   const [dbCountries, setDbCountries] = useState<DatabaseCountry[]>([]);
   const [dbWorldQuizTypes, setDbWorldQuizTypes] = useState<DatabaseWorldQuizType[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
@@ -145,7 +150,8 @@ export default function GameTypeSelectorWithLeaders({
     return config.name[localeKey] || config.name.en;
   };
 
-  const handleClick = (gameTypeId: string) => {
+  // Navigate to detail page (leaderboard)
+  const handleViewDetails = (gameTypeId: string) => {
     if (navigationMode) {
       router.push(`/${locale}${basePath}/${gameTypeId}`);
     } else if (onChange) {
@@ -153,33 +159,86 @@ export default function GameTypeSelectorWithLeaders({
     }
   };
 
+  // Start game directly
+  const handleStartGame = async (gameTypeId: string) => {
+    setStartingGame(gameTypeId);
+    try {
+      const guestId = !session?.user ? nanoid() : undefined;
+      const response = await fetch("/api/ranked/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameType: gameTypeId, guestId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        router.push(`/${locale}/guesser/play/${data.gameId}`);
+      } else {
+        const error = await response.json();
+        console.error("Failed to create game:", error);
+      }
+    } catch (error) {
+      console.error("Error starting game:", error);
+    } finally {
+      setStartingGame(null);
+    }
+  };
+
   const GameTypeCard = ({ config }: { config: GameTypeConfig }) => {
     const isSelected = selected === config.id;
     const name = getGameTypeName(config);
     const players = topPlayers[config.id] || [];
+    const isStarting = startingGame === config.id;
 
     return (
-      <button
-        onClick={() => handleClick(config.id)}
+      <div
         className={cn(
-          "flex flex-col p-4 rounded-sm border transition-all duration-200 text-left cursor-pointer",
+          "flex flex-col p-4 rounded-sm border transition-all duration-200",
           "min-h-[160px]",
           isSelected
             ? "bg-primary/10 border-primary"
-            : "bg-surface-1 border-surface-3",
-          "hover:bg-surface-2 hover:border-primary/50",
-          "active:scale-[0.98]"
+            : "bg-surface-1 border-surface-3"
         )}
       >
-        {/* Header: Icon + Name */}
+        {/* Header: Icon + Name + Action Buttons */}
         <div className="flex items-center gap-3 mb-3">
           <span className="text-3xl">{config.icon}</span>
           <span className={cn(
-            "text-base font-semibold",
+            "text-base font-semibold flex-1",
             isSelected ? "text-primary" : "text-foreground"
           )}>
             {name}
           </span>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handleStartGame(config.id)}
+              disabled={isStarting}
+              title={locale === "de" ? "Spiel starten" : locale === "en" ? "Start game" : "Začni igro"}
+              className={cn(
+                "p-2 rounded-sm transition-all cursor-pointer",
+                "bg-primary/10 hover:bg-primary/20 text-primary",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              {isStarting ? (
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Play className="w-5 h-5" />
+              )}
+            </button>
+            <button
+              onClick={() => handleViewDetails(config.id)}
+              title={locale === "de" ? "Rangliste" : locale === "en" ? "Leaderboard" : "Lestvica"}
+              className={cn(
+                "p-2 rounded-sm transition-all cursor-pointer",
+                "bg-surface-2 hover:bg-surface-3 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Trophy className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Top 3 Players */}
@@ -212,7 +271,7 @@ export default function GameTypeSelectorWithLeaders({
             </div>
           )}
         </div>
-      </button>
+      </div>
     );
   };
 
