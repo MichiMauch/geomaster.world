@@ -19,6 +19,7 @@ import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
 import { getTimeoutPenalty } from "@/lib/countries";
 import { calculateScore } from "@/lib/score";
 import { isImageGameType, getImageMapId, getGameTypeConfig } from "@/lib/game-types";
+import { isPointInCountry, isCountryQuizGameType } from "@/lib/polygon-validation";
 
 // Helper function to get scoreScaleFactor from DB for dynamic game types
 async function getScoreScaleFactorFromDB(gameType: string): Promise<number | undefined> {
@@ -307,12 +308,17 @@ export async function POST(request: Request) {
     // Get location coordinates - query correct table based on locationSource
     const effectiveGameType = round.gameType || `country:${round.country}`;
     const isImage = isImageGameType(effectiveGameType);
+    const isCountryQuiz = isCountryQuizGameType(effectiveGameType);
 
-    let location: { latitude: number; longitude: number } | undefined;
+    let location: { latitude: number; longitude: number; countryCode?: string | null } | undefined;
 
     if (round.locationSource === "worldLocations") {
       const worldLoc = await db
-        .select({ latitude: worldLocations.latitude, longitude: worldLocations.longitude })
+        .select({
+          latitude: worldLocations.latitude,
+          longitude: worldLocations.longitude,
+          countryCode: worldLocations.countryCode,
+        })
         .from(worldLocations)
         .where(eq(worldLocations.id, round.locationId))
         .get();
@@ -346,6 +352,8 @@ export async function POST(request: Request) {
 
     // Calculate distance
     let distanceKm: number;
+    let insideCountry = false;
+
     if (timeout) {
       // Get timeout penalty from game type config (always in km)
       const gameTypeConfig = getGameTypeConfig(effectiveGameType);
@@ -358,6 +366,22 @@ export async function POST(request: Request) {
         location.longitude,
         location.latitude
       );
+    } else if (isCountryQuiz && location.countryCode) {
+      // For country quizzes: check if click is inside the correct country polygon
+      insideCountry = isPointInCountry(latitude, longitude, location.countryCode);
+
+      if (insideCountry) {
+        // Perfect! Clicked inside the correct country
+        distanceKm = 0;
+      } else {
+        // Outside: calculate distance to country center as fallback
+        distanceKm = calculateDistance(
+          latitude,
+          longitude,
+          location.latitude,
+          location.longitude
+        );
+      }
     } else {
       // For geo maps: use Haversine formula
       distanceKm = calculateDistance(
@@ -392,6 +416,8 @@ export async function POST(request: Request) {
       gameType: effectiveGameType,
       targetLatitude: location.latitude,
       targetLongitude: location.longitude,
+      // For country quizzes: indicate if click was inside the correct country
+      ...(isCountryQuiz && { insideCountry, targetCountryCode: location.countryCode }),
     });
   } catch (error) {
     console.error("Error creating guess:", error);

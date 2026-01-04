@@ -61,6 +61,9 @@ export function LocationsTab({ locations, countries, onDelete, onAdd, onImport, 
   // Expanded locations state (for showing translations)
   const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
 
+  // Map visibility state (collapsed by default)
+  const [showMap, setShowMap] = useState(false);
+
   // Single location form state
   const [locationName, setLocationName] = useState("");
   const [latitude, setLatitude] = useState("");
@@ -359,35 +362,7 @@ export function LocationsTab({ locations, countries, onDelete, onAdd, onImport, 
           <Card variant="surface" padding="lg">
             <h2 className="text-h3 text-text-primary mb-6">Einzelnen Ort hinzufügen</h2>
             <form onSubmit={handleSingleSubmit} className="space-y-6">
-              {/* Map preview */}
-              <div>
-                <label className="block text-body-small font-medium text-text-primary mb-2">
-                  Position auf der Karte setzen
-                </label>
-                <div className="rounded-lg overflow-hidden border border-glass-border">
-                  <CountryMap
-                    dynamicCountry={{
-                      id: selectedCountry.id,
-                      centerLat: selectedCountry.centerLat,
-                      centerLng: selectedCountry.centerLng,
-                      boundsNorth: selectedCountry.boundsNorth,
-                      boundsSouth: selectedCountry.boundsSouth,
-                      boundsEast: selectedCountry.boundsEast,
-                      boundsWest: selectedCountry.boundsWest,
-                      defaultZoom: selectedCountry.defaultZoom,
-                      minZoom: selectedCountry.minZoom,
-                    }}
-                    onMarkerPlace={handleMapClick}
-                    markerPosition={markerPosition}
-                    height="300px"
-                  />
-                </div>
-                <p className="text-caption text-text-muted mt-2">
-                  Klicke auf die Karte um die Position zu setzen, oder gib die Koordinaten manuell ein.
-                </p>
-              </div>
-
-              {/* Coordinates */}
+              {/* Coordinates - now primary input method */}
               <div className="grid gap-4 md:grid-cols-2">
                 <Input
                   label="Breitengrad (Latitude)"
@@ -405,6 +380,44 @@ export function LocationsTab({ locations, countries, onDelete, onAdd, onImport, 
                   onChange={(e) => handleCoordinateChange(latitude, e.target.value)}
                   placeholder="z.B. 8.5417"
                 />
+              </div>
+
+              {/* Optional Map preview - collapsed by default */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowMap(!showMap)}
+                  className="flex items-center gap-2 text-body-small font-medium text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <span className="text-sm">{showMap ? "▼" : "▶"}</span>
+                  <span>Karte {showMap ? "ausblenden" : "anzeigen"} (optional)</span>
+                </button>
+
+                {showMap && (
+                  <div className="mt-3">
+                    <div className="rounded-lg overflow-hidden border border-glass-border">
+                      <CountryMap
+                        dynamicCountry={{
+                          id: selectedCountry.id,
+                          centerLat: selectedCountry.centerLat,
+                          centerLng: selectedCountry.centerLng,
+                          boundsNorth: selectedCountry.boundsNorth,
+                          boundsSouth: selectedCountry.boundsSouth,
+                          boundsEast: selectedCountry.boundsEast,
+                          boundsWest: selectedCountry.boundsWest,
+                          defaultZoom: selectedCountry.defaultZoom,
+                          minZoom: selectedCountry.minZoom,
+                        }}
+                        onMarkerPlace={handleMapClick}
+                        markerPosition={markerPosition}
+                        height="300px"
+                      />
+                    </div>
+                    <p className="text-caption text-text-muted mt-2">
+                      Klicke auf die Karte um die Position zu setzen.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Location name */}

@@ -11,6 +11,11 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import {
+  QuestionDisplay,
+  isCountryQuizGameType,
+  getCountryQuizCategory,
+} from "@/components/country-quiz/QuestionDisplay";
 
 interface GameRound {
   id: string;
@@ -92,6 +97,8 @@ export default function GuesserPlayPage({
     score: number;
     targetLat: number;
     targetLng: number;
+    insideCountry?: boolean;
+    targetCountryCode?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -248,6 +255,8 @@ export default function GuesserPlayPage({
           score: data.score,
           targetLat: data.targetLatitude,
           targetLng: data.targetLongitude,
+          insideCountry: data.insideCountry,
+          targetCountryCode: data.targetCountryCode,
         });
         setUserGuesses([
           ...userGuesses,
@@ -340,7 +349,13 @@ export default function GuesserPlayPage({
   const getButtonConfig = () => {
     if (showResult) {
       const isLastRound = currentRoundIndex >= rounds.length - 1;
-      const resultVariant = lastResult && lastResult.distanceKm < 20 ? "success" : "primary";
+      // For country quizzes, success is based on insideCountry
+      const currentGameType = currentRound?.gameType;
+      const isCountryQuiz = isCountryQuizGameType(currentGameType);
+      const isSuccess = isCountryQuiz
+        ? lastResult?.insideCountry === true
+        : lastResult && lastResult.distanceKm < 20;
+      const resultVariant = isSuccess ? "success" : "primary";
       return {
         text: isLastRound ? t("finish", { defaultValue: "Beenden" }) : t("next", { defaultValue: "Weiter" }),
         variant: resultVariant as "success" | "primary",
@@ -386,58 +401,93 @@ export default function GuesserPlayPage({
       />
 
       {/* Badge Bar - simplified: Location | Timer | Button */}
-      {currentRound && (
-        <div className={cn(
-          "absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-[500]",
-          "bg-surface-1 rounded-lg",
-          "flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2",
-          "border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.15)]",
-          !showResult && timeRemaining > 10 && "border-primary",
-          !showResult && timeRemaining <= 10 && timeRemaining > 5 && "border-accent",
-          !showResult && timeRemaining <= 5 && "border-error",
-          showResult && lastResult && lastResult.distanceKm < 20 && "border-success",
-          showResult && lastResult && lastResult.distanceKm >= 20 && "border-surface-3"
-        )}>
-          {/* Location Name */}
-          <span className="text-sm sm:text-base font-bold text-text-primary">
-            {currentRound.locationName}
-          </span>
+      {currentRound && (() => {
+        const countryQuizCategory = getCountryQuizCategory(currentRound.gameType);
+        const isCountryQuiz = !!countryQuizCategory;
 
-          {/* Divider */}
-          <div className="w-px h-5 bg-surface-3" />
+        // For country quizzes, success is based on insideCountry, not distance
+        const isSuccess = isCountryQuiz
+          ? lastResult?.insideCountry === true
+          : lastResult && lastResult.distanceKm < 20;
 
-          {/* Timer / Result */}
-          <span className={cn(
-            "font-mono font-bold text-sm sm:text-base tabular-nums min-w-[55px] text-center",
-            showResult ? (
-              lastResult && lastResult.distanceKm < 20 ? "text-success" :
-              lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 ? "text-accent" :
-              "text-text-primary"
-            ) : getTimerColor()
+        // Get result text for country quizzes
+        const getCountryQuizResultText = () => {
+          if (!lastResult) return "";
+          if (lastResult.insideCountry) {
+            switch (locale) {
+              case "de":
+                return "Richtig!";
+              case "sl":
+                return "Pravilno!";
+              default:
+                return "Correct!";
+            }
+          } else {
+            return `${lastResult.distanceKm.toFixed(0)} km`;
+          }
+        };
+
+        return (
+          <div className={cn(
+            "absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-[500]",
+            "bg-surface-1 rounded-lg",
+            "flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2",
+            "border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.15)]",
+            !showResult && timeRemaining > 10 && "border-primary",
+            !showResult && timeRemaining <= 10 && timeRemaining > 5 && "border-accent",
+            !showResult && timeRemaining <= 5 && "border-error",
+            showResult && isSuccess && "border-success",
+            showResult && !isSuccess && "border-surface-3"
           )}>
-            {showResult && lastResult ? (
-              <>{lastResult.distanceKm.toFixed(1)} km</>
+            {/* Question/Location Display */}
+            {isCountryQuiz && countryQuizCategory ? (
+              <QuestionDisplay
+                question={currentRound.locationName}
+                category={countryQuizCategory}
+                locale={locale}
+              />
             ) : (
-              <>{timeRemaining.toFixed(2)}</>
+              <span className="text-sm sm:text-base font-bold text-text-primary">
+                {currentRound.locationName}
+              </span>
             )}
-          </span>
 
-          {/* Divider */}
-          <div className="w-px h-5 bg-surface-3" />
+            {/* Divider */}
+            <div className="w-px h-5 bg-surface-3" />
 
-          {/* Action Button */}
-          <Button
-            variant={buttonConfig.variant}
-            size="sm"
-            onClick={buttonConfig.onClick}
-            disabled={buttonConfig.disabled}
-            isLoading={submitting}
-            className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3"
-          >
-            {submitting ? "..." : buttonConfig.text}
-          </Button>
-        </div>
-      )}
+            {/* Timer / Result */}
+            <span className={cn(
+              "font-mono font-bold text-sm sm:text-base tabular-nums min-w-[55px] text-center",
+              showResult ? (
+                isSuccess ? "text-success" :
+                lastResult && lastResult.distanceKm < 100 ? "text-accent" :
+                "text-text-primary"
+              ) : getTimerColor()
+            )}>
+              {showResult && lastResult ? (
+                isCountryQuiz ? getCountryQuizResultText() : <>{lastResult.distanceKm.toFixed(1)} km</>
+              ) : (
+                <>{timeRemaining.toFixed(2)}</>
+              )}
+            </span>
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-surface-3" />
+
+            {/* Action Button */}
+            <Button
+              variant={buttonConfig.variant}
+              size="sm"
+              onClick={buttonConfig.onClick}
+              disabled={buttonConfig.disabled}
+              isLoading={submitting}
+              className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3"
+            >
+              {submitting ? "..." : buttonConfig.text}
+            </Button>
+          </div>
+        );
+      })()}
 
       {/* Progress indicator - bottom center */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500]">

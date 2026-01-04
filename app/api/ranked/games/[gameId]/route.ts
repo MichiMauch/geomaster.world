@@ -79,12 +79,21 @@ export async function GET(
         : countryLocationsMap;
       const locationInfo = locationMap.get(round.locationId);
 
+      // For Country-Quiz (flags or place names): use name directly (flag emoji or place name)
+      // For others: use localized name
+      const isCountryQuiz = round.gameType?.startsWith("world:") &&
+        ["country-flags", "place-names"].includes(round.gameType.split(":")[1]);
+
+      const locationName = isCountryQuiz
+        ? locationInfo?.name ?? "Unknown"
+        : locationInfo ? getLocalizedName(locationInfo, locale) : "Unknown";
+
       return {
         id: round.id,
         roundNumber: round.roundNumber,
         locationIndex: round.locationIndex,
         locationId: round.locationId,
-        locationName: locationInfo ? getLocalizedName(locationInfo, locale) : "Unknown",
+        locationName,
         latitude: locationInfo?.latitude ?? 0,
         longitude: locationInfo?.longitude ?? 0,
         country: round.country,

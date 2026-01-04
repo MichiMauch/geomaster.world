@@ -32,6 +32,9 @@ interface UseAdminDataReturn {
   deleteWorldLocation: (locationId: string) => Promise<void>;
   importWorldLocations: (locations: unknown[], category: string) => Promise<{ imported: number; duplicatesSkipped: number }>;
   fetchWorldLocationsByCategory: (category: string) => Promise<void>;
+  // World location translation actions
+  translateWorldLocations: (category: string) => Promise<TranslationResult>;
+  fetchWorldLocationTranslationStatus: (category: string) => Promise<TranslationStatus>;
   // Location actions
   addLocation: (country: string, name: string, lat: number, lng: number, difficulty: string) => Promise<boolean>;
   deleteLocation: (locationId: string) => Promise<void>;
@@ -426,6 +429,39 @@ export function useAdminData(): UseAdminDataReturn {
     return { imported: result.imported, duplicatesSkipped: result.duplicatesSkipped };
   }, [fetchWorldLocationsByCategory]);
 
+  // World location translation actions
+  const translateWorldLocations = useCallback(async (category: string): Promise<TranslationResult> => {
+    const response = await fetch("/api/world-locations/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      toast.error(result.error || "Übersetzung fehlgeschlagen");
+      throw new Error(result.error || "Translation failed");
+    }
+
+    if (result.translated > 0) {
+      toast.success(`${result.translated} Welt-Orte übersetzt`);
+      await fetchWorldLocationsByCategory(category);
+    } else if (result.message) {
+      toast.success(result.message);
+    }
+
+    return result;
+  }, [fetchWorldLocationsByCategory]);
+
+  const fetchWorldLocationTranslationStatus = useCallback(async (category: string): Promise<TranslationStatus> => {
+    const response = await fetch(`/api/world-locations/translate?category=${encodeURIComponent(category)}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch translation status");
+    }
+    return response.json();
+  }, []);
+
   // Location actions
   const refreshLocations = useCallback(async () => {
     try {
@@ -625,6 +661,8 @@ export function useAdminData(): UseAdminDataReturn {
     deleteWorldLocation,
     importWorldLocations,
     fetchWorldLocationsByCategory,
+    translateWorldLocations,
+    fetchWorldLocationTranslationStatus,
     addLocation,
     deleteLocation,
     importLocations,

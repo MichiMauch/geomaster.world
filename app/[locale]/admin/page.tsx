@@ -41,6 +41,8 @@ export default function AdminPage() {
     deleteWorldLocation,
     importWorldLocations,
     fetchWorldLocationsByCategory,
+    translateWorldLocations,
+    fetchWorldLocationTranslationStatus,
     addLocation,
     deleteLocation,
     importLocations,
@@ -185,6 +187,8 @@ export default function AdminPage() {
             onAdd={addWorldLocation}
             onImport={importWorldLocations}
             onFetchByCategory={fetchWorldLocationsByCategory}
+            onTranslate={translateWorldLocations}
+            onFetchTranslationStatus={fetchWorldLocationTranslationStatus}
           />
         )}
 
