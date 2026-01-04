@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email || session.user.email !== "michi.mauch@netnode.ch") {
+    if (!session?.user?.isSuperAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -94,7 +94,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email || session.user.email !== "michi.mauch@netnode.ch") {
+    if (!session?.user?.isSuperAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

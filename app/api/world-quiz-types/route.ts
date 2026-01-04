@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { worldQuizTypes, worldLocations } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
-import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 import { TranslationService } from "@/lib/services/translation-service";
 
 // GET /api/world-quiz-types - List all world quiz types with location counts
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email || !isSuperAdmin(session.user.email)) {
+    if (!session?.user?.isSuperAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

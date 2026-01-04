@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { locations } from "@/lib/db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json(
       { error: "Only super-admin can translate locations" },
       { status: 403 }
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

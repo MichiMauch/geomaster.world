@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { worldLocations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
-import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 
 // GET /api/world-locations - List world locations, optionally filtered by category
 export async function GET(req: NextRequest) {
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email || !isSuperAdmin(session.user.email)) {
+    if (!session?.user?.isSuperAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email || !isSuperAdmin(session.user.email)) {
+    if (!session?.user?.isSuperAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

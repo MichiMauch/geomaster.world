@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users, groupMembers, guesses } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.email || !isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -42,7 +42,7 @@ export async function GET() {
 export async function DELETE(request: Request) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.email || !isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -87,7 +87,7 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.email || !isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

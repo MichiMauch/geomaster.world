@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { locations } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   // Only super-admin can view locations
-  if (!isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json(
       { error: "Only super-admin can view locations" },
       { status: 403 }
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   // Only super-admin can add locations
-  if (!isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json(
       { error: "Only super-admin can add locations" },
       { status: 403 }
@@ -130,7 +130,7 @@ export async function DELETE(request: Request) {
   }
 
   // Only super-admin can delete locations
-  if (!isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json(
       { error: "Only super-admin can delete locations" },
       { status: 403 }

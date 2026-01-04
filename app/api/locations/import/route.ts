@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { locations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   // Only super-admin can import locations
-  if (!isSuperAdmin(session.user.email)) {
+  if (!session?.user?.isSuperAdmin) {
     return NextResponse.json(
       { error: "Only super-admin can import locations" },
       { status: 403 }
