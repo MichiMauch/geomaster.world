@@ -37,8 +37,8 @@
 
   /* Text Colors (Dark Mode) */
   --text-primary: #FFFFFF;
-  --text-secondary: #8B9AAF;
-  --text-muted: #5A6577;
+  --text-secondary: #C8D3E0;
+  --text-muted: #9FAFBF;
 
   /* Shadows & Glows - Neon Style */
   --glow-primary: 0 0 20px var(--primary-glow);
@@ -97,6 +97,7 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
+  --color-muted-foreground: var(--text-secondary);
   --color-glass-bg: var(--glass-bg);
   --color-glass-border: var(--glass-border);
 
