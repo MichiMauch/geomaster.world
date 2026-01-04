@@ -1,13 +1,15 @@
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, verificationTokens } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
+import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, nickname, email, password } = body;
+    const { name, nickname, email, password, locale = "de" } = body;
 
     // Validate input
     if (!name || !email || !password) {
@@ -39,7 +41,7 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await hash(password, 12);
 
-    // Create user
+    // Create user (emailVerified stays NULL)
     const newUser = await db
       .insert(users)
       .values({
@@ -50,9 +52,24 @@ export async function POST(request: Request) {
       })
       .returning();
 
+    // Generate verification token
+    const token = nanoid(32);
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Save token
+    await db.insert(verificationTokens).values({
+      identifier: email,
+      token,
+      expires,
+    });
+
+    // Send verification email
+    await sendVerificationEmail(email, token, locale);
+
     return NextResponse.json(
       {
         success: true,
+        requiresVerification: true,
         user: {
           id: newUser[0].id,
           name: newUser[0].name,

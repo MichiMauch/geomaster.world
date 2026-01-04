@@ -41,7 +41,7 @@ export default function RegisterPage() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, nickname, email, password }),
+        body: JSON.stringify({ name, nickname, email, password, locale }),
       });
 
       const data = await response.json();
@@ -52,20 +52,8 @@ export default function RegisterPage() {
         return;
       }
 
-      // Auto-login after successful registration
-      const loginResult = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (loginResult?.error) {
-        // Registration succeeded but login failed - redirect to login
-        router.push(`/${locale}/login`);
-      } else {
-        router.push(`/${locale}/guesser`);
-        router.refresh();
-      }
+      // Redirect to verify-email page (no auto-login)
+      router.push(`/${locale}/verify-email?email=${encodeURIComponent(email)}`);
     } catch {
       setError(t("registerError"));
     } finally {

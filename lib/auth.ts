@@ -48,6 +48,12 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Check if email is verified
+        if (!user.emailVerified) {
+          // Throw error with specific message that client can detect
+          throw new Error("EMAIL_NOT_VERIFIED");
+        }
+
         return {
           id: user.id,
           name: user.name,

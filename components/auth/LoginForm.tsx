@@ -19,11 +19,16 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showResend, setShowResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setShowResend(false);
+    setResendSuccess(false);
 
     try {
       const result = await signIn("credentials", {
@@ -33,7 +38,13 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        setError(t("invalidCredentials"));
+        // Check if it's an email verification error
+        if (result.error.includes("EMAIL_NOT_VERIFIED")) {
+          setError(t("emailNotVerified"));
+          setShowResend(true);
+        } else {
+          setError(t("invalidCredentials"));
+        }
       } else {
         router.push(`/${locale}/guesser`);
         router.refresh();
@@ -42,6 +53,27 @@ export function LoginForm() {
       setError(t("loginError"));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setIsResending(true);
+    setResendSuccess(false);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, locale }),
+      });
+
+      if (response.ok) {
+        setResendSuccess(true);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -85,6 +117,24 @@ export function LoginForm() {
         >
           {isLoading ? t("loggingIn") : t("login")}
         </Button>
+
+        {/* Resend verification email option */}
+        {showResend && (
+          <div className="mt-4 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+            <p className="text-sm text-warning mb-2">{t("emailNotVerified")}</p>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleResend}
+              isLoading={isResending}
+              disabled={resendSuccess}
+              className="w-full"
+            >
+              {resendSuccess ? t("emailResent") : t("resendEmail")}
+            </Button>
+          </div>
+        )}
       </form>
 
       {/* Register Link */}
