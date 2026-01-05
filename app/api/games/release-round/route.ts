@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { getLocationCountryName } from "@/lib/countries";
 import { getEffectiveGameType, isWorldGameType, getWorldCategory, isImageGameType, getImageMapId } from "@/lib/game-types";
+import { shuffle } from "@/lib/utils";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -162,8 +163,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Select random locations for the new round
-    const shuffled = [...availableLocations].sort(() => Math.random() - 0.5);
+    // Select random locations using Fisher-Yates shuffle for unbiased selection
+    const shuffled = shuffle(availableLocations);
     const selectedLocations = shuffled.slice(0, effectiveLocationsPerRound);
 
     // Create the new round

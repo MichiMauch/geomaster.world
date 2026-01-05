@@ -9,6 +9,7 @@ import { getGameTypeConfig, isWorldGameType, getWorldCategory, GAME_TYPES, type 
 import { getLocationCountryName } from "@/lib/countries";
 import { getCurrentScoringVersion } from "@/lib/scoring";
 import { countryToGameTypeConfig, worldQuizToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType } from "@/lib/utils/country-converter";
+import { shuffle } from "@/lib/utils";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -124,8 +125,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Randomly select locations
-    const shuffled = [...availableLocations].sort(() => Math.random() - 0.5);
+    // Randomly select locations using Fisher-Yates shuffle for unbiased selection
+    const shuffled = shuffle(availableLocations);
     const selectedLocations = shuffled.slice(0, locationsPerRound);
 
     // Create game
