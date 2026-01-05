@@ -24,6 +24,9 @@ type TabType = "weekly" | "best" | "total";
 
 const ITEMS_PER_PAGE = 10;
 
+// These are category pages, not game types - they have their own routes
+const CATEGORY_SLUGS = ["countries", "world", "special"];
+
 export default function GuesserGameTypePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -31,6 +34,13 @@ export default function GuesserGameTypePage() {
   const locale = params.locale as string;
   const gameType = decodeURIComponent(params.gameType as string);
   const t = useTranslations("ranked");
+
+  // Redirect category slugs to their proper routes
+  useEffect(() => {
+    if (CATEGORY_SLUGS.includes(gameType)) {
+      router.replace(`/${locale}/guesser/${gameType}`);
+    }
+  }, [gameType, locale, router]);
 
   // Game config state - may be loaded from static GAME_TYPES or fetched from DB
   const [gameConfig, setGameConfig] = useState<GameTypeConfig | null>(null);

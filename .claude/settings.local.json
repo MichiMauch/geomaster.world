@@ -21,7 +21,8 @@
       "WebSearch",
       "Bash(mkdir:*)",
       "Bash(turso db shell:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git diff:*)"
     ],
     "deny": [],
     "ask": []
