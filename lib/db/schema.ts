@@ -144,7 +144,7 @@ export const gameRounds = sqliteTable("gameRounds", {
   roundNumber: integer("roundNumber").notNull(), // Which round/day (1, 2, 3...)
   locationIndex: integer("locationIndex").notNull().default(1), // Position within round (1-N)
   locationId: text("locationId").notNull(), // No FK constraint - can reference locations OR worldLocations
-  locationSource: text("locationSource", { enum: ["locations", "worldLocations", "imageLocations"] }).notNull().default("locations"),
+  locationSource: text("locationSource", { enum: ["locations", "worldLocations", "imageLocations", "panoramaLocations"] }).notNull().default("locations"),
   country: text("country").notNull().default("switzerland"), // Country key for this round (can differ from game.country)
   gameType: text("gameType"), // Full game type ID for this round (e.g., "country:switzerland", "world:capitals")
   timeLimitSeconds: integer("timeLimitSeconds"), // Time limit for this round (null = no limit)
@@ -176,6 +176,23 @@ export const imageLocations = sqliteTable("imageLocations", {
   nameSl: text("name_sl"),
   x: real("x").notNull(), // Pixel X-Koordinate
   y: real("y").notNull(), // Pixel Y-Koordinate
+  difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).default("medium"),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+// Panorama Locations (for Mapillary Street View style games)
+export const panoramaLocations = sqliteTable("panoramaLocations", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  mapillaryImageKey: text("mapillaryImageKey").notNull(), // Mapillary image key
+  name: text("name").notNull(), // Admin-only, not shown during gameplay (GeoGuessr experience)
+  nameDe: text("name_de"),
+  nameEn: text("name_en"),
+  nameSl: text("name_sl"),
+  latitude: real("latitude").notNull(), // Actual coordinates (for scoring)
+  longitude: real("longitude").notNull(),
+  heading: real("heading"), // Camera direction 0-360 degrees (0 = North)
+  pitch: real("pitch"), // Camera tilt -90 to +90 degrees
+  countryCode: text("countryCode"), // ISO code (e.g., "CH", "FR")
   difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).default("medium"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
@@ -286,6 +303,7 @@ export type GroupMember = typeof groupMembers.$inferSelect;
 export type Location = typeof locations.$inferSelect;
 export type WorldLocation = typeof worldLocations.$inferSelect;
 export type ImageLocation = typeof imageLocations.$inferSelect;
+export type PanoramaLocation = typeof panoramaLocations.$inferSelect;
 export type Game = typeof games.$inferSelect;
 export type GameRound = typeof gameRounds.$inferSelect;
 export type Guess = typeof guesses.$inferSelect;

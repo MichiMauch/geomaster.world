@@ -2,7 +2,7 @@ import { CountryBounds, COUNTRIES } from "./countries";
 
 export interface GameTypeConfig {
   id: string;
-  type: "country" | "world" | "image";
+  type: "country" | "world" | "image" | "panorama";
   name: { de: string; en: string; sl: string };
   icon: string;
   geoJsonFile: string;
@@ -16,6 +16,8 @@ export interface GameTypeConfig {
   imageUrl?: string; // URL to the image file
   silhouetteUrl?: string; // URL to silhouette version (shown during gameplay)
   imageBounds?: [[number, number], [number, number]]; // [[minY, minX], [maxY, maxX]] in pixels
+  // Panorama-specific fields
+  defaultTimeLimitSeconds?: number; // Default time limit for panorama games (60s)
 }
 
 export const GAME_TYPES: Record<string, GameTypeConfig> = {
@@ -47,6 +49,23 @@ export const GAME_TYPES: Record<string, GameTypeConfig> = {
     defaultCenter: COUNTRIES.slovenia.bounds.center,
   },
   // World-based game types are now loaded dynamically from the database (worldQuizTypes table)
+
+  // Panorama-based game types (Mapillary Street View style)
+  "panorama:world": {
+    id: "panorama:world",
+    type: "panorama",
+    name: { de: "Street View Welt", en: "Street View World", sl: "Ulični pogled Svet" },
+    icon: "📷",
+    geoJsonFile: "/world.geojson",
+    bounds: null, // World map (no bounds)
+    timeoutPenalty: 5000, // 5000 km for timeouts
+    scoreScaleFactor: 3000, // 3000 km
+    defaultZoom: 2,
+    minZoom: 1,
+    defaultCenter: { lat: 20, lng: 0 },
+    defaultTimeLimitSeconds: 60, // 60 seconds default for panorama
+  },
+
   // Image-based game types
   // Scale: 92 pixels = 10 meters, image is 2330x2229 pixels ≈ 253m x 242m
   "image:garten": {
@@ -148,6 +167,23 @@ export function getWorldCategory(gameTypeId: string): string | null {
 export function isImageGameType(gameTypeId: string | null | undefined): boolean {
   if (!gameTypeId) return false;
   return gameTypeId.startsWith("image:");
+}
+
+/**
+ * Check if a game type is a panorama-based type (Mapillary Street View)
+ */
+export function isPanoramaGameType(gameTypeId: string | null | undefined): boolean {
+  if (!gameTypeId) return false;
+  return gameTypeId.startsWith("panorama:");
+}
+
+/**
+ * Get the panorama category from a panorama game type ID
+ * e.g., "panorama:world" -> "world"
+ */
+export function getPanoramaCategory(gameTypeId: string): string | null {
+  if (!isPanoramaGameType(gameTypeId)) return null;
+  return gameTypeId.split(":")[1];
 }
 
 /**

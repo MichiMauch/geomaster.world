@@ -22,7 +22,19 @@
       "Bash(mkdir:*)",
       "Bash(turso db shell:*)",
       "Bash(npm install:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git stash:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs:*)",
+      "Bash(echo:*)",
+      "WebFetch(domain:www.mapillary.com)",
+      "WebFetch(domain:help.mapillary.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:blog.mapillary.com)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
