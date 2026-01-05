@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { FloatingInput } from "@/components/ui/FloatingInput";
 
 export default function RegisterPage() {
@@ -80,7 +79,15 @@ export default function RegisterPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/50" />
       </div>
 
-      <Card className="w-full max-w-md p-8 bg-surface-1/95 backdrop-blur-xl">
+      <div
+        className={cn(
+          "w-full max-w-md",
+          "bg-surface-1/95 backdrop-blur-xl",
+          "border border-glass-border",
+          "rounded-lg p-6 md:p-8",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
+        )}
+      >
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-text-primary mb-2">
@@ -205,7 +212,28 @@ export default function RegisterPage() {
           </svg>
           Google
         </button>
-      </Card>
+
+        {/* Magic Link */}
+        <Link
+          href={`/${locale}/magic-link`}
+          className={cn(
+            "w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg mt-3",
+            "bg-surface-2 text-text-secondary font-medium",
+            "border border-glass-border",
+            "hover:bg-surface-3 hover:text-text-primary transition-colors cursor-pointer"
+          )}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+            />
+          </svg>
+          {t("magicLink")}
+        </Link>
+      </div>
     </div>
   );
 }

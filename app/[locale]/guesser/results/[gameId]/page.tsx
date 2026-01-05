@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
@@ -9,25 +9,65 @@ import { Button } from "@/components/ui/Button";
 import { signIn } from "next-auth/react";
 import { getGameTypeName } from "@/lib/game-types";
 
+interface PredictedRank {
+  predictedRank: number;
+  totalGames: number;
+}
+
 export default function GuesserResultsPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const t = useTranslations("ranked");
   const gameId = params.gameId as string;
   const locale = params.locale as string;
 
+  // Guest-specific query params
+  const guestScore = searchParams.get("guestScore");
+  const guestGameType = searchParams.get("gameType");
+  const isGuestResult = !!guestScore && !session?.user?.id;
+
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [startingGame, setStartingGame] = useState(false);
+  const [predictedRank, setPredictedRank] = useState<PredictedRank | null>(null);
 
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await fetch(`/api/ranked/games/${gameId}/results`);
-        if (response.ok) {
-          const data = await response.json();
-          setResults(data);
+        // For guests: use score from URL and fetch predicted rank
+        if (isGuestResult && guestScore && guestGameType) {
+          const score = parseInt(guestScore, 10);
+
+          // Set guest results
+          setResults({
+            totalScore: score,
+            gameType: guestGameType,
+          });
+
+          // Fetch predicted rank from API
+          try {
+            const predictResponse = await fetch(
+              `/api/ranked/leaderboard/predict?score=${score}&gameType=${encodeURIComponent(guestGameType)}`
+            );
+            if (predictResponse.ok) {
+              const predictData = await predictResponse.json();
+              setPredictedRank({
+                predictedRank: predictData.predictedRank,
+                totalGames: predictData.totalGames,
+              });
+            }
+          } catch (predictError) {
+            console.error("Error fetching predicted rank:", predictError);
+          }
+        } else {
+          // For logged-in users: fetch results from API
+          const response = await fetch(`/api/ranked/games/${gameId}/results`);
+          if (response.ok) {
+            const data = await response.json();
+            setResults(data);
+          }
         }
       } catch (error) {
         console.error("Error fetching results:", error);
@@ -37,7 +77,7 @@ export default function GuesserResultsPage() {
     };
 
     fetchResults();
-  }, [gameId]);
+  }, [gameId, isGuestResult, guestScore, guestGameType]);
 
   // Start a new game directly
   const handlePlayAgain = async () => {
@@ -170,10 +210,24 @@ export default function GuesserResultsPage() {
         </p>
       </Card>
 
-      {/* Login Prompt for Guests */}
+      {/* Login Prompt for Guests with Predicted Rank */}
       {!session?.user?.id && (
         <Card className="p-4 sm:p-6 mb-6 bg-accent/10 border-accent">
           <div className="text-center">
+            {/* Show predicted rank if available */}
+            {predictedRank && (
+              <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+                <p className="text-lg sm:text-xl font-bold text-primary">
+                  {locale === "de" ? (
+                    <>Mit {results?.totalScore} Punkten wärst du auf <span className="text-2xl">Platz {predictedRank.predictedRank}</span> von {predictedRank.totalGames}!</>
+                  ) : locale === "sl" ? (
+                    <>Z {results?.totalScore} točkami bi bil na <span className="text-2xl">{predictedRank.predictedRank}. mestu</span> od {predictedRank.totalGames}!</>
+                  ) : (
+                    <>With {results?.totalScore} points, you would be <span className="text-2xl">rank {predictedRank.predictedRank}</span> of {predictedRank.totalGames}!</>
+                  )}
+                </p>
+              </div>
+            )}
             <h3 className="font-semibold text-foreground mb-2 text-sm sm:text-base">
               {t("loginToRank", { defaultValue: "Melde dich an, um in den Rankings zu erscheinen!" })}
             </h3>

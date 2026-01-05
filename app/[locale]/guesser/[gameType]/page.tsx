@@ -10,6 +10,7 @@ import { getGameTypeConfig, GAME_TYPES, type GameTypeConfig } from "@/lib/game-t
 import { nanoid } from "nanoid";
 import { cn } from "@/lib/utils";
 import { countryToGameTypeConfig, worldQuizToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType } from "@/lib/utils/country-converter";
+import { LoginCard } from "@/components/auth/LoginCard";
 
 interface RankingEntry {
   rank: number;
@@ -471,20 +472,14 @@ export default function GuesserGameTypePage() {
 
           {/* Right: My Rankings + Button (1 col) - Desktop Only */}
           <div className="hidden lg:block lg:col-span-1">
-            <Card className="p-4">
-              {session?.user ? (
+            {session?.user ? (
+              <Card className="p-4">
                 <MyStats />
-              ) : (
-                <p className="text-sm text-muted-foreground mb-4">
-                  {locale === "de"
-                    ? "Melde dich an für Rankings"
-                    : locale === "en"
-                    ? "Sign in for rankings"
-                    : "Prijavi se za uvrstitve"}
-                </p>
-              )}
-              <StartButton />
-            </Card>
+                <StartButton />
+              </Card>
+            ) : (
+              <LoginCard />
+            )}
           </div>
         </div>
 

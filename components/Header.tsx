@@ -31,6 +31,9 @@ export function Header() {
   // Check if on admin page
   const isAdminPage = pathname?.startsWith(`/${locale}/admin`);
 
+  // Check if on guesser game type page (e.g., /de/guesser/country:switzerland)
+  const isGuesserGamePage = pathname?.match(new RegExp(`^/${locale}/guesser/[^/]+$`));
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -141,6 +144,21 @@ export function Header() {
             <span className="text-lg font-bold tracking-tight">PinPoint</span>
           </Link>
 
+          {/* Link to Game Selection - only on guesser game pages */}
+          {isGuesserGamePage && (
+            <Link
+              href={`/${locale}/guesser`}
+              className="flex items-center gap-2 ml-4 pl-4 border-l border-glass-border text-text-secondary hover:text-primary transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+              <span className="text-sm font-medium">
+                {locale === "de" ? "Spiele" : locale === "en" ? "Games" : "Igre"}
+              </span>
+            </Link>
+          )}
+
           {/* Page Title */}
           {(pageTitle || isAdminPage) && (
             <div className="flex items-center gap-2 ml-4 pl-4 border-l border-glass-border">
@@ -245,12 +263,60 @@ export function Header() {
               )}
             </div>
           ) : (
-            <Link
-              href={`/${locale}`}
-              className="px-4 py-2 text-sm font-medium text-primary hover:text-primary-light transition-colors"
-            >
-              {t("login")}
-            </Link>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className={cn(
+                  "flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors",
+                  "hover:bg-surface-2",
+                  dropdownOpen && "bg-surface-2"
+                )}
+              >
+                {/* Anonymous Avatar */}
+                <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-text-secondary text-sm font-bold">
+                  A
+                </div>
+                {/* Dropdown Arrow */}
+                <svg
+                  className={cn(
+                    "w-4 h-4 text-text-muted transition-transform",
+                    dropdownOpen && "rotate-180"
+                  )}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 py-1 bg-surface-2 border border-glass-border rounded-lg shadow-lg animate-fade-in">
+                  {/* Guest Info */}
+                  <div className="px-4 py-3 border-b border-glass-border">
+                    <p className="text-sm text-text-secondary">
+                      {locale === "de" ? "Du spielst als Gast" : locale === "sl" ? "Igraš kot gost" : "You're playing as a guest"}
+                    </p>
+                    <p className="text-xs text-text-muted mt-1">
+                      {locale === "de" ? "Melde dich an, um deine Ergebnisse zu speichern" : locale === "sl" ? "Prijavi se, da shraniš rezultate" : "Sign in to save your results"}
+                    </p>
+                  </div>
+
+                  {/* Login Button */}
+                  <Link
+                    href={`/${locale}/register`}
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-primary hover:text-primary-light hover:bg-surface-3 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    {t("login")}
+                  </Link>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

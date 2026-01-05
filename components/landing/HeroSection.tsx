@@ -5,9 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginCard } from "@/components/auth/LoginCard";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { cn } from "@/lib/utils";
 import type { OverviewStats } from "@/app/api/stats/overview/route";
 
 interface HeroSectionProps {
@@ -205,19 +204,7 @@ export default function HeroSection({ locale }: HeroSectionProps) {
 
           {/* Right Side - Login Card (40%) */}
           <div className="lg:col-span-2">
-            <div
-              className={cn(
-                "bg-surface-1/95 backdrop-blur-xl",
-                "border border-glass-border",
-                "rounded-lg p-6 md:p-8",
-                "shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
-              )}
-            >
-              <h2 className="text-2xl font-bold text-text-primary mb-6 text-center">
-                {tAuth("login")}
-              </h2>
-              <LoginForm />
-            </div>
+            <LoginCard />
           </div>
         </div>
       </motion.div>

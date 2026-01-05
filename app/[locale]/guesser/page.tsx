@@ -1,11 +1,11 @@
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
-import { useTranslations, useLocale } from "next-intl";
+import { useSession } from "next-auth/react";
+import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import GameTypeSelectorWithLeaders from "@/components/guesser/GameTypeSelectorWithLeaders";
+import { LoginCard } from "@/components/auth/LoginCard";
 
 interface UserStats {
   totalGames: number;
@@ -19,7 +19,6 @@ interface UserStats {
 export default function GuesserPage() {
   const { data: session, status } = useSession();
   const locale = useLocale();
-  const t = useTranslations("ranked");
 
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,10 +47,6 @@ export default function GuesserPage() {
     }
   }, [session, status]);
 
-  const handleLogin = () => {
-    signIn("google");
-  };
-
   return (
     <div className="relative min-h-screen">
       {/* Background with world map */}
@@ -70,19 +65,7 @@ export default function GuesserPage() {
       </div>
 
       <div className="container max-w-6xl mx-auto px-4 py-4">
-        {/* Guest Login Prompt */}
-      {status === "unauthenticated" && (
-        <div className="flex items-center justify-between gap-4 mb-6 p-3 bg-primary/5 border border-primary/20 rounded-sm">
-          <p className="text-sm text-foreground">
-            {t("loginPrompt", { defaultValue: "Melde dich an für Rankings!" })}
-          </p>
-          <Button onClick={handleLogin} variant="primary" size="sm">
-            {t("login", { defaultValue: "Anmelden" })}
-          </Button>
-        </div>
-      )}
-
-      {/* Main Content: Two Columns */}
+        {/* Main Content: Two Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left: Game Types (3 cols) */}
         <div className="lg:col-span-3">
@@ -93,9 +76,9 @@ export default function GuesserPage() {
           />
         </div>
 
-        {/* Right: User Stats (1 col) */}
-        {status === "authenticated" && session?.user && (
-          <div className="lg:col-span-1">
+        {/* Right: User Stats or Login (1 col) */}
+        <div className="lg:col-span-1">
+          {status === "authenticated" && session?.user ? (
             <Card className="p-4">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
                 {locale === "de" ? "Deine Stats" : locale === "en" ? "Your Stats" : "Tvoje statistike"}
@@ -133,8 +116,10 @@ export default function GuesserPage() {
                 </div>
               )}
             </Card>
-          </div>
-        )}
+          ) : (
+            <LoginCard />
+          )}
+        </div>
         </div>
       </div>
     </div>

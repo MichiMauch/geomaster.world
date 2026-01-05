@@ -6,7 +6,8 @@ import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CountryMap, SummaryMap } from "@/components/Map";
 import { DEFAULT_COUNTRY } from "@/lib/countries";
-import { getEffectiveGameType } from "@/lib/game-types";
+import { getEffectiveGameType, getGameTypeConfig } from "@/lib/game-types";
+import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -70,6 +71,30 @@ interface DynamicWorldQuiz {
 
 const FIXED_TIME_LIMIT = 30; // 30 seconds per location for ranked
 
+/**
+ * Calculate score client-side for guest players
+ * Uses the same time-based scoring formula as the server (v2)
+ */
+function calculateClientScore(
+  distanceKm: number,
+  timeSeconds: number,
+  gameType: string,
+  scoreScaleFactor?: number
+): number {
+  const maxPoints = 100;
+  const config = getGameTypeConfig(gameType);
+  const scaleFactor = scoreScaleFactor ?? config.scoreScaleFactor;
+
+  // Calculate base distance score
+  const distanceScore = maxPoints * Math.exp(-distanceKm / scaleFactor);
+
+  // Calculate time multiplier (same as server v2)
+  const timeMultiplier = 1.0 + Math.min(2.0, 3 / (timeSeconds + 0.1));
+
+  const finalScore = distanceScore * timeMultiplier;
+  return Math.round(finalScore);
+}
+
 export default function GuesserPlayPage({
   params,
 }: {
@@ -116,12 +141,12 @@ export default function GuesserPlayPage({
     }
   }, [session]);
 
+  const isGuest = !session?.user?.id;
+
   const fetchGameData = useCallback(async () => {
     try {
-      const [gameRes, guessesRes] = await Promise.all([
-        fetch(`/api/ranked/games/${gameId}?locale=${locale}`),
-        fetch(`/api/guesses?gameId=${gameId}`),
-      ]);
+      // Fetch game data
+      const gameRes = await fetch(`/api/ranked/games/${gameId}?locale=${locale}`);
 
       if (gameRes.ok) {
         const gameData = await gameRes.json();
@@ -135,16 +160,20 @@ export default function GuesserPlayPage({
         }
       }
 
-      if (guessesRes.ok) {
-        const guessesData = await guessesRes.json();
-        setUserGuesses(guessesData.guesses || []);
+      // Only fetch guesses for logged-in users (guests don't have stored guesses)
+      if (!isGuest) {
+        const guessesRes = await fetch(`/api/guesses?gameId=${gameId}`);
+        if (guessesRes.ok) {
+          const guessesData = await guessesRes.json();
+          setUserGuesses(guessesData.guesses || []);
+        }
       }
     } catch (err) {
       console.error("Error fetching game:", err);
     } finally {
       setLoading(false);
     }
-  }, [gameId, locale]);
+  }, [gameId, locale, isGuest]);
 
   useEffect(() => {
     fetchGameData();
@@ -190,6 +219,35 @@ export default function GuesserPlayPage({
     setTimerActive(false);
     setSubmitting(true);
 
+    // For guests: handle timeout client-side
+    if (isGuest) {
+      const gameType = currentRound.gameType || (game ? getEffectiveGameType(game) : "country:switzerland");
+      const config = getGameTypeConfig(gameType);
+      const timeoutDistance = config.timeoutPenalty;
+
+      setLastResult({
+        distanceKm: timeoutDistance,
+        score: 0,
+        targetLat: currentRound.latitude,
+        targetLng: currentRound.longitude,
+      });
+      setUserGuesses([
+        ...userGuesses,
+        {
+          gameRoundId: currentRound.id,
+          distanceKm: timeoutDistance,
+          score: 0,
+          roundNumber: currentRound.roundNumber,
+          latitude: null,
+          longitude: null,
+        },
+      ]);
+      setShowResult(true);
+      setSubmitting(false);
+      return;
+    }
+
+    // For logged-in users: use API
     try {
       const response = await fetch("/api/guesses", {
         method: "POST",
@@ -235,8 +293,54 @@ export default function GuesserPlayPage({
     setTimerActive(false);
     setSubmitting(true);
 
+    const timeUsed = FIXED_TIME_LIMIT - timeRemaining;
+    const gameType = currentRound.gameType || (game ? getEffectiveGameType(game) : "country:switzerland");
+    const isImageGame = gameType.startsWith("image:");
+
+    // For guests: handle guess client-side
+    if (isGuest) {
+      // Calculate distance based on game type
+      const distanceKm = isImageGame
+        ? calculatePixelDistance(
+            markerPosition.lat,
+            markerPosition.lng,
+            currentRound.latitude,
+            currentRound.longitude
+          )
+        : calculateDistance(
+            markerPosition.lat,
+            markerPosition.lng,
+            currentRound.latitude,
+            currentRound.longitude
+          );
+
+      // Calculate score using client-side function
+      const score = calculateClientScore(distanceKm, timeUsed, gameType);
+
+      setLastResult({
+        distanceKm,
+        score,
+        targetLat: currentRound.latitude,
+        targetLng: currentRound.longitude,
+      });
+      setUserGuesses([
+        ...userGuesses,
+        {
+          gameRoundId: currentRound.id,
+          distanceKm,
+          score,
+          roundNumber: currentRound.roundNumber,
+          latitude: markerPosition.lat,
+          longitude: markerPosition.lng,
+        },
+      ]);
+      setShowResult(true);
+      setSubmitting(false);
+      return;
+    }
+
+    // For logged-in users: use API
     try {
-      const timeUsed = FIXED_TIME_LIMIT - timeRemaining;
       const response = await fetch("/api/guesses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -294,6 +398,16 @@ export default function GuesserPlayPage({
 
   const handleCompleteGame = async () => {
     setSubmitting(true);
+
+    // For guests: skip API call and redirect with score in URL
+    if (isGuest) {
+      const gameType = game?.gameType || (game ? getEffectiveGameType(game) : "country:switzerland");
+      // Redirect to results page with score and gameType as query params
+      router.push(`/${locale}/guesser/results/${gameId}?guestScore=${totalScore}&gameType=${encodeURIComponent(gameType)}`);
+      return;
+    }
+
+    // For logged-in users: use API
     try {
       const response = await fetch("/api/ranked/games/complete", {
         method: "POST",
