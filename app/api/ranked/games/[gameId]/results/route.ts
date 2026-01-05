@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { rankedGameResults } from "@/lib/db/schema";
+import { rankedGameResults, worldQuizTypes, countries } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { RankingService } from "@/lib/services/ranking-service";
@@ -28,6 +28,23 @@ export async function GET(
       );
     }
 
+    // Fetch game type name from database
+    let gameTypeName = result.gameType;
+
+    if (result.gameType.startsWith("world:")) {
+      const worldQuizId = result.gameType.split(":")[1];
+      const worldQuiz = await db.select().from(worldQuizTypes).where(eq(worldQuizTypes.id, worldQuizId)).get();
+      if (worldQuiz) {
+        gameTypeName = worldQuiz.name;
+      }
+    } else if (result.gameType.startsWith("country:")) {
+      const countryId = result.gameType.split(":")[1];
+      const country = await db.select().from(countries).where(eq(countries.id, countryId)).get();
+      if (country) {
+        gameTypeName = country.name;
+      }
+    }
+
     // If user is logged in, fetch their rankings for this game type
     let userRankings: Record<string, any> | null = null;
     if (session?.user?.id && result.userId === session.user.id) {
@@ -47,6 +64,7 @@ export async function GET(
     return NextResponse.json({
       gameId: result.gameId,
       gameType: result.gameType,
+      gameTypeName,
       totalScore: result.totalScore,
       averageScore: result.averageScore,
       totalDistance: result.totalDistance,

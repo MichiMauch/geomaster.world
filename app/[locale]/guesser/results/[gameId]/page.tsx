@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { signIn } from "next-auth/react";
-import { getGameTypeName } from "@/lib/game-types";
 
 interface PredictedRank {
   predictedRank: number;
@@ -122,9 +121,8 @@ export default function GuesserResultsPage() {
   // Share result on WhatsApp
   const handleWhatsAppShare = () => {
     if (!results) return;
-    const gameTypeName = getGameTypeName(results.gameType, locale);
     const shareUrl = `${window.location.origin}/${locale}/guesser/${results.gameType}`;
-    const text = `Ich habe das Spiel PinPoint gespielt. In der Runde ${gameTypeName}, habe ich ${results.totalScore} Punkte erreicht! Kannst du mich schlagen: ${shareUrl}`;
+    const text = `Ich habe das Spiel PinPoint gespielt. Im Spiel "${results.gameTypeName || results.gameType}", habe ich ${results.totalScore} Punkte erreicht! Kannst du mich schlagen: ${shareUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');
   };
