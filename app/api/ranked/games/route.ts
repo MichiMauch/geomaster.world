@@ -1,11 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, gameRounds, locations, worldLocations, countries, worldQuizTypes } from "@/lib/db/schema";
+import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
-import { getGameTypeConfig, isWorldGameType, getWorldCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
+import { getGameTypeConfig, isWorldGameType, getWorldCategory, isPanoramaGameType, getPanoramaCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
 import { getLocationCountryName } from "@/lib/countries";
 import { getCurrentScoringVersion } from "@/lib/scoring";
 import { countryToGameTypeConfig, worldQuizToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType } from "@/lib/utils/country-converter";
@@ -68,14 +68,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ranked games have fixed settings: 5 locations, 30 seconds per location
+    // Ranked games have fixed settings: 5 locations, 30 seconds per location (60 for panorama)
     const locationsPerRound = 5;
-    const timeLimitSeconds = 30;
+    const timeLimitSeconds = isPanoramaGameType(gameType) ? config.defaultTimeLimitSeconds ?? 60 : 30;
 
     // Fetch available locations based on game type
-    let availableLocations: Array<{ id: string; name: string; latitude: number; longitude: number }> = [];
+    let availableLocations: Array<{ id: string; name: string; latitude: number; longitude: number; mapillaryImageKey?: string; heading?: number | null; pitch?: number | null }> = [];
 
-    if (isWorldGameType(gameType)) {
+    if (isPanoramaGameType(gameType)) {
+      // Panorama game type - fetch from panoramaLocations
+      const panoramaLocs = await db
+        .select()
+        .from(panoramaLocations);
+
+      availableLocations = panoramaLocs.map((loc) => ({
+        id: loc.id,
+        name: loc.name,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        mapillaryImageKey: loc.mapillaryImageKey,
+        heading: loc.heading,
+        pitch: loc.pitch,
+      }));
+    } else if (isWorldGameType(gameType)) {
       const category = getWorldCategory(gameType);
       if (!category) {
         return NextResponse.json(
@@ -158,7 +173,7 @@ export async function POST(request: Request) {
         roundNumber: 1, // Single round with 5 locations
         locationIndex: i + 1,
         locationId: location.id,
-        locationSource: isWorldGameType(gameType) ? "worldLocations" : "locations",
+        locationSource: isPanoramaGameType(gameType) ? "panoramaLocations" : isWorldGameType(gameType) ? "worldLocations" : "locations",
         country: "switzerland", // Legacy field
         gameType,
         timeLimitSeconds, // 30 seconds per location

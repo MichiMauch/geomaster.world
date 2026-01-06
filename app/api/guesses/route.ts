@@ -9,6 +9,7 @@ import {
   locations,
   worldLocations,
   imageLocations,
+  panoramaLocations,
   countries,
   worldQuizTypes,
 } from "@/lib/db/schema";
@@ -158,6 +159,14 @@ export async function GET(request: Request) {
             .select({ name: worldLocations.name, latitude: worldLocations.latitude, longitude: worldLocations.longitude })
             .from(worldLocations)
             .where(eq(worldLocations.id, guess.locationId))
+            .get();
+          locationData = loc || null;
+        } else if (guess.locationSource === "panoramaLocations") {
+          // Panorama locations (Mapillary Street View style)
+          const loc = await db
+            .select({ name: panoramaLocations.name, latitude: panoramaLocations.latitude, longitude: panoramaLocations.longitude })
+            .from(panoramaLocations)
+            .where(eq(panoramaLocations.id, guess.locationId))
             .get();
           locationData = loc || null;
         } else if (guess.locationSource === "imageLocations" || isImageGameType(effectiveGameType)) {
@@ -323,6 +332,18 @@ export async function POST(request: Request) {
         .where(eq(worldLocations.id, round.locationId))
         .get();
       location = worldLoc;
+    } else if (round.locationSource === "panoramaLocations") {
+      // Panorama locations (Mapillary Street View style)
+      const panoramaLoc = await db
+        .select({
+          latitude: panoramaLocations.latitude,
+          longitude: panoramaLocations.longitude,
+          countryCode: panoramaLocations.countryCode,
+        })
+        .from(panoramaLocations)
+        .where(eq(panoramaLocations.id, round.locationId))
+        .get();
+      location = panoramaLoc;
     } else if (round.locationSource === "imageLocations" || isImage) {
       // Image-based locations use x/y pixel coordinates
       const imageLoc = await db

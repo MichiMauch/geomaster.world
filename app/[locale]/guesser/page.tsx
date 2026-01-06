@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { LoginCard } from "@/components/auth/LoginCard";
-import { Globe, Flag, MapPin, Sparkles } from "lucide-react";
+import { Globe, Flag, MapPin, Sparkles, Camera } from "lucide-react";
 
 // Game category configuration
 const GAME_CATEGORIES = [
@@ -36,6 +36,15 @@ const GAME_CATEGORIES = [
     borderColor: "border-purple-500/30",
     iconColor: "text-purple-500",
   },
+  {
+    id: "panorama",
+    icon: Camera,
+    emoji: "📷",
+    gradient: "from-orange-500/20 to-amber-500/20",
+    hoverGradient: "hover:from-orange-500/30 hover:to-amber-500/30",
+    borderColor: "border-orange-500/30",
+    iconColor: "text-orange-500",
+  },
 ];
 
 // Translations for categories
@@ -55,6 +64,11 @@ const categoryNames: Record<string, Record<string, string>> = {
     en: "Special Quizzes",
     sl: "Posebni kvizi",
   },
+  panorama: {
+    de: "Street View",
+    en: "Street View",
+    sl: "Ulični pogled",
+  },
 };
 
 const categoryDescriptions: Record<string, Record<string, string>> = {
@@ -72,6 +86,11 @@ const categoryDescriptions: Record<string, Record<string, string>> = {
     de: "Flaggen, Ländernamen, geografische Mittelpunkte und mehr",
     en: "Flags, country names, geographic centers and more",
     sl: "Zastave, imena držav, geografski centri in več",
+  },
+  panorama: {
+    de: "Erkunde die Welt in 360° und finde heraus, wo du bist - wie GeoGuessr!",
+    en: "Explore the world in 360° and find out where you are - like GeoGuessr!",
+    sl: "Raziskuj svet v 360° in ugotovi, kje si - kot GeoGuessr!",
   },
 };
 
@@ -121,7 +140,7 @@ export default function GuesserCategoriesPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Categories (3 cols) */}
           <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {GAME_CATEGORIES.map((category) => {
                 const IconComponent = category.icon;
                 const name = categoryNames[category.id][locale] || categoryNames[category.id].en;

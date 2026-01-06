@@ -1,11 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, gameRounds, locations, worldLocations, countries, worldQuizTypes } from "@/lib/db/schema";
+import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getLocalizedName } from "@/lib/location-utils";
-import { GAME_TYPES, isWorldGameType, getWorldCategory } from "@/lib/game-types";
+import { GAME_TYPES, isWorldGameType, getWorldCategory, isPanoramaGameType } from "@/lib/game-types";
 
 export async function GET(
   request: Request,
@@ -39,10 +39,12 @@ export async function GET(
     // Separate rounds by locationSource
     const countryRoundIds = allRounds.filter(r => r.locationSource === "locations").map(r => r.locationId);
     const worldRoundIds = allRounds.filter(r => r.locationSource === "worldLocations").map(r => r.locationId);
+    const panoramaRoundIds = allRounds.filter(r => r.locationSource === "panoramaLocations").map(r => r.locationId);
 
     // Fetch location names from respective tables
     const countryLocationsMap = new Map();
     const worldLocationsMap = new Map();
+    const panoramaLocationsMap = new Map();
 
     if (countryRoundIds.length > 0) {
       const countryLocs = await db.select().from(locations);
@@ -72,11 +74,30 @@ export async function GET(
       });
     }
 
+    if (panoramaRoundIds.length > 0) {
+      const panoramaLocs = await db.select().from(panoramaLocations);
+      panoramaLocs.forEach(loc => {
+        panoramaLocationsMap.set(loc.id, {
+          name: loc.name,
+          nameDe: loc.nameDe,
+          nameEn: loc.nameEn,
+          nameSl: loc.nameSl,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          mapillaryImageKey: loc.mapillaryImageKey,
+          heading: loc.heading,
+          pitch: loc.pitch,
+        });
+      });
+    }
+
     // Combine rounds with location info
     const rounds = allRounds.map(round => {
-      const locationMap = round.locationSource === "worldLocations"
-        ? worldLocationsMap
-        : countryLocationsMap;
+      const locationMap = round.locationSource === "panoramaLocations"
+        ? panoramaLocationsMap
+        : round.locationSource === "worldLocations"
+          ? worldLocationsMap
+          : countryLocationsMap;
       const locationInfo = locationMap.get(round.locationId);
 
       // For Country-Quiz (flags or place names): use name directly (flag emoji or place name)
@@ -84,9 +105,13 @@ export async function GET(
       const isCountryQuiz = round.gameType?.startsWith("world:") &&
         ["country-flags", "place-names"].includes(round.gameType.split(":")[1]);
 
-      const locationName = isCountryQuiz
-        ? locationInfo?.name ?? "Unknown"
-        : locationInfo ? getLocalizedName(locationInfo, locale) : "Unknown";
+      // For panorama games, we don't show the location name during gameplay (GeoGuessr experience)
+      const isPanorama = isPanoramaGameType(round.gameType);
+      const locationName = isPanorama
+        ? "" // Don't show name for panorama (pure GeoGuessr experience)
+        : isCountryQuiz
+          ? locationInfo?.name ?? "Unknown"
+          : locationInfo ? getLocalizedName(locationInfo, locale) : "Unknown";
 
       return {
         id: round.id,
@@ -99,6 +124,10 @@ export async function GET(
         country: round.country,
         gameType: round.gameType,
         timeLimitSeconds: round.timeLimitSeconds,
+        // Panorama-specific fields
+        mapillaryImageKey: locationInfo?.mapillaryImageKey ?? null,
+        heading: locationInfo?.heading ?? null,
+        pitch: locationInfo?.pitch ?? null,
       };
     });
 

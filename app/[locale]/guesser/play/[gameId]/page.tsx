@@ -4,9 +4,9 @@ import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { CountryMap, SummaryMap } from "@/components/Map";
+import { CountryMap, SummaryMap, PanoramaMap } from "@/components/Map";
 import { DEFAULT_COUNTRY } from "@/lib/countries";
-import { getEffectiveGameType, getGameTypeConfig } from "@/lib/game-types";
+import { getEffectiveGameType, getGameTypeConfig, isPanoramaGameType } from "@/lib/game-types";
 import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
@@ -29,6 +29,10 @@ interface GameRound {
   country: string;
   gameType?: string | null;
   timeLimitSeconds?: number | null;
+  // Panorama-specific fields
+  mapillaryImageKey?: string | null;
+  heading?: number | null;
+  pitch?: number | null;
 }
 
 interface Guess {
@@ -69,7 +73,8 @@ interface DynamicWorldQuiz {
   minZoom: number;
 }
 
-const FIXED_TIME_LIMIT = 30; // 30 seconds per location for ranked
+const DEFAULT_TIME_LIMIT = 30; // 30 seconds default for ranked
+const PANORAMA_TIME_LIMIT = 60; // 60 seconds for panorama games
 
 /**
  * Calculate score client-side for guest players
@@ -127,7 +132,7 @@ export default function GuesserPlayPage({
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(FIXED_TIME_LIMIT);
+  const [timeRemaining, setTimeRemaining] = useState(DEFAULT_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
   const [guestId, setGuestId] = useState<string | null>(null);
 
@@ -182,15 +187,28 @@ export default function GuesserPlayPage({
   // Define currentRound before using it in useEffect dependencies
   const currentRound = rounds[currentRoundIndex];
 
+  // Helper to get time limit for current round (panorama games have 60s, others 30s)
+  const getCurrentTimeLimit = useCallback(() => {
+    if (currentRound?.timeLimitSeconds) {
+      return currentRound.timeLimitSeconds;
+    }
+    // Fallback based on game type
+    const gameType = currentRound?.gameType || game?.gameType;
+    if (isPanoramaGameType(gameType)) {
+      return PANORAMA_TIME_LIMIT;
+    }
+    return DEFAULT_TIME_LIMIT;
+  }, [currentRound, game]);
+
   // Timer logic - starts automatically when round begins
   useEffect(() => {
     if (!showResult && !loading && currentRound && !userGuesses.some(g => g.gameRoundId === currentRound.id)) {
       setTimerActive(true);
-      setTimeRemaining(FIXED_TIME_LIMIT);
+      setTimeRemaining(getCurrentTimeLimit());
     } else {
       setTimerActive(false);
     }
-  }, [currentRoundIndex, showResult, loading, currentRound, userGuesses]);
+  }, [currentRoundIndex, showResult, loading, currentRound, userGuesses, getCurrentTimeLimit]);
 
   // Countdown timer with centiseconds (updates every 10ms)
   useEffect(() => {
@@ -255,7 +273,7 @@ export default function GuesserPlayPage({
         body: JSON.stringify({
           gameRoundId: currentRound.id,
           timeout: true,
-          timeSeconds: FIXED_TIME_LIMIT,
+          timeSeconds: getCurrentTimeLimit(),
         }),
       });
 
@@ -293,7 +311,7 @@ export default function GuesserPlayPage({
     setTimerActive(false);
     setSubmitting(true);
 
-    const timeUsed = FIXED_TIME_LIMIT - timeRemaining;
+    const timeUsed = getCurrentTimeLimit() - timeRemaining;
     const gameType = currentRound.gameType || (game ? getEffectiveGameType(game) : "country:switzerland");
     const isImageGame = gameType.startsWith("image:");
 
@@ -393,7 +411,10 @@ export default function GuesserPlayPage({
     setShowResult(false);
     setLastResult(null);
     setCurrentRoundIndex(nextRoundIndex);
-    setTimeRemaining(FIXED_TIME_LIMIT);
+    // Time remaining will be properly set by the useEffect watching currentRoundIndex
+    const nextRound = rounds[nextRoundIndex];
+    const nextTimeLimit = nextRound?.timeLimitSeconds ?? (isPanoramaGameType(nextRound?.gameType) ? PANORAMA_TIME_LIMIT : DEFAULT_TIME_LIMIT);
+    setTimeRemaining(nextTimeLimit);
   };
 
   const handleCompleteGame = async () => {
@@ -494,25 +515,46 @@ export default function GuesserPlayPage({
     return "text-error animate-pulse";
   };
 
+  // Check if current game type is panorama
+  const isPanorama = isPanoramaGameType(currentRound?.gameType || game?.gameType);
+
   return (
     <div className="h-dvh max-w-[1440px] mx-auto relative">
-      {/* Fullscreen Map */}
-      <CountryMap
-        gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
-        country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
-        dynamicCountry={dynamicCountry ?? undefined}
-        dynamicWorldQuiz={dynamicWorldQuiz ?? undefined}
-        onMarkerPlace={showResult ? undefined : setMarkerPosition}
-        markerPosition={markerPosition}
-        targetPosition={
-          showResult && lastResult
-            ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
-            : null
-        }
-        showTarget={showResult}
-        interactive={!showResult}
-        height="100%"
-      />
+      {/* Fullscreen Map - PanoramaMap for panorama games, CountryMap for others */}
+      {isPanorama && currentRound?.mapillaryImageKey ? (
+        <PanoramaMap
+          mapillaryImageKey={currentRound.mapillaryImageKey}
+          heading={currentRound.heading ?? undefined}
+          pitch={currentRound.pitch ?? undefined}
+          onMarkerPlace={showResult ? undefined : setMarkerPosition}
+          markerPosition={markerPosition}
+          targetPosition={
+            showResult && lastResult
+              ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
+              : null
+          }
+          showTarget={showResult}
+          interactive={!showResult}
+          height="100%"
+        />
+      ) : (
+        <CountryMap
+          gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
+          country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
+          dynamicCountry={dynamicCountry ?? undefined}
+          dynamicWorldQuiz={dynamicWorldQuiz ?? undefined}
+          onMarkerPlace={showResult ? undefined : setMarkerPosition}
+          markerPosition={markerPosition}
+          targetPosition={
+            showResult && lastResult
+              ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
+              : null
+          }
+          showTarget={showResult}
+          interactive={!showResult}
+          height="100%"
+        />
+      )}
 
       {/* Badge Bar - simplified: Location | Timer | Button */}
       {currentRound && (() => {
@@ -554,7 +596,12 @@ export default function GuesserPlayPage({
             showResult && !isSuccess && "border-surface-3"
           )}>
             {/* Question/Location Display */}
-            {isCountryQuiz && countryQuizCategory ? (
+            {isPanorama ? (
+              <span className="text-sm sm:text-base font-bold text-text-primary flex items-center gap-2">
+                <span>📷</span>
+                <span>{locale === "de" ? "Wo ist das?" : locale === "sl" ? "Kje je to?" : "Where is this?"}</span>
+              </span>
+            ) : isCountryQuiz && countryQuizCategory ? (
               <QuestionDisplay
                 question={currentRound.locationName}
                 category={countryQuizCategory}

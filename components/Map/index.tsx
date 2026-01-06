@@ -24,4 +24,13 @@ export const SummaryMap = dynamic(() => import("./SummaryMap"), {
   ),
 });
 
+export const PanoramaMap = dynamic(() => import("./PanoramaMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full bg-surface-1 flex items-center justify-center">
+      <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  ),
+});
+
 export default SwitzerlandMap;
