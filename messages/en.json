@@ -395,7 +395,8 @@
     "worldRecord": "World Record",
     "gamesPlayed": "games played",
     "by": "by",
-    "shareWhatsApp": "Share on WhatsApp"
+    "shareWhatsApp": "Share on WhatsApp",
+    "shareText": "I played PinPoint! In the game \"{gameName}\", I scored {score} points. Can you beat me? {url}"
   },
   "profile": {
     "title": "Profile",

@@ -5,6 +5,7 @@ import { rankedGameResults, worldQuizTypes, countries } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { RankingService } from "@/lib/services/ranking-service";
+import { GAME_TYPES } from "@/lib/game-types";
 
 export async function GET(
   request: Request,
@@ -28,10 +29,15 @@ export async function GET(
       );
     }
 
-    // Fetch game type name from database
-    let gameTypeName = result.gameType;
+    // Fetch game type name - check static config first, then database
+    let gameTypeName: string | Record<string, string> = result.gameType;
 
-    if (result.gameType.startsWith("world:")) {
+    // Check if it's a static game type (panorama, image, etc.)
+    const staticConfig = GAME_TYPES[result.gameType as keyof typeof GAME_TYPES];
+    if (staticConfig) {
+      // Return the localized name object for client-side locale selection
+      gameTypeName = staticConfig.name;
+    } else if (result.gameType.startsWith("world:")) {
       const worldQuizId = result.gameType.split(":")[1];
       const worldQuiz = await db.select().from(worldQuizTypes).where(eq(worldQuizTypes.id, worldQuizId)).get();
       if (worldQuiz) {

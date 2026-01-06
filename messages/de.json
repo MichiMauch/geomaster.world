@@ -395,7 +395,8 @@
     "worldRecord": "Weltrekord",
     "gamesPlayed": "Spiele gespielt",
     "by": "von",
-    "shareWhatsApp": "Mit WhatsApp teilen"
+    "shareWhatsApp": "Mit WhatsApp teilen",
+    "shareText": "Ich habe PinPoint gespielt! Im Spiel \"{gameName}\" habe ich {score} Punkte erreicht. Kannst du mich schlagen? {url}"
   },
   "profile": {
     "title": "Profil",

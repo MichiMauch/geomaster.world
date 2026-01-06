@@ -118,11 +118,29 @@ export default function GuesserResultsPage() {
     }
   };
 
+  // Get localized game type name
+  const getLocalizedGameTypeName = (): string => {
+    if (!results) return "";
+    const name = results.gameTypeName;
+    // If it's an object with locale keys, get the right one
+    if (typeof name === "object" && name !== null) {
+      return name[locale] || name.en || results.gameType;
+    }
+    // Otherwise use as string or fallback to gameType
+    return name || results.gameType;
+  };
+
   // Share result on WhatsApp
   const handleWhatsAppShare = () => {
     if (!results) return;
     const shareUrl = `${window.location.origin}/${locale}/guesser/${results.gameType}`;
-    const text = `Ich habe das Spiel PinPoint gespielt. Im Spiel "${results.gameTypeName || results.gameType}", habe ich ${results.totalScore} Punkte erreicht! Kannst du mich schlagen: ${shareUrl}`;
+    const gameName = getLocalizedGameTypeName();
+    const text = t("shareText", {
+      gameName,
+      score: results.totalScore,
+      url: shareUrl,
+      defaultValue: `I played PinPoint! In the game "${gameName}", I scored ${results.totalScore} points. Can you beat me? ${shareUrl}`
+    });
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');
   };
