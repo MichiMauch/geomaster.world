@@ -51,7 +51,7 @@ export function Footer() {
       <div className="max-w-[1440px] mx-auto px-4 py-4 flex items-center justify-between">
         {/* Copyright */}
         <p className="text-sm text-text-muted">
-          © {new Date().getFullYear()} PinPoint
+          © {new Date().getFullYear()} GeoMaster
         </p>
 
         {/* Language Dropdown */}

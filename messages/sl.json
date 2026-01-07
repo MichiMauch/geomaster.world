@@ -396,7 +396,7 @@
     "gamesPlayed": "odigrane igre",
     "by": "od",
     "shareWhatsApp": "Deli na WhatsApp",
-    "shareText": "Igral sem PinPoint! V igri \"{gameName}\" sem dosegel {score} točk. Me lahko premagas? {url}"
+    "shareText": "Igral sem GeoMaster! V igri \"{gameName}\" sem dosegel {score} točk. Me lahko premagas? {url}"
   },
   "profile": {
     "title": "Profil",

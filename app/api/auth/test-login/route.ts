@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const testUserId = `test-user-${testUserNumber}`;
-    const testUserEmail = `test${testUserNumber}@swiss-guesser.local`;
+    const testUserEmail = `test${testUserNumber}@geomaster.local`;
     const testUserName = `Test User ${testUserNumber}`;
 
     // Check if user exists, create if not

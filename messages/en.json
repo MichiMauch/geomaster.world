@@ -396,7 +396,7 @@
     "gamesPlayed": "games played",
     "by": "by",
     "shareWhatsApp": "Share on WhatsApp",
-    "shareText": "I played PinPoint! In the game \"{gameName}\", I scored {score} points. Can you beat me? {url}"
+    "shareText": "I played GeoMaster! In the game \"{gameName}\", I scored {score} points. Can you beat me? {url}"
   },
   "profile": {
     "title": "Profile",

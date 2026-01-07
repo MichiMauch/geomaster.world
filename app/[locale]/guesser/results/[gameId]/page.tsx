@@ -139,7 +139,7 @@ export default function GuesserResultsPage() {
       gameName,
       score: results.totalScore,
       url: shareUrl,
-      defaultValue: `I played PinPoint! In the game "${gameName}", I scored ${results.totalScore} points. Can you beat me? ${shareUrl}`
+      defaultValue: `I played GeoMaster! In the game "${gameName}", I scored ${results.totalScore} points. Can you beat me? ${shareUrl}`
     });
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');

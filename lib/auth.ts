@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
           pass: process.env.MANDRILL_API_KEY,
         },
       },
-      from: `"${process.env.MANDRILL_FROM_NAME || "PinPoint"}" <${process.env.MANDRILL_FROM_EMAIL}>`,
+      from: `"${process.env.MANDRILL_FROM_NAME || "GeoMaster"}" <${process.env.MANDRILL_FROM_EMAIL}>`,
       sendVerificationRequest: async ({ identifier: email, url }) => {
         // Extract locale from the callback URL if present, default to "de"
         const locale = url.includes("/en/") ? "en" : url.includes("/sl/") ? "sl" : "de";
