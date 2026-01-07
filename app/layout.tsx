@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "GeoMaster",
+  title: "GeoMaster World",
   description: "Teste dein geografisches Wissen",
   manifest: "/manifest.json",
   icons: {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "GeoMaster",
+    title: "GeoMaster World",
   },
 };
 
