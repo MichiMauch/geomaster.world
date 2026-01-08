@@ -62,9 +62,9 @@ export default function HeroSection({ locale }: HeroSectionProps) {
 
         <motion.div className="container max-w-6xl mx-auto px-4" style={{ y }}>
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-              <span className="text-foreground">GeoMaster</span>
-              <span className="text-primary"> World</span>
+            <h1 className="text-5xl md:text-7xl mb-6" style={{ letterSpacing: "-1px" }}>
+              <span className="text-foreground font-extrabold">GeoMaster</span>
+              <span className="font-light" style={{ color: "#FF6B35" }}> World</span>
             </h1>
             <p className="text-xl md:text-2xl text-white mb-4">
               {t("hero.subtitle")}
@@ -131,9 +131,9 @@ export default function HeroSection({ locale }: HeroSectionProps) {
           {/* Left Side - Game Info (60%) */}
           <div className="lg:col-span-3 text-center lg:text-left">
             {/* Logo/Title */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
-              <span className="text-foreground">GeoMaster</span>
-              <span className="text-primary"> World</span>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6" style={{ letterSpacing: "-1px" }}>
+              <span className="text-foreground font-extrabold">GeoMaster</span>
+              <span className="font-light" style={{ color: "#FF6B35" }}> World</span>
             </h1>
 
             {/* Subtitle */}

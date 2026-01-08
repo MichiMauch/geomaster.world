@@ -1,12 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
 
-const inter = Inter({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  variable: "--font-open-sans",
   display: "swap",
 });
 
@@ -69,7 +75,7 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} className="dark">
-      <body className={`${inter.variable} font-sans antialiased bg-background text-text-primary`}>
+      <body className={`${montserrat.variable} ${openSans.variable} font-sans antialiased bg-background text-text-primary`}>
         <Providers>{children}</Providers>
         <Toaster
           position="top-center"
