@@ -108,6 +108,16 @@ export function LoginForm() {
           error={error || undefined}
         />
 
+        {/* Forgot Password Link */}
+        <div className="text-right">
+          <Link
+            href={`/${locale}/forgot-password`}
+            className="text-sm text-text-muted hover:text-primary transition-colors"
+          >
+            {t("forgotPassword")}
+          </Link>
+        </div>
+
         <Button
           type="submit"
           variant="primary"

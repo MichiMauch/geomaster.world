@@ -142,3 +142,62 @@ export async function sendMagicLinkEmail(email: string, url: string, locale: str
     html,
   });
 }
+
+export async function sendPasswordResetEmail(email: string, token: string, locale: string = "de") {
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const resetUrl = `${baseUrl}/${locale}/reset-password?token=${token}`;
+
+  const translations = {
+    de: {
+      subject: "Passwort zurücksetzen",
+      greeting: "Passwort zurücksetzen",
+      message: "Du hast angefordert, dein Passwort zurückzusetzen. Klicke auf den folgenden Link:",
+      button: "Passwort zurücksetzen",
+      expiry: "Dieser Link ist 24 Stunden gültig.",
+      ignore: "Falls du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren. Dein Passwort bleibt unverändert.",
+    },
+    en: {
+      subject: "Reset your password",
+      greeting: "Reset your password",
+      message: "You requested to reset your password. Click the following link:",
+      button: "Reset password",
+      expiry: "This link is valid for 24 hours.",
+      ignore: "If you did not request this, you can ignore this email. Your password will remain unchanged.",
+    },
+    sl: {
+      subject: "Ponastavitev gesla",
+      greeting: "Ponastavitev gesla",
+      message: "Zahtevali ste ponastavitev gesla. Kliknite na naslednjo povezavo:",
+      button: "Ponastavi geslo",
+      expiry: "Ta povezava velja 24 ur.",
+      ignore: "Če niste zahtevali te spremembe, lahko to e-pošto ignorirate. Vaše geslo bo ostalo nespremenjeno.",
+    },
+  };
+
+  const t = translations[locale as keyof typeof translations] || translations.de;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0a0a0f; color: #e5e5e5; padding: 40px 20px; margin: 0;">
+      <div style="max-width: 480px; margin: 0 auto; background-color: #1a1a24; border-radius: 12px; padding: 40px; border: 1px solid rgba(255,255,255,0.1);">
+        <h1 style="color: #00d9ff; margin: 0 0 24px 0; font-size: 24px;">${t.greeting}</h1>
+        <p style="color: #a3a3a3; line-height: 1.6; margin: 0 0 24px 0;">${t.message}</p>
+        <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #00d9ff, #00b8d9); color: #000; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none; margin: 0 0 24px 0;">${t.button}</a>
+        <p style="color: #666; font-size: 14px; margin: 24px 0 0 0;">${t.expiry}</p>
+        <p style="color: #666; font-size: 12px; margin: 16px 0 0 0;">${t.ignore}</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: t.subject,
+    html,
+  });
+}
