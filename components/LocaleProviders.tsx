@@ -2,6 +2,7 @@
 
 import { NextIntlClientProvider, AbstractIntlMessages } from "next-intl";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { CursorGlow } from "./CursorGlow";
@@ -16,10 +17,14 @@ interface LocaleProvidersProps {
 
 export function LocaleProviders({ children, messages, locale, timeZone }: LocaleProvidersProps) {
   const pathname = usePathname();
+  const { status } = useSession();
 
   // Hide header and footer on game play page for immersive experience
   const isPlayPage = pathname?.includes("/guesser/play/");
-  const showHeader = !isPlayPage;
+  // Hide header on homepage for unauthenticated users (hero has its own layout)
+  const isHomepage = pathname === `/${locale}` || pathname === `/${locale}/`;
+  const isUnauthenticated = status === "unauthenticated";
+  const showHeader = !isPlayPage && !(isHomepage && isUnauthenticated);
   const showFooter = !isPlayPage;
 
   return (
