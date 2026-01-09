@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { signIn } from "next-auth/react";
 import { BarChart3, Eye, Share2 } from "lucide-react";
 import { StarRating, ScoreDisplay, RoundReview } from "@/components/guesser/results";
+import { LevelUpCelebration } from "@/components/LevelUpCelebration";
 
 interface PredictedRank {
   predictedRank: number;
@@ -43,6 +44,32 @@ export default function GuesserResultsPage() {
   const [startingGame, setStartingGame] = useState(false);
   const [predictedRank, setPredictedRank] = useState<PredictedRank | null>(null);
   const [showRoundReview, setShowRoundReview] = useState(false);
+
+  // Smooth fade-in transition from LevelUp celebration
+  const fromLevelUp = searchParams.get("fromLevelUp") === "true";
+  const [cardVisible, setCardVisible] = useState(!fromLevelUp);
+
+  useEffect(() => {
+    if (fromLevelUp) {
+      // Longer delay for page to settle, then smooth fade in
+      const timer = setTimeout(() => setCardVisible(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [fromLevelUp]);
+
+  // Test LevelUpCelebration with ?testLevelUp=true
+  const testLevelUp = searchParams.get("testLevelUp") === "true";
+  const [showLevelUpTest, setShowLevelUpTest] = useState(false);
+
+  useEffect(() => {
+    if (testLevelUp && !loading && results) {
+      // Show level up after a short delay when results are loaded
+      const timer = setTimeout(() => {
+        setShowLevelUpTest(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [testLevelUp, loading, results]);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -208,9 +235,11 @@ export default function GuesserResultsPage() {
     <div className="relative min-h-screen flex items-center justify-center p-4">
       <BackgroundMap />
 
-      {/* Main Card - Very transparent */}
+      {/* Main Card - Very transparent, with fade-in from LevelUp */}
       <div
-        className="w-full max-w-md rounded-2xl border border-white/10 p-6 sm:p-8 text-center"
+        className={`w-full max-w-md rounded-2xl border border-white/10 p-6 sm:p-8 text-center transition-opacity duration-700 ease-out ${
+          cardVisible ? "opacity-100" : "opacity-0"
+        }`}
         style={{ backgroundColor: "rgba(0, 0, 0, 0.08)", backdropFilter: "blur(8px)" }}
       >
         {/* 1. Title ("Starke Leistung!") */}
@@ -328,6 +357,15 @@ export default function GuesserResultsPage() {
         gameId={gameId}
         isOpen={showRoundReview}
         onClose={() => setShowRoundReview(false)}
+      />
+
+      {/* Test LevelUpCelebration with ?testLevelUp=true */}
+      <LevelUpCelebration
+        isOpen={showLevelUpTest}
+        onClose={() => setShowLevelUpTest(false)}
+        newLevel={5}
+        newLevelName="Entdecker"
+        locale={locale}
       />
     </div>
   );

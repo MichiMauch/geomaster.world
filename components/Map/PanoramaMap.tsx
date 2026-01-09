@@ -240,7 +240,7 @@ export default function PanoramaMap({
             center={[20, 0]}
             zoom={isMobile ? 1 : 2}
             minZoom={1}
-            style={{ height: "100%", width: "100%", backgroundColor: "#1A1F26" }}
+            style={{ height: "100%", width: "100%", backgroundColor: "transparent" }}
             zoomControl={false}
             worldCopyJump={true}
           >

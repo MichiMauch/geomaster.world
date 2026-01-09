@@ -103,7 +103,7 @@ export default function ImageMap({
       crs={L.CRS.Simple}
       maxBounds={bounds}
       maxBoundsViscosity={1.0}
-      style={{ height, width: "100%", backgroundColor: "#1A1F26" }}
+      style={{ height, width: "100%", backgroundColor: "transparent" }}
       className="rounded-lg"
     >
       {/* Image as background */}

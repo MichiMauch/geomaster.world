@@ -109,7 +109,7 @@ export default function CountryMap({
   const mapContainerProps: Record<string, unknown> = {
     center,
     zoom,
-    style: { height, width: "100%", backgroundColor: "#1A1F26" },
+    style: { height, width: "100%", backgroundColor: "transparent" },
     className: "rounded-lg",
     minZoom,
     zoomControl: false,

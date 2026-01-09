@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { CountryMap, PanoramaMap } from "@/components/Map";
 import { DEFAULT_COUNTRY } from "@/lib/countries";
 import { getEffectiveGameType, getGameTypeConfig, isPanoramaGameType } from "@/lib/game-types";
@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { isCountryQuizGameType } from "@/components/country-quiz/QuestionDisplay";
 import { LevelUpCelebration } from "@/components/LevelUpCelebration";
+import { cn } from "@/lib/utils";
 import { useGameData } from "../hooks/useGameData";
 import { useGameTimer } from "../hooks/useGameTimer";
 import { GameBadgeBar } from "../components/GameBadgeBar";
@@ -26,8 +27,12 @@ export default function GuesserPlayPage({
   const { gameId } = use(params);
   const router = useRouter();
   const routeParams = useParams();
+  const searchParams = useSearchParams();
   const locale = routeParams.locale as string;
   const t = useTranslations("play");
+
+  // Test mode: simulate level up with ?testLevelUp=true
+  const testLevelUp = searchParams.get("testLevelUp") === "true";
   const tCommon = useTranslations("common");
   const tRanked = useTranslations("ranked");
 
@@ -263,10 +268,11 @@ export default function GuesserPlayPage({
       if (response.ok) {
         const data = await response.json();
 
-        if (data.levelUp?.leveledUp) {
+        // Test mode or real level up: show celebration
+        if (data.levelUp?.leveledUp || testLevelUp) {
           setLevelUpData({
-            newLevel: data.levelUp.newLevel,
-            newLevelName: data.levelUp.newLevelName,
+            newLevel: data.levelUp?.newLevel ?? 5,
+            newLevelName: data.levelUp?.newLevelName ?? "Entdecker",
           });
           setSubmitting(false);
           return;
@@ -287,8 +293,8 @@ export default function GuesserPlayPage({
   };
 
   const handleLevelUpClose = () => {
-    setLevelUpData(null);
-    router.push(`/${locale}/guesser/results/${gameId}`);
+    // Navigate to results page with fade-in flag
+    router.push(`/${locale}/guesser/results/${gameId}?fromLevelUp=true`);
   };
 
   // Loading state
@@ -348,50 +354,71 @@ export default function GuesserPlayPage({
 
   return (
     <div className="h-dvh max-w-[1440px] mx-auto relative">
+      {/* Background - same as Results page for smooth transition */}
+      <div className="absolute inset-0 -z-10">
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage: 'url("/images/hero-map-bg.jpg")',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/40" />
+      </div>
+
       {/* Subtle corner glows */}
       <div className="pointer-events-none absolute inset-0 z-[1]">
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-accent/5 blur-3xl rounded-full translate-x-1/2 translate-y-1/2" />
       </div>
 
-      {/* Fullscreen Map */}
-      {isPanorama && currentRound?.mapillaryImageKey ? (
-        <PanoramaMap
-          mapillaryImageKey={currentRound.mapillaryImageKey}
-          heading={currentRound.heading ?? undefined}
-          pitch={currentRound.pitch ?? undefined}
-          onMarkerPlace={showResult ? undefined : setMarkerPosition}
-          markerPosition={markerPosition}
-          targetPosition={
-            showResult && lastResult
-              ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
-              : null
-          }
-          showTarget={showResult}
-          interactive={!showResult}
-          height="100%"
-        />
-      ) : (
-        <CountryMap
-          gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
-          country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
-          dynamicCountry={dynamicCountry ?? undefined}
-          dynamicWorldQuiz={dynamicWorldQuiz ?? undefined}
-          onMarkerPlace={showResult ? undefined : setMarkerPosition}
-          markerPosition={markerPosition}
-          targetPosition={
-            showResult && lastResult
-              ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
-              : null
-          }
-          showTarget={showResult}
-          interactive={!showResult}
-          height="100%"
-        />
-      )}
+      {/* Fullscreen Map - fades out when LevelUp is shown */}
+      <div
+        className={cn(
+          "absolute inset-0 transition-opacity duration-300",
+          levelUpData ? "opacity-0" : "opacity-100"
+        )}
+      >
+        {isPanorama && currentRound?.mapillaryImageKey ? (
+          <PanoramaMap
+            mapillaryImageKey={currentRound.mapillaryImageKey}
+            heading={currentRound.heading ?? undefined}
+            pitch={currentRound.pitch ?? undefined}
+            onMarkerPlace={showResult ? undefined : setMarkerPosition}
+            markerPosition={markerPosition}
+            targetPosition={
+              showResult && lastResult
+                ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
+                : null
+            }
+            showTarget={showResult}
+            interactive={!showResult}
+            height="100%"
+          />
+        ) : (
+          <CountryMap
+            gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
+            country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
+            dynamicCountry={dynamicCountry ?? undefined}
+            dynamicWorldQuiz={dynamicWorldQuiz ?? undefined}
+            onMarkerPlace={showResult ? undefined : setMarkerPosition}
+            markerPosition={markerPosition}
+            targetPosition={
+              showResult && lastResult
+                ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
+                : null
+            }
+            showTarget={showResult}
+            interactive={!showResult}
+            height="100%"
+          />
+        )}
+      </div>
 
-      {/* Badge Bar */}
-      {currentRound && (
+      {/* Badge Bar - hidden when LevelUp is shown */}
+      {currentRound && !levelUpData && (
         <GameBadgeBar
           currentRound={currentRound}
           locale={locale}
@@ -405,14 +432,16 @@ export default function GuesserPlayPage({
         />
       )}
 
-      {/* Progress indicator */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500]">
-        <div className="bg-surface-1/90 backdrop-blur-sm rounded-full px-4 py-1.5 border border-surface-3 shadow-lg">
-          <span className="text-sm text-text-muted font-mono tabular-nums">
-            {currentRoundIndex + 1} / 5
-          </span>
+      {/* Progress indicator - hidden when LevelUp is shown */}
+      {!levelUpData && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500]">
+          <div className="bg-surface-1/90 backdrop-blur-sm rounded-full px-4 py-1.5 border border-surface-3 shadow-lg">
+            <span className="text-sm text-text-muted font-mono tabular-nums">
+              {currentRoundIndex + 1} / 5
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Level Up Celebration */}
       <LevelUpCelebration

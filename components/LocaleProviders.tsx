@@ -19,13 +19,14 @@ export function LocaleProviders({ children, messages, locale, timeZone }: Locale
   const pathname = usePathname();
   const { status } = useSession();
 
-  // Hide header and footer on game play page for immersive experience
+  // Hide header and footer on game play and results pages for immersive experience
   const isPlayPage = pathname?.includes("/guesser/play/");
+  const isResultsPage = pathname?.includes("/guesser/results/");
   // Hide header on homepage for unauthenticated users (hero has its own layout)
   const isHomepage = pathname === `/${locale}` || pathname === `/${locale}/`;
   const isUnauthenticated = status === "unauthenticated";
-  const showHeader = !isPlayPage && !(isHomepage && isUnauthenticated);
-  const showFooter = !isPlayPage;
+  const showHeader = !isPlayPage && !isResultsPage && !(isHomepage && isUnauthenticated);
+  const showFooter = !isPlayPage && !isResultsPage;
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale} timeZone={timeZone}>
