@@ -7,26 +7,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import WinnerCelebration from "@/components/WinnerCelebration";
-import { getGameTypesByTypeExtended, getGameTypeName } from "@/lib/game-types";
-import { cn } from "@/lib/utils";
-
-interface Winner {
-  userName: string;
-  userImage: string | null;
-  totalDistance: number;
-}
-
-interface RoundControlPanelProps {
-  gameId: string;
-  groupId: string;
-  currentRound: number;
-  locationsPerRound?: number;
-  isAdmin: boolean;
-  userCompletedRounds?: number;
-  gameStatus: "active" | "completed";
-  gameName?: string;
-  currentGameType: string;
-}
+import { getGameTypesByTypeExtended } from "@/lib/game-types";
+import { OptionButton } from "./OptionButton";
+import { GameTypeSection } from "./GameTypeSection";
+import { LOCATION_OPTIONS, TIME_OPTIONS } from "./constants";
+import type { RoundControlPanelProps, Winner } from "./types";
 
 export default function RoundControlPanel({
   gameId,
@@ -54,8 +39,6 @@ export default function RoundControlPanel({
   const tGroup = useTranslations("group");
 
   const { country: countryGameTypes, world: worldGameTypes, image: imageGameTypes } = getGameTypesByTypeExtended();
-  const locationOptions = [3, 5, 10];
-  const timeOptions = [30, 60, 90, 0]; // 0 = no limit
 
   const handleReleaseRound = async () => {
     setLoading(true);
@@ -65,7 +48,12 @@ export default function RoundControlPanel({
       const response = await fetch("/api/games/release-round", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameId, gameType: selectedGameType, locationsPerRound: selectedLocationsPerRound, timePerRound: selectedTimePerRound || null }),
+        body: JSON.stringify({
+          gameId,
+          gameType: selectedGameType,
+          locationsPerRound: selectedLocationsPerRound,
+          timePerRound: selectedTimePerRound || null,
+        }),
       });
 
       const data = await response.json();
@@ -119,13 +107,11 @@ export default function RoundControlPanel({
         throw new Error(data.error || t("errorCompleting"));
       }
 
-      // Fetch winner and show celebration
       const winnerData = await fetchWinner();
       if (winnerData) {
         setWinner(winnerData);
         setShowCelebration(true);
       } else {
-        // No winner data, just show success and refresh
         toast.success(t("gameCompleted"));
         router.refresh();
       }
@@ -140,9 +126,7 @@ export default function RoundControlPanel({
     toast(
       (toastObj) => (
         <div className="text-center">
-          <p className="font-medium text-text-primary mb-2">
-            {t("confirmComplete")}
-          </p>
+          <p className="font-medium text-text-primary mb-2">{t("confirmComplete")}</p>
           <p className="text-sm text-text-secondary mb-4">{t("completeInfo")}</p>
           <div className="flex gap-2 justify-center">
             <button
@@ -202,76 +186,30 @@ export default function RoundControlPanel({
               {t("selectGameType")}
             </label>
 
-            {/* Country Game Types */}
-            <div className="space-y-1">
-              <span className="text-xs text-text-muted">{t("countries")}</span>
-              <div className="flex gap-2">
-                {countryGameTypes.map((gameType) => (
-                  <button
-                    key={gameType.id}
-                    type="button"
-                    onClick={() => setSelectedGameType(gameType.id)}
-                    className={cn(
-                      "flex-1 py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
-                      selectedGameType === gameType.id
-                        ? "border-success bg-success/10 text-success"
-                        : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
-                    )}
-                  >
-                    <span>{gameType.icon}</span>
-                    <span>{getGameTypeName(gameType.id, locale)}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <GameTypeSection
+              label={t("countries")}
+              gameTypes={countryGameTypes}
+              selectedGameType={selectedGameType}
+              onSelect={setSelectedGameType}
+              locale={locale}
+            />
 
-            {/* World Game Types */}
-            <div className="space-y-1">
-              <span className="text-xs text-text-muted">{t("worldQuizzes")}</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {worldGameTypes.map((gameType) => (
-                  <button
-                    key={gameType.id}
-                    type="button"
-                    onClick={() => setSelectedGameType(gameType.id)}
-                    className={cn(
-                      "py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
-                      selectedGameType === gameType.id
-                        ? "border-success bg-success/10 text-success"
-                        : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
-                    )}
-                  >
-                    <span>{gameType.icon}</span>
-                    <span>{getGameTypeName(gameType.id, locale)}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <GameTypeSection
+              label={t("worldQuizzes")}
+              gameTypes={worldGameTypes}
+              selectedGameType={selectedGameType}
+              onSelect={setSelectedGameType}
+              locale={locale}
+              layout="grid"
+            />
 
-            {/* Image Game Types */}
-            {imageGameTypes.length > 0 && (
-              <div className="space-y-1">
-                <span className="text-xs text-text-muted">{t("imageMaps")}</span>
-                <div className="flex gap-2">
-                  {imageGameTypes.map((gameType) => (
-                    <button
-                      key={gameType.id}
-                      type="button"
-                      onClick={() => setSelectedGameType(gameType.id)}
-                      className={cn(
-                        "flex-1 py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm flex items-center justify-center gap-1",
-                        selectedGameType === gameType.id
-                          ? "border-success bg-success/10 text-success"
-                          : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
-                      )}
-                    >
-                      <span>{gameType.icon}</span>
-                      <span>{getGameTypeName(gameType.id, locale)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <GameTypeSection
+              label={t("imageMaps")}
+              gameTypes={imageGameTypes}
+              selectedGameType={selectedGameType}
+              onSelect={setSelectedGameType}
+              locale={locale}
+            />
           </div>
 
           {/* Locations per Round */}
@@ -280,20 +218,15 @@ export default function RoundControlPanel({
               {tNewGroup("locationsPerRound")}
             </label>
             <div className="flex gap-2 justify-center">
-              {locationOptions.map((count) => (
-                <button
+              {LOCATION_OPTIONS.map((count) => (
+                <OptionButton
                   key={count}
-                  type="button"
+                  selected={selectedLocationsPerRound === count}
                   onClick={() => setSelectedLocationsPerRound(count)}
-                  className={cn(
-                    "w-12 py-2 rounded-lg border-2 font-medium transition-all text-sm",
-                    selectedLocationsPerRound === count
-                      ? "border-success bg-success/10 text-success"
-                      : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
-                  )}
+                  className="w-12"
                 >
                   {count}
-                </button>
+                </OptionButton>
               ))}
             </div>
           </div>
@@ -304,20 +237,14 @@ export default function RoundControlPanel({
               {tGroup("timeLimit")}
             </label>
             <div className="flex gap-2 justify-center">
-              {timeOptions.map((seconds) => (
-                <button
+              {TIME_OPTIONS.map((seconds) => (
+                <OptionButton
                   key={seconds}
-                  type="button"
+                  selected={selectedTimePerRound === seconds}
                   onClick={() => setSelectedTimePerRound(seconds)}
-                  className={cn(
-                    "px-3 py-2 rounded-lg border-2 font-medium transition-all text-sm",
-                    selectedTimePerRound === seconds
-                      ? "border-success bg-success/10 text-success"
-                      : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
-                  )}
                 >
                   {seconds === 0 ? tGroup("noTimeLimit") : `${seconds}s`}
-                </button>
+                </OptionButton>
               ))}
             </div>
           </div>
@@ -355,3 +282,6 @@ export default function RoundControlPanel({
     </Card>
   );
 }
+
+// Re-export types
+export type { RoundControlPanelProps, Winner } from "./types";
