@@ -30,6 +30,7 @@ export function WorldQuizTypeEditModal({ quizType, onSave, onClose }: WorldQuizT
 
   // Reset form when quizType changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing props to state is intentional
     setFormData({
       name: quizType.name,
       icon: quizType.icon,

@@ -13,7 +13,7 @@ import { logger } from "@/lib/logger";
 
 // Cache the world GeoJSON data
 let worldGeoJsonCache: FeatureCollection | null = null;
-let countryPolygonCache: Map<string, Feature<Polygon | MultiPolygon>> = new Map();
+const countryPolygonCache: Map<string, Feature<Polygon | MultiPolygon>> = new Map();
 
 /**
  * Load world.geojson and cache country polygons by ISO-2 code

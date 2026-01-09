@@ -24,6 +24,7 @@ export function CursorGlow() {
     // Only show on desktop (no touch)
     const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     if (isTouchDevice || shouldHide) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync visibility with touch detection
       setIsVisible(false);
       return;
     }

@@ -53,7 +53,7 @@ export async function GET(
     }
 
     // If user is logged in, fetch their rankings and highscore info
-    let userRankings: Record<string, any> | null = null;
+    let userRankings: Record<string, { rank: number; total: number }> | null = null;
     let isNewHighscore = false;
     let previousBestScore: number | null = null;
     let pointsToHighscore = 0;

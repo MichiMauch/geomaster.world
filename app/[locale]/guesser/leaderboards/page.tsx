@@ -15,7 +15,7 @@ export default function LeaderboardsPage() {
 
   const [selectedGameType, setSelectedGameType] = useState<string>("overall");
   const [selectedPeriod, setSelectedPeriod] = useState<RankingPeriod>("alltime");
-  const [rankings, setRankings] = useState<any[]>([]);
+  const [rankings, setRankings] = useState<{ rank: number; userId: string; userName: string; userImage: string | null; totalScore: number; gamesPlayed: number }[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Fetch rankings when gameType or period changes

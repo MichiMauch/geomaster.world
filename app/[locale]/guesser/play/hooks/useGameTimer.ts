@@ -36,6 +36,7 @@ export function useGameTimer({
   }, [currentRound, game]);
 
   // Timer activation logic
+   
   useEffect(() => {
     if (!showResult && !loading && currentRound && !userGuesses.some(g => g.gameRoundId === currentRound.id)) {
       setTimerActive(true);

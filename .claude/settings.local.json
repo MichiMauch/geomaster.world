@@ -61,7 +61,10 @@
       "Bash(git log:*)",
       "Bash(wc:*)",
       "Bash(npm run lint)",
-      "Bash(npm run test:coverage:*)"
+      "Bash(npm run test:coverage:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh secret set:*)"
     ],
     "deny": [],
     "ask": []

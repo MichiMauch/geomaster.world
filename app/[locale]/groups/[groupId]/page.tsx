@@ -92,7 +92,7 @@ async function getGroupData(groupId: string, userId: string) {
 
   // Fetch all winners in a single query (optimized to avoid N+1 queries)
   const gameIds = completedGamesRaw.map((g) => g.id);
-  let winnersMap = new Map<string, { userName: string | null; userImage: string | null; totalDistance: number }>();
+  const winnersMap = new Map<string, { userName: string | null; userImage: string | null; totalDistance: number }>();
 
   if (gameIds.length > 0) {
     // Get all player scores for all completed games

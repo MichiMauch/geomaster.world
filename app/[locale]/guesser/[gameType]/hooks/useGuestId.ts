@@ -12,6 +12,7 @@ export function useGuestId() {
     if (!session?.user?.id) {
       const stored = localStorage.getItem("guestId");
       if (stored) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Reading from localStorage is intentional
         setGuestId(stored);
       } else {
         const newGuestId = nanoid();

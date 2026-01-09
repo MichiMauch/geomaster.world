@@ -30,6 +30,7 @@ export default function FlagBackground({ activeCountryCodes = ["ch", "si"] }: Fl
   const [rows, setRows] = useState<string[][]>([]);
 
   // Shuffle flags only on client mount to avoid hydration mismatch
+   
   useEffect(() => {
     const activeSet = new Set(activeCountryCodes.map(c => c.toLowerCase()));
     const backgroundCodes = ALL_COUNTRY_CODES.filter(code => !activeSet.has(code));

@@ -29,6 +29,7 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
 
   // Reset form when country changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing props to state is intentional
     setFormData({
       name: country.name,
       icon: country.icon,
