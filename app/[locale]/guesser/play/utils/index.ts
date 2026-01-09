@@ -1,0 +1,1 @@
+export { calculateClientScore } from "./scoring";
