@@ -13,6 +13,12 @@ interface PredictedRank {
   totalGames: number;
 }
 
+interface GameResults {
+  totalScore: number;
+  gameType: string;
+  gameTypeName?: string | { [locale: string]: string };
+}
+
 export default function GuesserResultsPage() {
   const params = useParams();
   const router = useRouter();
@@ -27,7 +33,7 @@ export default function GuesserResultsPage() {
   const guestGameType = searchParams.get("gameType");
   const isGuestResult = !!guestScore && !session?.user?.id;
 
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<GameResults | null>(null);
   const [loading, setLoading] = useState(true);
   const [startingGame, setStartingGame] = useState(false);
   const [predictedRank, setPredictedRank] = useState<PredictedRank | null>(null);

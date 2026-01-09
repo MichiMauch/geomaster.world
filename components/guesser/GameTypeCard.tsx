@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Play, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GameTypeConfig } from "@/lib/game-types";
@@ -70,7 +71,7 @@ export function GameTypeCard({
           {/* Header: Icon/Flag + Name + Action Buttons */}
           <div className="flex items-center gap-3 mb-3">
             {flagImage ? (
-              <img src={flagImage} alt={name} className="w-10 h-auto" />
+              <Image src={flagImage} alt={name} width={40} height={30} className="w-10 h-auto" />
             ) : (
               <span className="text-3xl">{config.icon}</span>
             )}

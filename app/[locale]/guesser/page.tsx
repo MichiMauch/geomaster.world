@@ -2,6 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { UserSidebar } from "@/components/guesser/UserSidebar";
 // Game category configuration
@@ -152,7 +153,7 @@ export default function GuesserCategoriesPage() {
                     {/* Content */}
                     <div className="relative z-10 p-6 flex flex-col h-full">
                       {/* Icon */}
-                      <img src={category.icon} alt="" className="w-12 h-12 mb-4 transition-transform group-hover:scale-110" />
+                      <Image src={category.icon} alt="" width={48} height={48} className="w-12 h-12 mb-4 transition-transform group-hover:scale-110" />
 
                       {/* Text */}
                       <div className="flex-1 flex flex-col">
