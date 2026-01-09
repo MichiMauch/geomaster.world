@@ -6,6 +6,7 @@ import { rankedGameResults, worldQuizTypes, countries, rankings } from "@/lib/db
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { RankingService } from "@/lib/services/ranking-service";
+import type { UserRankResult } from "@/lib/services/ranking/types";
 import { GAME_TYPES } from "@/lib/game-types";
 
 export async function GET(
@@ -53,7 +54,7 @@ export async function GET(
     }
 
     // If user is logged in, fetch their rankings and highscore info
-    let userRankings: Record<string, { rank: number; total: number }> | null = null;
+    let userRankings: Record<string, UserRankResult | null> | null = null;
     let isNewHighscore = false;
     let previousBestScore: number | null = null;
     let pointsToHighscore = 0;
