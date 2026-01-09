@@ -3,49 +3,17 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { CountryMap, SummaryMap } from "@/components/Map";
+import { CountryMap } from "@/components/Map";
 import { DEFAULT_COUNTRY } from "@/lib/countries";
-import { formatDistance } from "@/lib/distance";
 import { getEffectiveGameType, getGameTypeConfig } from "@/lib/game-types";
 import toast from "react-hot-toast";
 import { generateHintCircleCenter, getHintCircleRadius } from "@/lib/hint";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { RoundHeader } from "@/components/game/RoundHeader";
-import { ActionBar } from "@/components/game/ActionBar";
-import { ScorePopup, RoundCompletePopup } from "@/components/game/ScorePopup";
-import { cn } from "@/lib/utils";
-
-interface GameRound {
-  id: string;
-  roundNumber: number;
-  locationIndex: number;
-  locationId: string;
-  locationName: string;
-  latitude: number;
-  longitude: number;
-  country: string;
-  gameType?: string | null;
-  timeLimitSeconds?: number | null;
-}
-
-interface Guess {
-  gameRoundId: string;
-  distanceKm: number;
-  score: number; // Calculated from API based on gameType
-  roundNumber: number;
-  latitude?: number | null;
-  longitude?: number | null;
-}
-
-interface Game {
-  id: string;
-  status: string;
-  currentRound: number;
-  country: string;
-  gameType?: string | null;
-}
+import { GroupGameBadgeBar } from "../components/GroupGameBadgeBar";
+import { RoundSummary } from "../components/RoundSummary";
+import type { GameRound, Guess, Game, GuessResult, HintCircle, TimerState } from "../types";
 
 export default function PlayPage({
   params,
@@ -58,21 +26,14 @@ export default function PlayPage({
   const locale = routeParams.locale as string;
   const t = useTranslations("play");
   const tCommon = useTranslations("common");
+
   const [game, setGame] = useState<Game | null>(null);
   const [rounds, setRounds] = useState<GameRound[]>([]);
   const [userGuesses, setUserGuesses] = useState<Guess[]>([]);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
-  const [markerPosition, setMarkerPosition] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [lastResult, setLastResult] = useState<{
-    distanceKm: number;
-    score: number;
-    targetLat: number;
-    targetLng: number;
-  } | null>(null);
+  const [lastResult, setLastResult] = useState<GuessResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number | null>(null);
@@ -81,7 +42,7 @@ export default function PlayPage({
   const [startTime, setStartTime] = useState<number | null>(null);
   const [showRoundSummary, setShowRoundSummary] = useState(false);
   const [hintEnabled, setHintEnabled] = useState(false);
-  const [hintCircle, setHintCircle] = useState<{ lat: number; lng: number; radiusKm: number } | null>(null);
+  const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
 
   const fetchGameData = useCallback(async () => {
     try {
@@ -95,9 +56,7 @@ export default function PlayPage({
         setHintEnabled(gameData.hintEnabled ?? false);
 
         if (gameData.game) {
-          const actualGuessesRes = await fetch(
-            `/api/guesses?gameId=${gameData.game.id}`
-          );
+          const actualGuessesRes = await fetch(`/api/guesses?gameId=${gameData.game.id}`);
           if (actualGuessesRes.ok) {
             const guessesResponse = await actualGuessesRes.json();
             const guessesData = guessesResponse.guesses || [];
@@ -107,13 +66,8 @@ export default function PlayPage({
               (r: GameRound) => r.roundNumber <= gameData.game.currentRound
             );
 
-            const playedGameRoundIds = new Set(
-              guessesData.map((g: Guess) => g.gameRoundId)
-            );
-
-            const nextUnplayed = released.findIndex(
-              (r: GameRound) => !playedGameRoundIds.has(r.id)
-            );
+            const playedGameRoundIds = new Set(guessesData.map((g: Guess) => g.gameRoundId));
+            const nextUnplayed = released.findIndex((r: GameRound) => !playedGameRoundIds.has(r.id));
 
             if (nextUnplayed < 0 && released.length > 0) {
               router.push(`/${locale}/groups/${groupId}`);
@@ -137,14 +91,9 @@ export default function PlayPage({
 
   const releasedRounds = rounds.filter((r) => game && r.roundNumber <= game.currentRound);
   const currentRound = releasedRounds[currentRoundIndex];
-
-
-  const isLocationPlayed = userGuesses.some(
-    (g) => g.gameRoundId === currentRound?.id
-  );
+  const isLocationPlayed = userGuesses.some((g) => g.gameRoundId === currentRound?.id);
   const allReleasedLocationsPlayed = releasedRounds.length > 0 &&
     releasedRounds.every((r) => userGuesses.some((g) => g.gameRoundId === r.id));
-  const totalDistance = userGuesses.reduce((sum, g) => sum + g.distanceKm, 0);
 
   // Generate hint circle when round changes
   useEffect(() => {
@@ -153,7 +102,6 @@ export default function PlayPage({
       return;
     }
 
-    // Use gameType for dynamic radius calculation
     const gameType = currentRound.gameType ?? (game ? getEffectiveGameType(game) : "country:switzerland");
     const radiusKm = getHintCircleRadius(gameType);
     const center = generateHintCircleCenter(
@@ -162,14 +110,10 @@ export default function PlayPage({
       radiusKm,
       gameType
     );
-    setHintCircle({
-      lat: center.lat,
-      lng: center.lng,
-      radiusKm: radiusKm,
-    });
+    setHintCircle({ lat: center.lat, lng: center.lng, radiusKm });
   }, [loading, currentRound, hintEnabled, showResult, isLocationPlayed, game]);
 
-  // Timer effect - use per-round time limit, fallback to game-level
+  // Timer effect
   const currentTimeLimit = currentRound?.timeLimitSeconds ?? timeLimitSeconds;
 
   useEffect(() => {
@@ -204,9 +148,7 @@ export default function PlayPage({
     if (!markerPosition || !currentRound || submitting) return;
 
     setSubmitting(true);
-    const timeSeconds = startTime
-      ? Math.round((Date.now() - startTime) / 1000)
-      : null;
+    const timeSeconds = startTime ? Math.round((Date.now() - startTime) / 1000) : null;
 
     try {
       const response = await fetch("/api/guesses", {
@@ -272,7 +214,7 @@ export default function PlayPage({
           {
             gameRoundId: currentRound.id,
             distanceKm: data.distanceKm,
-            score: data.score, // 0 for timeout
+            score: data.score,
             roundNumber: currentRound.roundNumber,
             latitude: null,
             longitude: null,
@@ -382,120 +324,19 @@ export default function PlayPage({
 
   // Round complete summary
   if (showRoundSummary && allReleasedLocationsPlayed && releasedRounds.length > 0) {
-    const completedRoundNumber = game.currentRound;
-    const currentRoundLocations = releasedRounds.filter(
-      (r) => r.roundNumber === completedRoundNumber
-    );
-    const currentRoundGuesses = userGuesses.filter((g) =>
-      currentRoundLocations.some((loc) => loc.id === g.gameRoundId)
-    );
-    const currentRoundDistance = currentRoundGuesses.reduce(
-      (sum, g) => sum + g.distanceKm,
-      0
-    );
-    const currentRoundScore = currentRoundGuesses.reduce(
-      (sum, g) => sum + g.score,
-      0
-    );
-
-    // Prepare marker data for SummaryMap
-    const summaryMarkers = currentRoundGuesses.map((guess) => {
-      const location = currentRoundLocations.find((r) => r.id === guess.gameRoundId);
-      return {
-        guess: guess.latitude != null && guess.longitude != null
-          ? { lat: guess.latitude, lng: guess.longitude }
-          : null,
-        target: {
-          lat: location?.latitude ?? 0,
-          lng: location?.longitude ?? 0,
-          name: location?.locationName ?? "",
-        },
-        distanceKm: guess.distanceKm,
-      };
-    });
-
-    // Get country and gameType from the first location in this round (all locations in a round have the same settings)
-    const roundCountry = currentRoundLocations[0]?.country ?? game?.country ?? DEFAULT_COUNTRY;
-    const roundGameType = currentRoundLocations[0]?.gameType;
-
     return (
-      <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-          {/* Summary Map */}
-          <Card variant="elevated" padding="md">
-            <SummaryMap markers={summaryMarkers} height="300px" gameType={roundGameType ?? undefined} country={roundCountry} />
-          </Card>
-
-          {/* Results Card */}
-          <Card variant="elevated" padding="lg" className="text-center space-y-4">
-            <div className="space-y-1">
-              <span className="text-3xl">🎉</span>
-              <h2 className="text-h2 text-text-primary">
-                {t("roundComplete", { number: completedRoundNumber })}
-              </h2>
-            </div>
-
-            <div className="py-3 rounded-lg bg-surface-2">
-              <p className="text-xs text-text-muted mb-1">Gesamtpunktzahl</p>
-              <p className="text-3xl font-bold text-accent tabular-nums">
-                {currentRoundScore} Pkt
-              </p>
-              <p className="text-body text-text-muted mt-1 tabular-nums">
-                {formatDistance(currentRoundDistance, currentRound?.gameType)} Distanz
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              {currentRoundGuesses.map((guess) => {
-                const location = currentRoundLocations.find(
-                  (r) => r.id === guess.gameRoundId
-                );
-                return (
-                  <div
-                    key={guess.gameRoundId}
-                    className="flex justify-between items-center p-2 rounded-lg bg-surface-2"
-                  >
-                    <span className="text-text-secondary">{location?.locationName}</span>
-                    <div className="text-right">
-                      <span
-                        className={cn(
-                          "font-medium tabular-nums",
-                          guess.score >= 80
-                            ? "text-success"
-                            : guess.score >= 50
-                            ? "text-accent"
-                            : "text-error"
-                        )}
-                      >
-                        {guess.score} Pkt
-                      </span>
-                      <span className="text-caption text-text-muted ml-2 tabular-nums">
-                        ({formatDistance(guess.distanceKm, currentRound?.gameType)})
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <Link href={`/${locale}/groups/${groupId}`}>
-              <Button variant="primary" size="md" fullWidth>
-                {t("toLeaderboard")}
-              </Button>
-            </Link>
-        </Card>
-      </main>
+      <RoundSummary
+        locale={locale}
+        groupId={groupId}
+        game={game}
+        releasedRounds={releasedRounds}
+        userGuesses={userGuesses}
+        currentRound={currentRound}
+      />
     );
   }
 
-  // Calculate round info
-  const locationsInCurrentRound = currentRound
-    ? releasedRounds.filter((r) => r.roundNumber === currentRound.roundNumber)
-    : [];
-  const positionInRound = currentRound
-    ? locationsInCurrentRound.findIndex((r) => r.id === currentRound.id) + 1
-    : 0;
-
-  // Debug: if no current round, show message
+  // No current round available
   if (!currentRound && game) {
     return (
       <div className="min-h-screen bg-background">
@@ -526,16 +367,15 @@ export default function PlayPage({
     );
   }
 
-  // Determine timer state for animations
-  const getTimerState = () => {
+  // Timer state helper
+  const getTimerState = (): TimerState => {
     if (!timeRemaining) return "normal";
     if (timeRemaining <= 5) return "critical";
     if (timeRemaining <= 10) return "warning";
     return "normal";
   };
-  const timerState = getTimerState();
 
-  // Determine button text and action
+  // Button config helper
   const getButtonConfig = () => {
     if (timeExpired && !showResult) {
       return {
@@ -571,8 +411,6 @@ export default function PlayPage({
     };
   };
 
-  const buttonConfig = getButtonConfig();
-
   const mapGameType = currentRound?.gameType ?? (game ? getEffectiveGameType(game) : undefined);
 
   return (
@@ -594,75 +432,19 @@ export default function PlayPage({
         hintCircle={!showResult && !isLocationPlayed ? hintCircle : null}
       />
 
-      {/* Kombiniertes Badge - zentriert */}
+      {/* Badge Bar */}
       {currentRound && (
-        <div className={cn(
-          "absolute top-4 left-1/2 -translate-x-1/2 z-[500]",
-          "bg-background/85 backdrop-blur-md rounded-lg",
-          "flex items-center gap-3 px-4 py-2",
-          "border-2",
-          // Border color based on state
-          !showResult && !timeExpired && timerState === "normal" && "border-primary",
-          !showResult && !timeExpired && timerState === "warning" && "border-accent",
-          !showResult && !timeExpired && timerState === "critical" && "border-error",
-          timeExpired && !showResult && "border-error timer-expired",
-          showResult && lastResult && lastResult.distanceKm < 20 && "border-success",
-          showResult && lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 && "border-accent",
-          showResult && lastResult && lastResult.distanceKm >= 100 && "border-glass-border",
-          // Animations
-          !showResult && !timeExpired && timerState === "warning" && "animate-timer-warning",
-          !showResult && !timeExpired && timerState === "critical" && "animate-timer-critical"
-        )}>
-          {/* Ort */}
-          <div className="flex items-baseline gap-1">
-            <span className="text-[10px] text-text-muted uppercase tracking-widest">
-              {t("whereIs")}
-            </span>
-            <span className="text-lg font-bold text-text-primary text-glow-primary">
-              {currentRound.locationName}
-            </span>
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-6 bg-glass-border" />
-
-          {/* Timer / Result / Timeout Display */}
-          <span className={cn(
-            "font-mono font-bold text-lg tabular-nums min-w-[50px] text-center",
-            // Timer colors
-            !showResult && !timeExpired && timerState === "normal" && "text-primary",
-            !showResult && !timeExpired && timerState === "warning" && "text-accent",
-            !showResult && !timeExpired && timerState === "critical" && "text-error",
-            // Timeout
-            timeExpired && !showResult && "text-error",
-            // Result colors
-            showResult && lastResult && lastResult.distanceKm < 20 && "text-success",
-            showResult && lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 && "text-accent",
-            showResult && lastResult && lastResult.distanceKm >= 100 && "text-text-primary"
-          )}>
-            {!showResult && !timeExpired && currentTimeLimit && (
-              <>{timeRemaining !== null ? timeRemaining.toFixed(1) : currentTimeLimit.toFixed(1)}s</>
-            )}
-            {!showResult && !timeExpired && !currentTimeLimit && "—"}
-            {timeExpired && !showResult && t("timeUp")}
-            {showResult && lastResult && <>{formatDistance(lastResult.distanceKm, currentRound?.gameType)}</>}
-          </span>
-
-          {/* Divider */}
-          <div className="w-px h-6 bg-glass-border" />
-
-          {/* Action Button */}
-          <Button
-            variant={buttonConfig.variant}
-            size="sm"
-            onClick={buttonConfig.onClick}
-            disabled={buttonConfig.disabled}
-            isLoading={submitting}
-            className="whitespace-nowrap"
-          >
-            {submitting ? "..." : buttonConfig.text}
-          </Button>
-        </div>
+        <GroupGameBadgeBar
+          currentRound={currentRound}
+          showResult={showResult}
+          timeExpired={timeExpired}
+          timerState={getTimerState()}
+          timeRemaining={timeRemaining}
+          currentTimeLimit={currentTimeLimit}
+          lastResult={lastResult}
+          buttonConfig={getButtonConfig()}
+          submitting={submitting}
+        />
       )}
     </div>
   );
