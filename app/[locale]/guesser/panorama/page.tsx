@@ -5,9 +5,9 @@ import { useSession } from "next-auth/react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
-import { LoginCard } from "@/components/auth/LoginCard";
+import { UserSidebar } from "@/components/guesser/UserSidebar";
 import { Button } from "@/components/ui/Button";
-import { Play, Trophy, ArrowLeft, Camera } from "lucide-react";
+import { Play, Trophy, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { nanoid } from "nanoid";
 import { GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
@@ -107,17 +107,6 @@ export default function PanoramaQuizPage() {
       </div>
 
       <div className="container max-w-6xl mx-auto px-4 py-6">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push(`/${locale}/guesser`)}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>
-            {locale === "de" ? "Zurück zur Übersicht" : locale === "en" ? "Back to overview" : "Nazaj na pregled"}
-          </span>
-        </button>
-
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
@@ -249,40 +238,9 @@ export default function PanoramaQuizPage() {
             </Card>
           </div>
 
-          {/* Right: Login Card (1 col) */}
+          {/* Right: User Stats or Login (1 col) */}
           <div className="lg:col-span-1">
-            {session?.user ? (
-              <Card className="p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  {session.user.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || "User"}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                      {(session.user.name || "U")[0].toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-foreground text-sm">
-                      {session.user.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {locale === "de" ? "Eingeloggt" : locale === "en" ? "Logged in" : "Prijavljen"}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {locale === "de" ? "Deine Punkte werden in der Rangliste gespeichert!" :
-                   locale === "en" ? "Your score will be saved to the leaderboard!" :
-                   "Tvoj rezultat bo shranjen na lestvici!"}
-                </p>
-              </Card>
-            ) : (
-              <LoginCard />
-            )}
+            <UserSidebar />
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { FloatingInput } from "@/components/ui/FloatingInput";
 import { Button } from "@/components/ui/Button";
+import { LevelProgress } from "@/components/ui/LevelBadge";
 import { getDisplayName } from "@/lib/utils";
 
 interface UserProfile {
@@ -15,6 +16,19 @@ interface UserProfile {
   nickname: string | null;
   email: string | null;
   image: string | null;
+}
+
+interface LevelData {
+  level: number;
+  levelName: string;
+  totalPoints: number;
+  progress: number;
+  pointsToNextLevel: number;
+  nextLevel: {
+    level: number;
+    levelName: string;
+  } | null;
+  isMaxLevel: boolean;
 }
 
 export default function ProfilePage() {
@@ -26,6 +40,7 @@ export default function ProfilePage() {
   const tCommon = useTranslations("common");
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [levelData, setLevelData] = useState<LevelData | null>(null);
   const [nickname, setNickname] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,27 +54,39 @@ export default function ProfilePage() {
     }
   }, [status, router, locale]);
 
-  // Fetch profile
+  // Fetch profile and level data
   useEffect(() => {
-    async function fetchProfile() {
+    async function fetchData() {
       try {
-        const response = await fetch("/api/user/profile");
-        if (response.ok) {
-          const data = await response.json();
+        // Fetch profile and level data in parallel
+        const [profileRes, levelRes] = await Promise.all([
+          fetch("/api/user/profile"),
+          fetch("/api/user/level", {
+            headers: { "Accept-Language": locale },
+          }),
+        ]);
+
+        if (profileRes.ok) {
+          const data = await profileRes.json();
           setProfile(data);
           setNickname(data.nickname || "");
         }
+
+        if (levelRes.ok) {
+          const data = await levelRes.json();
+          setLevelData(data);
+        }
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
     }
 
     if (status === "authenticated") {
-      fetchProfile();
+      fetchData();
     }
-  }, [status]);
+  }, [status, locale]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -138,6 +165,24 @@ export default function ProfilePage() {
               {profile.email}
             </p>
           </div>
+
+          {/* Level Progress */}
+          {levelData && (
+            <div className="mb-6">
+              <LevelProgress
+                level={levelData.level}
+                levelName={levelData.levelName}
+                progress={levelData.progress}
+                pointsToNext={levelData.pointsToNextLevel}
+                nextLevelName={levelData.nextLevel?.levelName}
+                isMaxLevel={levelData.isMaxLevel}
+                locale={locale}
+              />
+              <p className="text-xs text-text-muted text-center mt-2">
+                {levelData.totalPoints.toLocaleString()} {locale === "de" ? "Punkte gesamt" : locale === "sl" ? "skupaj točk" : "total points"}
+              </p>
+            </div>
+          )}
 
           {/* Display Name Preview */}
           <div className="bg-surface-2 rounded-lg p-4 mb-6">

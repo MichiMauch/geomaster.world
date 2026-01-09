@@ -423,5 +423,13 @@
     "displayedAs": "Displayed as",
     "saved": "Saved!",
     "saveError": "Error saving"
+  },
+  "levels": {
+    "level": "Level",
+    "levelUp": "Level Up!",
+    "youReached": "You reached:",
+    "pointsToNext": "{points} points to {level}",
+    "maxLevel": "Maximum level reached!",
+    "totalPoints": "total points"
   }
 }

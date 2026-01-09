@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, gameRounds, guesses, worldQuizTypes, countries } from "@/lib/db/schema";
+import { games, gameRounds, guesses, worldQuizTypes, countries, rankings as rankingsTable } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/scoring";
 import { RankingService } from "@/lib/services/ranking-service";
+import { checkLevelUp, getLevelName } from "@/lib/levels";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -127,6 +128,23 @@ export async function POST(request: Request) {
 
     const averageScore = totalScore / 5;
 
+    // Get user's current total score BEFORE this game (for level-up check)
+    let previousTotalScore = 0;
+    if (userId) {
+      const currentRanking = await db
+        .select({ totalScore: rankingsTable.totalScore })
+        .from(rankingsTable)
+        .where(
+          and(
+            eq(rankingsTable.userId, userId),
+            eq(rankingsTable.period, "alltime"),
+            eq(rankingsTable.gameType, "overall")
+          )
+        )
+        .get();
+      previousTotalScore = currentRanking?.totalScore ?? 0;
+    }
+
     // Update game status to completed
     await db
       .update(games)
@@ -143,6 +161,26 @@ export async function POST(request: Request) {
       averageScore,
       totalDistance,
     });
+
+    // Check for level-up
+    let levelUp = null;
+    if (userId) {
+      const newTotalScore = previousTotalScore + totalScore;
+      const levelCheck = checkLevelUp(previousTotalScore, newTotalScore);
+
+      if (levelCheck.leveledUp) {
+        // Get locale from request
+        const acceptLanguage = request.headers.get("accept-language") || "en";
+        const locale = acceptLanguage.split(",")[0].split("-")[0];
+
+        levelUp = {
+          leveledUp: true,
+          previousLevel: levelCheck.previousLevel.level,
+          newLevel: levelCheck.newLevel.level,
+          newLevelName: getLevelName(levelCheck.newLevel, locale),
+        };
+      }
+    }
 
     // Get user's current rankings if logged in
     let rankings = null;
@@ -177,6 +215,7 @@ export async function POST(request: Request) {
       averageScore,
       totalDistance,
       rankings,
+      levelUp,
       message: userId ? "Game completed and ranked!" : "Game completed! Login to appear in rankings.",
     });
   } catch (error) {

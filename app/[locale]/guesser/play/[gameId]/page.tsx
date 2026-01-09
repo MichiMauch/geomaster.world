@@ -17,6 +17,7 @@ import {
   isCountryQuizGameType,
   getCountryQuizCategory,
 } from "@/components/country-quiz/QuestionDisplay";
+import { LevelUpCelebration } from "@/components/LevelUpCelebration";
 
 interface GameRound {
   id: string;
@@ -132,6 +133,10 @@ export default function GuesserPlayPage({
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{
+    newLevel: number;
+    newLevelName: string;
+  } | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(DEFAULT_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
   const [guestId, setGuestId] = useState<string | null>(null);
@@ -432,12 +437,28 @@ export default function GuesserPlayPage({
     try {
       const response = await fetch("/api/ranked/games/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Language": locale,
+        },
         body: JSON.stringify({ gameId, guestId }),
       });
 
       if (response.ok) {
-        // Redirect to results page
+        const data = await response.json();
+
+        // Check for level-up
+        if (data.levelUp?.leveledUp) {
+          setLevelUpData({
+            newLevel: data.levelUp.newLevel,
+            newLevelName: data.levelUp.newLevelName,
+          });
+          setSubmitting(false);
+          // Don't redirect yet - let the celebration show first
+          return;
+        }
+
+        // No level-up - redirect directly to results page
         router.push(`/${locale}/guesser/results/${gameId}`);
       } else {
         const error = await response.json();
@@ -450,6 +471,12 @@ export default function GuesserPlayPage({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Handle closing level-up celebration
+  const handleLevelUpClose = () => {
+    setLevelUpData(null);
+    router.push(`/${locale}/guesser/results/${gameId}`);
   };
 
   // Loading state
@@ -658,6 +685,15 @@ export default function GuesserPlayPage({
           </span>
         </div>
       </div>
+
+      {/* Level Up Celebration */}
+      <LevelUpCelebration
+        isOpen={!!levelUpData}
+        onClose={handleLevelUpClose}
+        newLevel={levelUpData?.newLevel ?? 1}
+        newLevelName={levelUpData?.newLevelName ?? ""}
+        locale={locale}
+      />
     </div>
   );
 }

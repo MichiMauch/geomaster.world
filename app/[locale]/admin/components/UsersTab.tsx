@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
@@ -13,6 +14,79 @@ interface UsersTabProps {
   onToggleSuperAdmin: (userId: string, currentState: boolean | null) => Promise<void>;
   deletingId: string | null;
 }
+
+interface UserRowProps {
+  user: User;
+  onDelete: (userId: string, userName: string | null) => Promise<void>;
+  onToggleHint: (userId: string, currentState: boolean | null) => Promise<void>;
+  onToggleSuperAdmin: (userId: string, currentState: boolean | null) => Promise<void>;
+  isDeleting: boolean;
+}
+
+const UserRow = memo(function UserRow({
+  user,
+  onDelete,
+  onToggleHint,
+  onToggleSuperAdmin,
+  isDeleting,
+}: UserRowProps) {
+  return (
+    <tr className="hover:bg-surface-2/50 transition-colors">
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Avatar src={user.image} name={user.name} size="sm" />
+          <span className="font-medium text-text-primary">
+            {user.name || "Unbenannt"}
+          </span>
+        </div>
+      </td>
+      <td className="px-6 py-4 text-text-muted text-sm">{user.email}</td>
+      <td className="px-6 py-4 text-center text-text-secondary">{user.groupCount}</td>
+      <td className="px-6 py-4 text-center text-text-secondary">{user.guessCount}</td>
+      <td className="px-6 py-4 text-center">
+        <button
+          onClick={() => onToggleSuperAdmin(user.id, user.isSuperAdmin)}
+          className={cn(
+            "px-3 py-1 rounded-lg text-sm font-medium transition-colors",
+            user.isSuperAdmin
+              ? "bg-error/20 text-error hover:bg-error/30"
+              : "bg-surface-3 text-text-muted hover:bg-surface-2"
+          )}
+        >
+          {user.isSuperAdmin ? "Admin" : "User"}
+        </button>
+      </td>
+      <td className="px-6 py-4 text-center">
+        <button
+          onClick={() => onToggleHint(user.id, user.hintEnabled)}
+          className={cn(
+            "px-3 py-1 rounded-lg text-sm font-medium transition-colors",
+            user.hintEnabled
+              ? "bg-primary/20 text-primary hover:bg-primary/30"
+              : "bg-surface-3 text-text-muted hover:bg-surface-2"
+          )}
+        >
+          {user.hintEnabled ? "An" : "Aus"}
+        </button>
+      </td>
+      <td className="px-6 py-4 text-right">
+        {!user.isSuperAdmin ? (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => onDelete(user.id, user.name)}
+            disabled={isDeleting}
+            isLoading={isDeleting}
+          >
+            Löschen
+          </Button>
+        ) : (
+          <span className="text-text-muted text-sm">-</span>
+        )}
+      </td>
+    </tr>
+  );
+});
 
 export function UsersTab({ users, onDelete, onToggleHint, onToggleSuperAdmin, deletingId }: UsersTabProps) {
   return (
@@ -32,66 +106,14 @@ export function UsersTab({ users, onDelete, onToggleHint, onToggleSuperAdmin, de
           </thead>
           <tbody className="divide-y divide-glass-border">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-surface-2/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar src={user.image} name={user.name} size="sm" />
-                    <span className="font-medium text-text-primary">
-                      {user.name || "Unbenannt"}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-text-muted text-sm">
-                  {user.email}
-                </td>
-                <td className="px-6 py-4 text-center text-text-secondary">
-                  {user.groupCount}
-                </td>
-                <td className="px-6 py-4 text-center text-text-secondary">
-                  {user.guessCount}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button
-                    onClick={() => onToggleSuperAdmin(user.id, user.isSuperAdmin)}
-                    className={cn(
-                      "px-3 py-1 rounded-lg text-sm font-medium transition-colors",
-                      user.isSuperAdmin
-                        ? "bg-error/20 text-error hover:bg-error/30"
-                        : "bg-surface-3 text-text-muted hover:bg-surface-2"
-                    )}
-                  >
-                    {user.isSuperAdmin ? "Admin" : "User"}
-                  </button>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button
-                    onClick={() => onToggleHint(user.id, user.hintEnabled)}
-                    className={cn(
-                      "px-3 py-1 rounded-lg text-sm font-medium transition-colors",
-                      user.hintEnabled
-                        ? "bg-primary/20 text-primary hover:bg-primary/30"
-                        : "bg-surface-3 text-text-muted hover:bg-surface-2"
-                    )}
-                  >
-                    {user.hintEnabled ? "An" : "Aus"}
-                  </button>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  {!user.isSuperAdmin ? (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => onDelete(user.id, user.name)}
-                      disabled={deletingId === user.id}
-                      isLoading={deletingId === user.id}
-                    >
-                      Löschen
-                    </Button>
-                  ) : (
-                    <span className="text-text-muted text-sm">-</span>
-                  )}
-                </td>
-              </tr>
+              <UserRow
+                key={user.id}
+                user={user}
+                onDelete={onDelete}
+                onToggleHint={onToggleHint}
+                onToggleSuperAdmin={onToggleSuperAdmin}
+                isDeleting={deletingId === user.id}
+              />
             ))}
             {users.length === 0 && (
               <tr>

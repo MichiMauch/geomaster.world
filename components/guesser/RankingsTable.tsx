@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { MedalBadge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,79 @@ interface RankingsTableProps {
   highlightUserId?: string;
   loading?: boolean;
 }
+
+interface RankingRowProps {
+  entry: RankingEntry;
+  isCurrentUser: boolean;
+  labels: {
+    anonymous: string;
+    you: string;
+  };
+}
+
+const RankingRow = memo(function RankingRow({ entry, isCurrentUser, labels }: RankingRowProps) {
+  const isTopThree = entry.rank <= 3;
+
+  return (
+    <tr
+      className={cn(
+        "transition-colors hover:bg-accent/5",
+        isCurrentUser && "bg-primary/10 hover:bg-primary/15"
+      )}
+    >
+      {/* Rank */}
+      <td className="px-4 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          {isTopThree ? (
+            <MedalBadge position={entry.rank} />
+          ) : (
+            <span className="font-medium text-foreground">#{entry.rank}</span>
+          )}
+        </div>
+      </td>
+
+      {/* Player */}
+      <td className="px-4 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-3">
+          <Avatar src={entry.userImage} size="sm" />
+          <span className={cn(
+            "font-medium",
+            isCurrentUser ? "text-primary font-semibold" : "text-foreground"
+          )}>
+            {entry.userName || labels.anonymous}
+            {isCurrentUser && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                ({labels.you})
+              </span>
+            )}
+          </span>
+        </div>
+      </td>
+
+      {/* Best Score */}
+      <td className="px-4 py-4 whitespace-nowrap text-right">
+        <span className="text-foreground">{entry.bestScore}</span>
+      </td>
+
+      {/* Games Played */}
+      <td className="px-4 py-4 whitespace-nowrap text-right">
+        <span className="text-muted-foreground">{entry.totalGames}</span>
+      </td>
+
+      {/* Total Score */}
+      <td className="px-4 py-4 whitespace-nowrap text-right">
+        <span className="font-semibold text-foreground">
+          {entry.totalScore.toLocaleString()}
+        </span>
+      </td>
+
+      {/* Average Score */}
+      <td className="px-4 py-4 whitespace-nowrap text-right">
+        <span className="text-muted-foreground">{entry.averageScore.toFixed(1)}</span>
+      </td>
+    </tr>
+  );
+});
 
 export default function RankingsTable({ rankings, highlightUserId, loading = false }: RankingsTableProps) {
   const t = useTranslations("ranked");
@@ -67,80 +141,17 @@ export default function RankingsTable({ rankings, highlightUserId, loading = fal
           </tr>
         </thead>
         <tbody className="divide-y divide-border/30">
-          {rankings.map((entry) => {
-            const isCurrentUser = entry.userId === highlightUserId;
-            const isTopThree = entry.rank <= 3;
-
-            return (
-              <tr
-                key={entry.userId}
-                className={cn(
-                  "transition-colors hover:bg-accent/5",
-                  isCurrentUser && "bg-primary/10 hover:bg-primary/15"
-                )}
-              >
-                {/* Rank */}
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="flex items-center gap-2">
-                    {isTopThree ? (
-                      <MedalBadge position={entry.rank} />
-                    ) : (
-                      <span className="font-medium text-foreground">#{entry.rank}</span>
-                    )}
-                  </div>
-                </td>
-
-                {/* Player */}
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={entry.userImage}
-                      size="sm"
-                    />
-                    <span className={cn(
-                      "font-medium",
-                      isCurrentUser ? "text-primary font-semibold" : "text-foreground"
-                    )}>
-                      {entry.userName || t("anonymous", { defaultValue: "Anonym" })}
-                      {isCurrentUser && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          ({t("you", { defaultValue: "Du" })})
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                </td>
-
-                {/* Best Score */}
-                <td className="px-4 py-4 whitespace-nowrap text-right">
-                  <span className="text-foreground">
-                    {entry.bestScore}
-                  </span>
-                </td>
-
-                {/* Games Played */}
-                <td className="px-4 py-4 whitespace-nowrap text-right">
-                  <span className="text-muted-foreground">
-                    {entry.totalGames}
-                  </span>
-                </td>
-
-                {/* Total Score */}
-                <td className="px-4 py-4 whitespace-nowrap text-right">
-                  <span className="font-semibold text-foreground">
-                    {entry.totalScore.toLocaleString()}
-                  </span>
-                </td>
-
-                {/* Average Score */}
-                <td className="px-4 py-4 whitespace-nowrap text-right">
-                  <span className="text-muted-foreground">
-                    {entry.averageScore.toFixed(1)}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
+          {rankings.map((entry) => (
+            <RankingRow
+              key={entry.userId}
+              entry={entry}
+              isCurrentUser={entry.userId === highlightUserId}
+              labels={{
+                anonymous: t("anonymous", { defaultValue: "Anonym" }),
+                you: t("you", { defaultValue: "Du" }),
+              }}
+            />
+          ))}
         </tbody>
       </table>
     </div>

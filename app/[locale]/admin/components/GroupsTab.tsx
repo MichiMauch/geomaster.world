@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -11,6 +12,42 @@ interface GroupsTabProps {
   onDelete: (groupId: string, groupName: string) => Promise<void>;
   deletingId: string | null;
 }
+
+interface GroupRowProps {
+  group: Group;
+  locale: string;
+  onDelete: (groupId: string, groupName: string) => Promise<void>;
+  isDeleting: boolean;
+}
+
+const GroupRow = memo(function GroupRow({ group, locale, onDelete, isDeleting }: GroupRowProps) {
+  return (
+    <tr className="hover:bg-surface-2/50 transition-colors">
+      <td className="px-6 py-4">
+        <Link
+          href={`/${locale}/groups/${group.id}`}
+          className="font-medium text-text-primary hover:text-primary transition-colors"
+        >
+          {group.name}
+        </Link>
+      </td>
+      <td className="px-6 py-4 text-text-muted font-mono text-sm">{group.inviteCode}</td>
+      <td className="px-6 py-4 text-center text-text-secondary">{group.memberCount}</td>
+      <td className="px-6 py-4 text-center text-text-secondary">{group.gameCount}</td>
+      <td className="px-6 py-4 text-right">
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => onDelete(group.id, group.name)}
+          disabled={isDeleting}
+          isLoading={isDeleting}
+        >
+          Löschen
+        </Button>
+      </td>
+    </tr>
+  );
+});
 
 export function GroupsTab({ groups, locale, onDelete, deletingId }: GroupsTabProps) {
   return (
@@ -28,36 +65,13 @@ export function GroupsTab({ groups, locale, onDelete, deletingId }: GroupsTabPro
           </thead>
           <tbody className="divide-y divide-glass-border">
             {groups.map((group) => (
-              <tr key={group.id} className="hover:bg-surface-2/50 transition-colors">
-                <td className="px-6 py-4">
-                  <Link
-                    href={`/${locale}/groups/${group.id}`}
-                    className="font-medium text-text-primary hover:text-primary transition-colors"
-                  >
-                    {group.name}
-                  </Link>
-                </td>
-                <td className="px-6 py-4 text-text-muted font-mono text-sm">
-                  {group.inviteCode}
-                </td>
-                <td className="px-6 py-4 text-center text-text-secondary">
-                  {group.memberCount}
-                </td>
-                <td className="px-6 py-4 text-center text-text-secondary">
-                  {group.gameCount}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => onDelete(group.id, group.name)}
-                    disabled={deletingId === group.id}
-                    isLoading={deletingId === group.id}
-                  >
-                    Löschen
-                  </Button>
-                </td>
-              </tr>
+              <GroupRow
+                key={group.id}
+                group={group}
+                locale={locale}
+                onDelete={onDelete}
+                isDeleting={deletingId === group.id}
+              />
             ))}
             {groups.length === 0 && (
               <tr>

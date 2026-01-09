@@ -423,5 +423,13 @@
     "displayedAs": "Prikazano kot",
     "saved": "Shranjeno!",
     "saveError": "Napaka pri shranjevanju"
+  },
+  "levels": {
+    "level": "Raven",
+    "levelUp": "Nova raven!",
+    "youReached": "Dosegel si:",
+    "pointsToNext": "{points} točk do {level}",
+    "maxLevel": "Dosežena je najvišja raven!",
+    "totalPoints": "skupaj točk"
   }
 }

@@ -1,49 +1,32 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/Card";
-import { LoginCard } from "@/components/auth/LoginCard";
-import { Globe, Flag, MapPin, Sparkles, Camera } from "lucide-react";
-
+import { Badge } from "@/components/ui/Badge";
+import { UserSidebar } from "@/components/guesser/UserSidebar";
 // Game category configuration
 const GAME_CATEGORIES = [
   {
     id: "countries",
-    icon: Flag,
-    emoji: "🌍",
-    gradient: "from-emerald-500/20 to-teal-500/20",
-    hoverGradient: "hover:from-emerald-500/30 hover:to-teal-500/30",
-    borderColor: "border-emerald-500/30",
-    iconColor: "text-emerald-500",
+    icon: "/images/country.svg",
+    image: "/images/countryquiz.webp",
   },
   {
     id: "world",
-    icon: Globe,
-    emoji: "🌐",
-    gradient: "from-blue-500/20 to-indigo-500/20",
-    hoverGradient: "hover:from-blue-500/30 hover:to-indigo-500/30",
-    borderColor: "border-blue-500/30",
-    iconColor: "text-blue-500",
+    icon: "/images/globe.svg",
+    image: "/images/worldquiz.webp",
   },
   {
     id: "special",
-    icon: Sparkles,
-    emoji: "✨",
-    gradient: "from-purple-500/20 to-pink-500/20",
-    hoverGradient: "hover:from-purple-500/30 hover:to-pink-500/30",
-    borderColor: "border-purple-500/30",
-    iconColor: "text-purple-500",
+    icon: "/images/special.svg",
+    image: "/images/specialquiz.webp",
+    badge: { de: "NEU", en: "NEW", sl: "NOVO" },
   },
   {
     id: "panorama",
-    icon: Camera,
-    emoji: "📷",
-    gradient: "from-orange-500/20 to-amber-500/20",
-    hoverGradient: "hover:from-orange-500/30 hover:to-amber-500/30",
-    borderColor: "border-orange-500/30",
-    iconColor: "text-orange-500",
+    icon: "/images/streetview.svg",
+    image: "/images/streetviewquiz.webp",
+    badge: { de: "BELIEBT", en: "POPULAR", sl: "PRILJUBLJENO" },
   },
 ];
 
@@ -95,10 +78,8 @@ const categoryDescriptions: Record<string, Record<string, string>> = {
 };
 
 export default function GuesserCategoriesPage() {
-  const { data: session, status } = useSession();
   const locale = useLocale();
   const router = useRouter();
-  const t = useTranslations("guesser");
 
   const handleCategoryClick = (categoryId: string) => {
     router.push(`/${locale}/guesser/${categoryId}`);
@@ -121,15 +102,16 @@ export default function GuesserCategoriesPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent" />
       </div>
 
-      <div className="container max-w-6xl mx-auto px-4 py-8">
+      <div className="container max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
+            <span className="text-4xl">🎯</span>
             {locale === "de" ? "Wähle deine Herausforderung" :
              locale === "en" ? "Choose Your Challenge" :
              "Izberi svoj izziv"}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground">
             {locale === "de" ? "Verschiedene Quiz-Kategorien warten auf dich. Wie gut kennst du die Welt?" :
              locale === "en" ? "Different quiz categories await you. How well do you know the world?" :
              "Različne kategorije kvizov te čakajo. Kako dobro poznaš svet?"}
@@ -142,7 +124,6 @@ export default function GuesserCategoriesPage() {
           <div className="lg:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {GAME_CATEGORIES.map((category) => {
-                const IconComponent = category.icon;
                 const name = categoryNames[category.id][locale] || categoryNames[category.id].en;
                 const description = categoryDescriptions[category.id][locale] || categoryDescriptions[category.id].en;
 
@@ -150,57 +131,55 @@ export default function GuesserCategoriesPage() {
                   <button
                     key={category.id}
                     onClick={() => handleCategoryClick(category.id)}
-                    className={`
-                      group relative overflow-hidden rounded-xl p-6
-                      bg-gradient-to-br ${category.gradient} ${category.hoverGradient}
-                      border ${category.borderColor}
-                      transition-all duration-300 ease-out
-                      hover:scale-[1.02] hover:shadow-xl
-                      text-left cursor-pointer
-                      min-h-[240px] flex flex-col
-                    `}
+                    className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-primary transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.4)] text-left cursor-pointer min-h-[240px]"
                   >
-                    {/* Background decoration */}
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 text-8xl opacity-10 transform rotate-12 transition-transform group-hover:rotate-6 group-hover:scale-110">
-                      {category.emoji}
-                    </div>
+                    {/* Background image */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center rounded-sm transition-transform duration-300 group-hover:scale-105"
+                      style={{ backgroundImage: `url('${category.image}')` }}
+                    />
 
-                    {/* Icon */}
-                    <div className={`
-                      w-14 h-14 rounded-xl mb-4
-                      bg-surface-1/80 backdrop-blur-sm
-                      flex items-center justify-center
-                      ${category.iconColor}
-                      transition-transform group-hover:scale-110
-                    `}>
-                      <IconComponent className="w-7 h-7" />
-                    </div>
+                    {/* Dark overlay for readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 transition-colors" />
+
+                    {/* Badge */}
+                    {category.badge && (
+                      <Badge variant="accent" size="md" className="absolute top-3 right-3 z-20">
+                        {category.badge[locale as keyof typeof category.badge] || category.badge.en}
+                      </Badge>
+                    )}
 
                     {/* Content */}
-                    <div className="flex-1 flex flex-col">
-                      <h2 className="text-xl font-bold text-foreground mb-2">
-                        {name}
-                      </h2>
-                      <p className="text-sm text-muted-foreground flex-1">
-                        {description}
-                      </p>
-                    </div>
+                    <div className="relative z-10 p-6 flex flex-col h-full">
+                      {/* Icon */}
+                      <img src={category.icon} alt="" className="w-12 h-12 mb-4 transition-transform group-hover:scale-110" />
 
-                    {/* Arrow indicator */}
-                    <div className="mt-4 flex items-center text-sm font-medium text-foreground/70 group-hover:text-foreground transition-colors">
-                      <span>
-                        {locale === "de" ? "Spiele entdecken" :
-                         locale === "en" ? "Explore games" :
-                         "Odkrij igre"}
-                      </span>
-                      <svg
-                        className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                      {/* Text */}
+                      <div className="flex-1 flex flex-col">
+                        <h2 className="text-xl font-bold text-white mb-2">
+                          {name}
+                        </h2>
+                        <p className="text-sm text-white/80 flex-1">
+                          {description}
+                        </p>
+                      </div>
+
+                      {/* Arrow indicator */}
+                      <div className="mt-4 flex items-center text-sm font-medium text-white/70 group-hover:text-white transition-colors">
+                        <span>
+                          {locale === "de" ? "Spiele entdecken" :
+                           locale === "en" ? "Explore games" :
+                           "Odkrij igre"}
+                        </span>
+                        <svg
+                          className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
                     </div>
                   </button>
                 );
@@ -210,38 +189,7 @@ export default function GuesserCategoriesPage() {
 
           {/* Right: User Stats or Login (1 col) */}
           <div className="lg:col-span-1">
-            {status === "authenticated" && session?.user ? (
-              <Card className="p-4 h-full">
-                <div className="flex items-center gap-3 mb-4">
-                  {session.user.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || "User"}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                      {(session.user.name || "U")[0].toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-foreground text-sm">
-                      {session.user.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {locale === "de" ? "Eingeloggt" : locale === "en" ? "Logged in" : "Prijavljen"}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {locale === "de" ? "Wähle eine Kategorie und starte dein nächstes Spiel!" :
-                   locale === "en" ? "Choose a category and start your next game!" :
-                   "Izberi kategorijo in začni naslednjo igro!"}
-                </p>
-              </Card>
-            ) : (
-              <LoginCard />
-            )}
+            <UserSidebar />
           </div>
         </div>
       </div>

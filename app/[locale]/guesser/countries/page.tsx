@@ -5,9 +5,8 @@ import { useSession } from "next-auth/react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
-import { LoginCard } from "@/components/auth/LoginCard";
-import { Play, Trophy, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { UserSidebar } from "@/components/guesser/UserSidebar";
+import { GameTypeCard, type TopPlayer } from "@/components/guesser/GameTypeCard";
 import { nanoid } from "nanoid";
 import {
   countriesToGameTypeConfigs,
@@ -16,11 +15,21 @@ import {
 } from "@/lib/utils/country-converter";
 import type { GameTypeConfig } from "@/lib/game-types";
 
-interface TopPlayer {
-  rank: number;
-  userName: string | null;
-  bestScore: number;
-}
+// Country images mapping (country ID -> image path)
+const COUNTRY_IMAGES: Record<string, string> = {
+  switzerland: "/images/country-ch.webp",
+  deutschland: "/images/country-de.webp",
+  austria: "/images/country-at.webp",
+  slovenia: "/images/country-sl.webp",
+};
+
+// Animated flag GIFs mapping (country ID -> flag GIF path)
+const COUNTRY_FLAGS: Record<string, string> = {
+  switzerland: "/images/flag-ch.gif",
+  deutschland: "/images/flag-de.gif",
+  austria: "/images/flag-at.gif",
+  slovenia: "/images/flag-sl.gif",
+};
 
 interface TopPlayersMap {
   [gameType: string]: TopPlayer[];
@@ -91,11 +100,6 @@ export default function CountriesPage() {
     fetchTopPlayers();
   }, [countriesLoading, countryTypes]);
 
-  const getGameTypeName = (config: GameTypeConfig) => {
-    const localeKey = locale as "de" | "en" | "sl";
-    return config.name[localeKey] || config.name.en;
-  };
-
   // Navigate to detail page (leaderboard)
   const handleViewDetails = (gameTypeId: string) => {
     router.push(`/${locale}/guesser/${gameTypeId}`);
@@ -126,83 +130,13 @@ export default function CountriesPage() {
     }
   };
 
-  const GameTypeCard = ({ config }: { config: GameTypeConfig }) => {
-    const name = getGameTypeName(config);
-    const players = topPlayers[config.id] || [];
-    const isStarting = startingGame === config.id;
-
-    return (
-      <div className="flex flex-col p-4 rounded-lg border transition-all duration-200 bg-surface-1 border-surface-3 hover:border-primary/50 min-h-[160px]">
-        {/* Header: Icon + Name + Action Buttons */}
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-3xl">{config.icon}</span>
-          <span className="text-base font-semibold flex-1 text-foreground">
-            {name}
-          </span>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => handleStartGame(config.id)}
-              disabled={isStarting}
-              title={locale === "de" ? "Spiel starten" : locale === "en" ? "Start game" : "Zacni igro"}
-              className={cn(
-                "p-2 rounded-sm transition-all cursor-pointer",
-                "bg-primary/10 hover:bg-primary/20 text-primary",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
-              )}
-            >
-              {isStarting ? (
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Play className="w-5 h-5" />
-              )}
-            </button>
-            <button
-              onClick={() => handleViewDetails(config.id)}
-              title={locale === "de" ? "Rangliste" : locale === "en" ? "Leaderboard" : "Lestvica"}
-              className={cn(
-                "p-2 rounded-sm transition-all cursor-pointer",
-                "bg-surface-2 hover:bg-surface-3 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Trophy className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Top 3 Players */}
-        <div className="flex-1">
-          {loading ? (
-            <div className="space-y-1.5">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-4 bg-surface-2 rounded-sm animate-pulse w-3/4" />
-              ))}
-            </div>
-          ) : players.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              {locale === "de" ? "Noch keine Spieler" : locale === "en" ? "No players yet" : "Se brez igralcev"}
-            </p>
-          ) : (
-            <div className="space-y-1">
-              {players.map((player, index) => (
-                <div key={index} className="flex items-center gap-2 text-xs">
-                  <span className="w-4 text-center">
-                    {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`}
-                  </span>
-                  <span className="text-muted-foreground truncate flex-1">
-                    {player.userName || "Anonym"}
-                  </span>
-                  <span className="text-foreground font-medium">
-                    {player.bestScore}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
+  // Helper to get image/flag for a country config
+  const getCountryAssets = (configId: string) => {
+    const countryId = configId.replace("country:", "");
+    return {
+      backgroundImage: COUNTRY_IMAGES[countryId],
+      flagImage: COUNTRY_FLAGS[countryId],
+    };
   };
 
   return (
@@ -223,17 +157,6 @@ export default function CountriesPage() {
       </div>
 
       <div className="container max-w-6xl mx-auto px-4 py-6">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push(`/${locale}/guesser`)}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>
-            {locale === "de" ? "Zurück zur Übersicht" : locale === "en" ? "Back to overview" : "Nazaj na pregled"}
-          </span>
-        </button>
-
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
@@ -265,47 +188,31 @@ export default function CountriesPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {countryTypes.map((config) => (
-                  <GameTypeCard key={config.id} config={config} />
-                ))}
+                {countryTypes.map((config) => {
+                  const { backgroundImage, flagImage } = getCountryAssets(config.id);
+                  return (
+                    <GameTypeCard
+                      key={config.id}
+                      config={config}
+                      locale={locale}
+                      topPlayers={topPlayers[config.id] || []}
+                      loading={loading}
+                      isStarting={startingGame === config.id}
+                      onStartGame={handleStartGame}
+                      onViewDetails={handleViewDetails}
+                      variant="overlay"
+                      backgroundImage={backgroundImage}
+                      flagImage={flagImage}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* Right: Login Card (1 col) */}
+          {/* Right: User Stats or Login (1 col) */}
           <div className="lg:col-span-1">
-            {session?.user ? (
-              <Card className="p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  {session.user.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || "User"}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                      {(session.user.name || "U")[0].toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-foreground text-sm">
-                      {session.user.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {locale === "de" ? "Eingeloggt" : locale === "en" ? "Logged in" : "Prijavljen"}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {locale === "de" ? "Wähle ein Land und starte dein Spiel!" :
-                   locale === "en" ? "Choose a country and start your game!" :
-                   "Izberi drzavo in zacni svojo igro!"}
-                </p>
-              </Card>
-            ) : (
-              <LoginCard />
-            )}
+            <UserSidebar />
           </div>
         </div>
       </div>
