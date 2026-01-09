@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
     "application-name": "GeoMaster World",
-    "msapplication-TileColor": "#ffffff",
+    "msapplication-TileColor": "#0a0a0f",
     "msapplication-TileImage": "/mstile-144x144.png",
     "msapplication-config": "/browserconfig.xml",
   },
@@ -60,7 +60,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#ffffff",
+  themeColor: "#0a0a0f",
 };
 
 export default async function RootLayout({

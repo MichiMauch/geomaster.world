@@ -431,5 +431,28 @@
     "pointsToNext": "{points} Punkte bis {level}",
     "maxLevel": "Maximales Level erreicht!",
     "totalPoints": "Punkte gesamt"
+  },
+  "results": {
+    "titlePerfect": "Perfekt!",
+    "titleAmazing": "Unglaublich!",
+    "titleGreat": "Starke Leistung!",
+    "titleGood": "Gut gemacht!",
+    "titleTryAgain": "Versuch's nochmal!",
+    "rankGeoMaster": "GeoMaster",
+    "rankExpert": "Experte",
+    "rankExplorer": "Entdecker",
+    "rankTraveler": "Reisender",
+    "rankTourist": "Tourist",
+    "rank": "Rang",
+    "newHighscore": "Neuer Highscore!",
+    "pointsToHighscore": "Noch {points} Punkte bis zum Highscore",
+    "playAgain": "Nochmal spielen",
+    "leaderboard": "Rangliste",
+    "viewAnswers": "Antworten",
+    "yourAnswers": "Deine Antworten",
+    "noGuesses": "Keine Antworten gefunden",
+    "timeout": "Timeout",
+    "points": "Punkte",
+    "creating": "Erstelle Spiel..."
   }
 }

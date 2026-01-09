@@ -431,5 +431,28 @@
     "pointsToNext": "{points} points to {level}",
     "maxLevel": "Maximum level reached!",
     "totalPoints": "total points"
+  },
+  "results": {
+    "titlePerfect": "Perfect!",
+    "titleAmazing": "Amazing!",
+    "titleGreat": "Great Performance!",
+    "titleGood": "Good job!",
+    "titleTryAgain": "Try again!",
+    "rankGeoMaster": "GeoMaster",
+    "rankExpert": "Expert",
+    "rankExplorer": "Explorer",
+    "rankTraveler": "Traveler",
+    "rankTourist": "Tourist",
+    "rank": "Rank",
+    "newHighscore": "New Highscore!",
+    "pointsToHighscore": "{points} points to highscore",
+    "playAgain": "Play Again",
+    "leaderboard": "Leaderboard",
+    "viewAnswers": "Answers",
+    "yourAnswers": "Your Answers",
+    "noGuesses": "No answers found",
+    "timeout": "Timeout",
+    "points": "Points",
+    "creating": "Creating game..."
   }
 }

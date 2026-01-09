@@ -2,8 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { rankedGameResults, worldQuizTypes, countries } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { rankedGameResults, worldQuizTypes, countries, rankings } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { RankingService } from "@/lib/services/ranking-service";
 import { GAME_TYPES } from "@/lib/game-types";
@@ -52,8 +52,12 @@ export async function GET(
       }
     }
 
-    // If user is logged in, fetch their rankings for this game type
+    // If user is logged in, fetch their rankings and highscore info
     let userRankings: Record<string, any> | null = null;
+    let isNewHighscore = false;
+    let previousBestScore: number | null = null;
+    let pointsToHighscore = 0;
+
     if (session?.user?.id && result.userId === session.user.id) {
       const periods = ["daily", "weekly", "monthly", "alltime"] as const;
       userRankings = {};
@@ -66,6 +70,32 @@ export async function GET(
         });
         userRankings[period] = rank;
       }
+
+      // Get alltime best score for highscore comparison
+      const alltimeRanking = await db
+        .select({ bestScore: rankings.bestScore })
+        .from(rankings)
+        .where(
+          and(
+            eq(rankings.userId, session.user.id),
+            eq(rankings.gameType, result.gameType),
+            eq(rankings.period, "alltime")
+          )
+        )
+        .get();
+
+      if (alltimeRanking) {
+        previousBestScore = alltimeRanking.bestScore;
+        // Check if this game score is the new best (or ties it)
+        // The bestScore in rankings is updated AFTER game completion, so if equal it means this game set it
+        isNewHighscore = result.totalScore >= previousBestScore;
+        if (!isNewHighscore) {
+          pointsToHighscore = previousBestScore - result.totalScore;
+        }
+      } else {
+        // First game ever for this game type - it's a new highscore
+        isNewHighscore = true;
+      }
     }
 
     return NextResponse.json({
@@ -77,6 +107,9 @@ export async function GET(
       totalDistance: result.totalDistance,
       completedAt: result.completedAt,
       rankings: userRankings,
+      isNewHighscore,
+      previousBestScore,
+      pointsToHighscore,
     });
   } catch (error) {
     logger.error("Error fetching results", error);

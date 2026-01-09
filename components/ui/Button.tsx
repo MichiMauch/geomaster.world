@@ -15,12 +15,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary - Cyan Neon Gaming Style
-        primary: `bg-primary text-white font-bold uppercase tracking-wider
+        // Primary - Cyan Neon Gaming Style with Gradient
+        primary: `bg-gradient-to-r from-[#00D9FF] via-[#5CE6FF] to-[#00D9FF] text-black font-bold uppercase tracking-wider
                   shadow-[0_0_20px_rgba(0,217,255,0.4)]
                   hover:shadow-[0_0_35px_rgba(0,217,255,0.6)]
                   hover:-translate-y-0.5
-                  hover:bg-primary-light`,
+                  hover:from-[#5CE6FF] hover:via-[#8AEFFF] hover:to-[#5CE6FF]`,
 
         // Secondary - Surface with border
         secondary: `bg-surface-2 text-text-primary border border-glass-border

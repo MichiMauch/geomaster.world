@@ -431,5 +431,28 @@
     "pointsToNext": "{points} točk do {level}",
     "maxLevel": "Dosežena je najvišja raven!",
     "totalPoints": "skupaj točk"
+  },
+  "results": {
+    "titlePerfect": "Perfektno!",
+    "titleAmazing": "Neverjetno!",
+    "titleGreat": "Odlična igra!",
+    "titleGood": "Dobro opravljeno!",
+    "titleTryAgain": "Poskusi znova!",
+    "rankGeoMaster": "GeoMaster",
+    "rankExpert": "Strokovnjak",
+    "rankExplorer": "Raziskovalec",
+    "rankTraveler": "Popotnik",
+    "rankTourist": "Turist",
+    "rank": "Rang",
+    "newHighscore": "Nov rekord!",
+    "pointsToHighscore": "Še {points} točk do rekorda",
+    "playAgain": "Igraj znova",
+    "leaderboard": "Lestvica",
+    "viewAnswers": "Odgovori",
+    "yourAnswers": "Tvoji odgovori",
+    "noGuesses": "Ni najdenih odgovorov",
+    "timeout": "Timeout",
+    "points": "Točk",
+    "creating": "Ustvarjanje igre..."
   }
 }

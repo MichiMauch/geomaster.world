@@ -51,7 +51,17 @@
       "Bash(find:*)",
       "Bash(openssl rand:*)",
       "Bash(magick:*)",
-      "WebFetch(domain:www.3dflagsplus.com)"
+      "WebFetch(domain:www.3dflagsplus.com)",
+      "Bash(npx dotenv:*)",
+      "Bash(node -e:*)",
+      "Bash(TURSO_DATABASE_URL=\"libsql://swiss-guesser-netnode-ag.turso.io\" TURSO_AUTH_TOKEN=\"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NjQyODU5OTcsImlkIjoiYzhkZWQwZWItZmEzNS00NjZhLWJhNmMtM2ZiY2I5ZmVjYTM1In0.TJfov2mKTAxqvUgbWQpqQU8PfSudrpoyPy_O-kcc05eXvqReNvA5UWVX4Vx8PNRg3na6SW64QE_U06K6-aBiDw\" npx drizzle-kit push:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm test)",
+      "Bash(npm uninstall:*)",
+      "Bash(git log:*)",
+      "Bash(wc:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:coverage:*)"
     ],
     "deny": [],
     "ask": []

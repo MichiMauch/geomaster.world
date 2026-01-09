@@ -1,15 +1,16 @@
 {
-  "name": "fisba.ch",
-  "short_name": "fisba.ch",
-  "description": "",
+  "name": "GeoMaster World",
+  "short_name": "GeoMaster",
+  "description": "Teste dein Geografiewissen mit spannenden Quiz-Spielen",
   "dir": "auto",
   "lang": "de-CH",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "scope": "/",
   "start_url": "/",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#0a0a0f",
+  "theme_color": "#6366f1",
+  "categories": ["games", "education"],
   "icons": [
     {
       "src": "/android-chrome-36x36.png",

@@ -1,7 +1,13 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      {children}
+      <PWAInstallPrompt />
+    </SessionProvider>
+  );
 }
