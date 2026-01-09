@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 import { games, gameRounds, guesses, worldQuizTypes, countries, rankings as rankingsTable } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -209,6 +211,13 @@ export async function POST(request: Request) {
       };
     }
 
+    // Log game completed (non-blocking)
+    activityLogger.logGame("completed", userId, gameId, {
+      totalScore,
+      averageScore,
+      gameType: game.gameType,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       totalScore,
@@ -219,7 +228,7 @@ export async function POST(request: Request) {
       message: userId ? "Game completed and ranked!" : "Game completed! Login to appear in rankings.",
     });
   } catch (error) {
-    console.error("Error completing ranked game:", error);
+    logger.error("Error completing ranked game", error);
     return NextResponse.json(
       { error: "Failed to complete ranked game" },
       { status: 500 }

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -35,7 +36,7 @@ export async function GET() {
       image: user.image,
     });
   } catch (error) {
-    console.error("Error fetching profile:", error);
+    logger.error("Error fetching profile", error);
     return NextResponse.json(
       { error: "Failed to fetch profile" },
       { status: 500 }
@@ -75,7 +76,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating profile:", error);
+    logger.error("Error updating profile", error);
     return NextResponse.json(
       { error: "Failed to update profile" },
       { status: 500 }

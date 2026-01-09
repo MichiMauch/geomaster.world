@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { RankingService } from "@/lib/services/ranking-service";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -18,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json({ stats });
   } catch (error) {
-    console.error("Error fetching user stats:", error);
+    logger.error("Error fetching user stats", error);
     return NextResponse.json(
       { error: "Failed to fetch stats" },
       { status: 500 }

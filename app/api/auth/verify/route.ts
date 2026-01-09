@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 import { users, verificationTokens } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -73,12 +75,15 @@ export async function GET(request: Request) {
         )
       );
 
+    // Log email verification
+    await activityLogger.logAuth("email_verified", user.id, { email: user.email });
+
     return NextResponse.json({
       success: true,
       message: "E-Mail erfolgreich bestätigt",
     });
   } catch (error) {
-    console.error("Verification error:", error);
+    logger.error("Verification error", error);
     return NextResponse.json(
       { error: "Fehler bei der Verifizierung" },
       { status: 500 }

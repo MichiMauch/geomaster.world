@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
+import { logger } from "@/lib/logger";
 
 interface PersonalStatsSectionProps {
   locale: string;
@@ -36,7 +37,7 @@ export default function PersonalStatsSection({ locale }: PersonalStatsSectionPro
           setStats(data.stats);
         }
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        logger.error("Error fetching stats", error);
       } finally {
         setLoading(false);
       }

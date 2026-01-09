@@ -4,6 +4,7 @@ import { countries } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(country[0]);
   } catch (error) {
-    console.error("Error fetching country:", error);
+    logger.error("Error fetching country", error);
     return NextResponse.json({ error: "Failed to fetch country" }, { status: 500 });
   }
 }
@@ -85,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating country:", error);
+    logger.error("Error updating country", error);
     return NextResponse.json({ error: "Failed to update country" }, { status: 500 });
   }
 }
@@ -109,7 +110,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting country:", error);
+    logger.error("Error deleting country", error);
     return NextResponse.json({ error: "Failed to delete country" }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { TranslationService } from "@/lib/services/translation-service";
+import { logger } from "@/lib/logger";
 
 // GET /api/countries - List all countries with location counts
 // Optional query param: ?active=true to only get active countries
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(countriesWithCounts);
   } catch (error) {
-    console.error("Error fetching countries:", error);
+    logger.error("Error fetching countries", error);
     return NextResponse.json({ error: "Failed to fetch countries" }, { status: 500 });
   }
 }
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
           finalNameSl = translations[0].nameSl || name;
         }
       } catch (translationError) {
-        console.error("Translation failed, using original name:", translationError);
+        logger.error("Translation failed, using original name", translationError);
         // Continue with original name if translation fails
       }
     }
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, id, nameEn: finalNameEn, nameSl: finalNameSl });
   } catch (error) {
-    console.error("Error creating country:", error);
+    logger.error("Error creating country", error);
     return NextResponse.json({ error: "Failed to create country" }, { status: 500 });
   }
 }

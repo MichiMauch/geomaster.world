@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "./db/schema";
 import { sendMagicLinkEmail } from "./email";
+import { activityLogger } from "./activity-logger";
 
 // Re-export für Rückwärtskompatibilität
 export { isSuperAdmin } from "./super-admin";
@@ -86,8 +87,13 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    signIn: async ({ account }) => {
-      // Explicitly allow all sign-ins (OAuth and credentials)
+    signIn: async ({ user, account }) => {
+      // Log successful sign-in (fire and forget - don't block sign-in)
+      activityLogger.logAuth("login", user.id, {
+        provider: account?.provider || "credentials",
+        email: user.email,
+      }).catch(() => {}); // Ignore logging errors
+
       return true;
     },
     jwt: async ({ token, user, trigger }) => {

@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { groups, groupMembers, games, gameRounds, guesses } from "@/lib/db/schema";
 import { eq, sql, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -28,7 +30,7 @@ export async function GET() {
 
     return NextResponse.json({ groups: allGroups });
   } catch (error) {
-    console.error("Error fetching groups:", error);
+    logger.error("Error fetching groups", error);
     return NextResponse.json(
       { error: "Failed to fetch groups" },
       { status: 500 }
@@ -52,6 +54,13 @@ export async function DELETE(request: Request) {
         { status: 400 }
       );
     }
+
+    // Get group info before deletion for logging
+    const group = await db
+      .select({ name: groups.name })
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .get();
 
     // Get all game IDs for this group
     const groupGames = await db
@@ -90,9 +99,16 @@ export async function DELETE(request: Request) {
     // Delete the group
     await db.delete(groups).where(eq(groups.id, groupId));
 
+    // Log the deletion (non-blocking)
+    activityLogger
+      .logAdmin("group.deleted", session.user.id, groupId, "group", {
+        groupName: group?.name,
+      })
+      .catch(() => {});
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting group:", error);
+    logger.error("Error deleting group", error);
     return NextResponse.json(
       { error: "Failed to delete group" },
       { status: 500 }

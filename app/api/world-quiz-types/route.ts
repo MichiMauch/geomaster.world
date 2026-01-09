@@ -5,6 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { TranslationService } from "@/lib/services/translation-service";
+import { logger } from "@/lib/logger";
 
 // GET /api/world-quiz-types - List all world quiz types with location counts
 // Optional query param: ?active=true to only get active types
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(typesWithCounts);
   } catch (error) {
-    console.error("Error fetching world quiz types:", error);
+    logger.error("Error fetching world quiz types", error);
     return NextResponse.json({ error: "Failed to fetch world quiz types" }, { status: 500 });
   }
 }
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
         nameSl = translations[0].nameSl || name;
       }
     } catch (translationError) {
-      console.error("Translation failed, using original name:", translationError);
+      logger.error("Translation failed, using original name", translationError);
       // Continue with original name if translation fails
     }
 
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, id, nameEn, nameSl });
   } catch (error) {
-    console.error("Error creating world quiz type:", error);
+    logger.error("Error creating world quiz type", error);
     return NextResponse.json({ error: "Failed to create world quiz type" }, { status: 500 });
   }
 }

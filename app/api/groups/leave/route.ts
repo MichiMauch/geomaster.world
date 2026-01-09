@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { groups, groupMembers, games, gameRounds, guesses } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, deleted: false });
     }
   } catch (error) {
-    console.error("Error leaving group:", error);
+    logger.error("Error leaving group", error);
     return NextResponse.json(
       { error: "Failed to leave group" },
       { status: 500 }

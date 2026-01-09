@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import {
   games,
   gameRounds,
@@ -172,7 +173,7 @@ export async function GET(request: Request) {
       hintEnabled: user?.hintEnabled ?? false
     });
   } catch (error) {
-    console.error("Error fetching game:", error);
+    logger.error("Error fetching game", error);
     return NextResponse.json(
       { error: "Failed to fetch game" },
       { status: 500 }
@@ -304,7 +305,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ gameId, gameType: selectedGameType });
   } catch (error) {
-    console.error("Error creating game:", error);
+    logger.error("Error creating game", error);
     return NextResponse.json(
       { error: "Failed to create game" },
       { status: 500 }

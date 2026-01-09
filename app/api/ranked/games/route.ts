@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -180,6 +182,9 @@ export async function POST(request: Request) {
       });
     }
 
+    // Log game started (non-blocking)
+    activityLogger.logGame("started", session?.user?.id, gameId, { gameType }).catch(() => {});
+
     return NextResponse.json({
       gameId,
       gameType,
@@ -188,7 +193,7 @@ export async function POST(request: Request) {
       guestId: session?.user?.id ? null : guestId, // Return guestId if guest
     });
   } catch (error) {
-    console.error("Error creating ranked game:", error);
+    logger.error("Error creating ranked game", error);
     return NextResponse.json(
       { error: "Failed to create ranked game" },
       { status: 500 }
@@ -229,7 +234,7 @@ export async function GET(request: Request) {
       activeGames: userActiveGames,
     });
   } catch (error) {
-    console.error("Error fetching ranked games:", error);
+    logger.error("Error fetching ranked games", error);
     return NextResponse.json(
       { error: "Failed to fetch ranked games" },
       { status: 500 }

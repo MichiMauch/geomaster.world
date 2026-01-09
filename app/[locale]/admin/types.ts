@@ -77,7 +77,7 @@ export interface WorldQuizType {
   locationCount: number;
 }
 
-export type AdminTab = "groups" | "users" | "countries" | "world-quiz-types" | "locations" | "world-locations" | "image-locations";
+export type AdminTab = "groups" | "users" | "countries" | "world-quiz-types" | "locations" | "world-locations" | "image-locations" | "logs";
 
 export interface WorldLocation {
   id: string;

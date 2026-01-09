@@ -296,6 +296,20 @@ export const worldQuizTypes = sqliteTable("worldQuizTypes", {
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 
+// Activity Logs (for admin dashboard)
+export const activityLogs = sqliteTable("activityLogs", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
+  level: text("level", { enum: ["debug", "info", "warn", "error"] }).notNull(),
+  category: text("category", { enum: ["auth", "game", "admin", "system"] }).notNull(),
+  action: text("action").notNull(), // e.g., "auth.login", "game.completed", "admin.user.deleted"
+  userId: text("userId").references(() => users.id, { onDelete: "set null" }), // Who triggered the action (nullable for system events)
+  targetId: text("targetId"), // The affected entity ID (user, game, group, etc.)
+  targetType: text("targetType"), // "user", "game", "group", "location", etc.
+  details: text("details"), // JSON string for additional context
+  metadata: text("metadata"), // JSON string for request info (IP, user agent, etc.)
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
@@ -312,3 +326,4 @@ export type RankedGameResult = typeof rankedGameResults.$inferSelect;
 export type Ranking = typeof rankings.$inferSelect;
 export type Country = typeof countries.$inferSelect;
 export type WorldQuizType = typeof worldQuizTypes.$inferSelect;
+export type ActivityLog = typeof activityLogs.$inferSelect;

@@ -6,6 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Viewer } from "mapillary-js";
 import "mapillary-js/dist/mapillary.css";
+import { logger } from "@/lib/logger";
 
 // Fix for default markers
 const defaultIcon = L.icon({
@@ -123,7 +124,7 @@ export default function PanoramaMap({
     fetch("/world.geojson")
       .then((res) => res.json())
       .then((data) => setGeoData(data))
-      .catch((err) => console.error("Error loading GeoJSON:", err));
+      .catch((err) => logger.error("Error loading GeoJSON", err));
   }, []);
 
   // Initialize Mapillary viewer
@@ -132,7 +133,7 @@ export default function PanoramaMap({
 
     const accessToken = process.env.NEXT_PUBLIC_MAPILLARY_ACCESS_TOKEN;
     if (!accessToken) {
-      console.error("Mapillary access token not configured");
+      logger.error("Mapillary access token not configured");
       return;
     }
 
@@ -178,7 +179,7 @@ export default function PanoramaMap({
     if (viewerRef.current && mapillaryImageKey && currentImageKeyRef.current !== mapillaryImageKey) {
       currentImageKeyRef.current = mapillaryImageKey;
       viewerRef.current.moveTo(mapillaryImageKey).catch((err) => {
-        console.error("Error moving to image:", err);
+        logger.error("Error moving to image", err);
       });
     }
   }, [mapillaryImageKey]);

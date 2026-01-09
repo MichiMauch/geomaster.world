@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { groups, groupMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ groupId: group.id });
   } catch (error) {
-    console.error("Error joining group:", error);
+    logger.error("Error joining group", error);
     return NextResponse.json(
       { error: "Failed to join group" },
       { status: 500 }

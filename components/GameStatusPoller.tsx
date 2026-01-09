@@ -6,6 +6,7 @@ import PlayButton from "@/components/PlayButton";
 import StartGameButton from "@/components/StartGameButton";
 import WinnerCelebration from "@/components/WinnerCelebration";
 import { Card } from "@/components/ui/Card";
+import { logger } from "@/lib/logger";
 
 interface GameStatus {
   gameId: string | null;
@@ -58,7 +59,7 @@ export default function GameStatusPoller({
         }
       }
     } catch (error) {
-      console.error("Failed to fetch winner:", error);
+      logger.error("Failed to fetch winner", error);
     }
     return false;
   }, [groupId]);
@@ -89,7 +90,7 @@ export default function GameStatusPoller({
         setGameStatus(data);
       }
     } catch (error) {
-      console.error("Failed to fetch game status:", error);
+      logger.error("Failed to fetch game status", error);
     }
   }, [groupId, fetchWinner, showCelebration]);
 

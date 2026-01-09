@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { games, groupMembers, locations, worldLocations, imageLocations, gameRounds } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -202,7 +203,7 @@ export async function POST(request: Request) {
       gameType: effectiveGameType,
     });
   } catch (error) {
-    console.error("Error releasing round:", error);
+    logger.error("Error releasing round", error);
     return NextResponse.json(
       { error: "Failed to release round" },
       { status: 500 }

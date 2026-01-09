@@ -5,6 +5,7 @@ import { imageLocations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ locations });
   } catch (error) {
-    console.error("Error fetching image locations:", error);
+    logger.error("Error fetching image locations", error);
     return NextResponse.json(
       { error: "Failed to fetch image locations" },
       { status: 500 }
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
       difficulty: difficulty || "medium",
     });
   } catch (error) {
-    console.error("Error creating image location:", error);
+    logger.error("Error creating image location", error);
     return NextResponse.json(
       { error: "Failed to create image location" },
       { status: 500 }
@@ -105,7 +106,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting image location:", error);
+    logger.error("Error deleting image location", error);
     return NextResponse.json(
       { error: "Failed to delete image location" },
       { status: 500 }

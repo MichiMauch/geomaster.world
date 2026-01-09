@@ -5,6 +5,7 @@ import { locations } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(locationsList);
   } catch (error) {
-    console.error("Error fetching locations:", error);
+    logger.error("Error fetching locations", error);
     return NextResponse.json(
       { error: "Failed to fetch locations" },
       { status: 500 }
@@ -114,7 +115,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: locationId });
   } catch (error) {
-    console.error("Error creating location:", error);
+    logger.error("Error creating location", error);
     return NextResponse.json(
       { error: "Failed to create location" },
       { status: 500 }
@@ -152,7 +153,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting location:", error);
+    logger.error("Error deleting location", error);
     return NextResponse.json(
       { error: "Failed to delete location" },
       { status: 500 }

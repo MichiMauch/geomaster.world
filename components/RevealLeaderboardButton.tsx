@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
+import { logger } from "@/lib/logger";
 
 interface RevealLeaderboardButtonProps {
   groupId: string;
@@ -34,7 +35,7 @@ export default function RevealLeaderboardButton({
         router.refresh();
       }
     } catch (error) {
-      console.error("Error revealing leaderboard:", error);
+      logger.error("Error revealing leaderboard", error);
     } finally {
       setIsRevealing(false);
     }

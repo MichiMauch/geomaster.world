@@ -9,6 +9,7 @@ import { point } from "@turf/helpers";
 import type { Feature, Polygon, MultiPolygon, FeatureCollection } from "geojson";
 import * as fs from "fs";
 import * as path from "path";
+import { logger } from "@/lib/logger";
 
 // Cache the world GeoJSON data
 let worldGeoJsonCache: FeatureCollection | null = null;
@@ -31,7 +32,7 @@ function loadWorldGeoJson(): void {
     }
   }
 
-  console.log(`[polygon-validation] Loaded ${countryPolygonCache.size} country polygons`);
+  logger.debug(`[polygon-validation] Loaded ${countryPolygonCache.size} country polygons`);
 }
 
 /**
@@ -54,7 +55,7 @@ export function isPointInCountry(lat: number, lng: number, countryCode: string):
   const countryFeature = getCountryPolygon(countryCode);
 
   if (!countryFeature) {
-    console.warn(`[polygon-validation] No polygon found for country: ${countryCode}`);
+    logger.warn(`[polygon-validation] No polygon found for country: ${countryCode}`);
     return false;
   }
 
@@ -64,7 +65,7 @@ export function isPointInCountry(lat: number, lng: number, countryCode: string):
   try {
     return booleanPointInPolygon(clickPoint, countryFeature);
   } catch (error) {
-    console.error(`[polygon-validation] Error checking point in polygon:`, error);
+    logger.error(`[polygon-validation] Error checking point in polygon`, error);
     return false;
   }
 }

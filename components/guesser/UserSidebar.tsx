@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { LevelProgress } from "@/components/ui/LevelBadge";
 import { LoginCard } from "@/components/auth/LoginCard";
+import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 
 interface LevelData {
@@ -42,7 +43,7 @@ export function UserSidebar({ className }: UserSidebarProps) {
           setLevelData(data);
         }
       } catch (error) {
-        console.error("Error fetching level data:", error);
+        logger.error("Error fetching level data", error);
       }
     }
 

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   // Only allow in development
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, user: { id: user!.id, name: user!.name } });
   } catch (error) {
-    console.error("Error creating test login:", error);
+    logger.error("Error creating test login", error);
     return NextResponse.json(
       { error: "Failed to create test login" },
       { status: 500 }

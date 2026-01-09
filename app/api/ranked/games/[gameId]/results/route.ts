@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { rankedGameResults, worldQuizTypes, countries } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -78,7 +79,7 @@ export async function GET(
       rankings: userRankings,
     });
   } catch (error) {
-    console.error("Error fetching results:", error);
+    logger.error("Error fetching results", error);
     return NextResponse.json(
       { error: "Failed to fetch results" },
       { status: 500 }

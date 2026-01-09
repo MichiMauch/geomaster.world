@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAdminData } from "./hooks/useAdminData";
-import { GroupsTab, UsersTab, CountriesTab, WorldQuizTypesTab, LocationsTab, WorldLocationsTab, ImageLocationsTab } from "./components";
+import { GroupsTab, UsersTab, CountriesTab, WorldQuizTypesTab, LocationsTab, WorldLocationsTab, ImageLocationsTab, LogsTab } from "./components";
 import type { AdminTab } from "./types";
 
 export default function AdminPage() {
@@ -126,6 +126,11 @@ export default function AdminPage() {
             onClick={() => setActiveTab("image-locations")}
             label={`Bild-Orte (${imageLocations.length})`}
           />
+          <TabButton
+            active={activeTab === "logs"}
+            onClick={() => setActiveTab("logs")}
+            label="Logs"
+          />
         </div>
 
         {/* Content */}
@@ -200,6 +205,8 @@ export default function AdminPage() {
             onDelete={deleteImageLocation}
           />
         )}
+
+        {activeTab === "logs" && <LogsTab />}
       </main>
     </div>
   );

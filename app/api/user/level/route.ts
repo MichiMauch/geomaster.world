@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { rankings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getUserLevel, getLevelProgress, getLevelName } from "@/lib/levels";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   try {
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
       isMaxLevel: levelProgress.nextLevel === null,
     });
   } catch (error) {
-    console.error("Error fetching user level:", error);
+    logger.error("Error fetching user level", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

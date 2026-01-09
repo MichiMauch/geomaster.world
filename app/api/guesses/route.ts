@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import {
   guesses,
   gameRounds,
@@ -217,7 +218,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ guesses: guessesWithLocations });
   } catch (error) {
-    console.error("Error fetching guesses:", error);
+    logger.error("Error fetching guesses", error);
     return NextResponse.json(
       { error: "Failed to fetch guesses" },
       { status: 500 }
@@ -441,7 +442,7 @@ export async function POST(request: Request) {
       ...(isCountryQuiz && { insideCountry, targetCountryCode: location.countryCode }),
     });
   } catch (error) {
-    console.error("Error creating guess:", error);
+    logger.error("Error creating guess", error);
     return NextResponse.json(
       { error: "Failed to create guess" },
       { status: 500 }

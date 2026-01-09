@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 import { users, verificationTokens } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { hash } from "bcryptjs";
@@ -87,12 +89,15 @@ export async function POST(request: Request) {
       .delete(verificationTokens)
       .where(eq(verificationTokens.token, token));
 
+    // Log successful password reset (non-blocking)
+    activityLogger.logAuth("password_reset", user.id, { email }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       message: "Passwort wurde erfolgreich zurückgesetzt",
     });
   } catch (error) {
-    console.error("Reset password error:", error);
+    logger.error("Reset password error", error);
     return NextResponse.json(
       { error: "Fehler beim Zurücksetzen des Passworts" },
       { status: 500 }

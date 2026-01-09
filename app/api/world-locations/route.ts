@@ -4,6 +4,7 @@ import { worldLocations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 // GET /api/world-locations - List world locations, optionally filtered by category
 export async function GET(req: NextRequest) {
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(locations);
   } catch (error) {
-    console.error("Error fetching world locations:", error);
+    logger.error("Error fetching world locations", error);
     return NextResponse.json({ error: "Failed to fetch world locations" }, { status: 500 });
   }
 }
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error creating world location:", error);
+    logger.error("Error creating world location", error);
     return NextResponse.json({ error: "Failed to create world location" }, { status: 500 });
   }
 }
@@ -119,7 +120,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting world location:", error);
+    logger.error("Error deleting world location", error);
     return NextResponse.json({ error: "Failed to delete world location" }, { status: 500 });
   }
 }

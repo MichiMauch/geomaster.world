@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -168,7 +169,7 @@ export async function GET(
       dynamicWorldQuiz,
     });
   } catch (error) {
-    console.error("Error fetching ranked game:", error);
+    logger.error("Error fetching ranked game", error);
     return NextResponse.json(
       { error: "Failed to fetch game" },
       { status: 500 }

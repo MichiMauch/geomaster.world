@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { RankingService, type RankingPeriod } from "@/lib/services/ranking-service";
 
@@ -107,7 +108,7 @@ export async function GET(request: Request) {
       total: rankings.length,
     });
   } catch (error) {
-    console.error("Error fetching leaderboard:", error);
+    logger.error("Error fetching leaderboard", error);
     return NextResponse.json(
       { error: "Failed to fetch leaderboard" },
       { status: 500 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { logger } from "@/lib/logger";
 import type { LeaderboardEntry, LeaderboardType } from "../types";
 
 interface UseLeaderboardOptions {
@@ -47,7 +48,7 @@ export function useLeaderboard({ groupId, gameId, blurred = false }: UseLeaderbo
         }
       }
     } catch (err) {
-      console.error("Error fetching leaderboard:", err);
+      logger.error("Error fetching leaderboard", err);
     } finally {
       setLoading(false);
     }

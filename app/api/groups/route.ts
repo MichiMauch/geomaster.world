@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { groups, groupMembers } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
       inviteCode,
     });
   } catch (error) {
-    console.error("Error creating group:", error);
+    logger.error("Error creating group", error);
     return NextResponse.json(
       { error: "Failed to create group" },
       { status: 500 }

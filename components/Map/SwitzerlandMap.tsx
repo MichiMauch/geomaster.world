@@ -5,6 +5,7 @@ import { MapContainer, Marker, Popup, useMapEvents, GeoJSON, Circle } from "reac
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { SWITZERLAND_BOUNDS } from "@/lib/distance";
+import { logger } from "@/lib/logger";
 
 // Fix for default markers
 const defaultIcon = L.icon({
@@ -78,7 +79,7 @@ export default function SwitzerlandMap({
     fetch("/switzerland.geojson")
       .then((res) => res.json())
       .then((data) => setGeoData(data))
-      .catch((err) => console.error("Error loading GeoJSON:", err));
+      .catch((err) => logger.error("Error loading GeoJSON", err));
   }, []);
 
   if (!mounted) {

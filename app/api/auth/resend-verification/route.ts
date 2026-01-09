@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { users, verificationTokens } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
       message: "Bestätigungs-E-Mail wurde erneut gesendet",
     });
   } catch (error) {
-    console.error("Resend verification error:", error);
+    logger.error("Resend verification error", error);
     return NextResponse.json(
       { error: "Fehler beim Senden der E-Mail" },
       { status: 500 }

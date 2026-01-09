@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 import { users, verificationTokens } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
@@ -66,6 +68,9 @@ export async function POST(request: Request) {
     // Send verification email
     await sendVerificationEmail(email, token, locale);
 
+    // Log registration
+    await activityLogger.logAuth("register", newUser[0].id, { email });
+
     return NextResponse.json(
       {
         success: true,
@@ -79,7 +84,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error("Registration error", error);
     return NextResponse.json(
       { error: "Fehler bei der Registrierung" },
       { status: 500 }

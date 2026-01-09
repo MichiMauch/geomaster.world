@@ -5,6 +5,7 @@ import { guesses, gameRounds, games, groupMembers, users } from "@/lib/db/schema
 import { eq, and, sql, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/score";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -251,7 +252,7 @@ export async function GET(request: Request) {
       });
     }
   } catch (error) {
-    console.error("Error fetching leaderboard:", error);
+    logger.error("Error fetching leaderboard", error);
     return NextResponse.json(
       { error: "Failed to fetch leaderboard" },
       { status: 500 }

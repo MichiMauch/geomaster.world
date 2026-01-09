@@ -5,6 +5,7 @@ import { locations } from "@/lib/db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { TranslationService } from "@/lib/services/translation-service";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
       errors: errors.slice(0, 10), // Return first 10 errors
     });
   } catch (error) {
-    console.error("Error translating locations:", error);
+    logger.error("Error translating locations", error);
 
     // Handle rate limit errors specifically
     if (error instanceof Error && error.message.includes("rate_limit")) {

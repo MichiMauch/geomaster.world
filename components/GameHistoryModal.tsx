@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { MedalBadge } from "@/components/ui/Badge";
 import { formatTotalDistance } from "@/lib/distance";
+import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
@@ -61,7 +62,7 @@ export default function GameHistoryModal({
         }
       }
     } catch (err) {
-      console.error("Error fetching leaderboard:", err);
+      logger.error("Error fetching leaderboard", err);
     } finally {
       setLoading(false);
     }

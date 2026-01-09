@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 import { users, verificationTokens } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -51,12 +53,15 @@ export async function POST(request: Request) {
     // Send password reset email
     await sendPasswordResetEmail(email, token, locale);
 
+    // Log password reset requested (non-blocking)
+    activityLogger.logAuth("password_reset_requested", user.id, { email }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       message: "Falls ein Konto existiert, wurde eine E-Mail gesendet",
     });
   } catch (error) {
-    console.error("Forgot password error:", error);
+    logger.error("Forgot password error", error);
     return NextResponse.json(
       { error: "Fehler beim Senden der E-Mail" },
       { status: 500 }

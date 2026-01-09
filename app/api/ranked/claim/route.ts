@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { RankingService } from "@/lib/services/ranking-service";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       stats,
     });
   } catch (error) {
-    console.error("Error claiming guest results:", error);
+    logger.error("Error claiming guest results", error);
     return NextResponse.json(
       { error: "Failed to claim guest results" },
       { status: 500 }

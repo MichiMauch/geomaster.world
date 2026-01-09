@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { userStats } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Error fetching user stats:", error);
+    logger.error("Error fetching user stats", error);
     return NextResponse.json(
       { error: "Failed to fetch user stats" },
       { status: 500 }

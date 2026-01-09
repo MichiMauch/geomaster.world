@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { rankedGameResults } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/ranked/leaderboard/predict
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
       period: "weekly",
     });
   } catch (error) {
-    console.error("Error predicting rank:", error);
+    logger.error("Error predicting rank", error);
     return NextResponse.json(
       { error: "Failed to predict rank" },
       { status: 500 }

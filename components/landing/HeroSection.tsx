@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { LoginCard } from "@/components/auth/LoginCard";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { logger } from "@/lib/logger";
 import type { OverviewStats } from "@/app/api/stats/overview/route";
 
 interface HeroSectionProps {
@@ -25,7 +26,7 @@ export default function HeroSection({ locale }: HeroSectionProps) {
     fetch("/api/stats/overview")
       .then((res) => res.json())
       .then((data) => setStats(data))
-      .catch(console.error);
+      .catch((err) => logger.error("Error fetching stats", err));
   }, []);
 
   const { scrollYProgress } = useScroll({

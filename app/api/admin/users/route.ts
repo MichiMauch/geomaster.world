@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { users, groupMembers, guesses } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
+import { activityLogger } from "@/lib/activity-logger";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -31,7 +33,7 @@ export async function GET() {
 
     return NextResponse.json({ users: allUsers });
   } catch (error) {
-    console.error("Error fetching users:", error);
+    logger.error("Error fetching users", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
       { status: 500 }
@@ -64,6 +66,13 @@ export async function DELETE(request: Request) {
       );
     }
 
+    // Get user info before deletion for logging
+    const user = await db
+      .select({ name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
+
     // Delete in order of foreign key constraints:
     // 1. Delete guesses
     await db.delete(guesses).where(eq(guesses.userId, userId));
@@ -74,9 +83,17 @@ export async function DELETE(request: Request) {
     // 3. Delete the user
     await db.delete(users).where(eq(users.id, userId));
 
+    // Log the deletion (non-blocking)
+    activityLogger
+      .logAdmin("user.deleted", session.user.id, userId, "user", {
+        userName: user?.name,
+        userEmail: user?.email,
+      })
+      .catch(() => {});
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting user:", error);
+    logger.error("Error deleting user", error);
     return NextResponse.json(
       { error: "Failed to delete user" },
       { status: 500 }
@@ -139,9 +156,16 @@ export async function PATCH(request: Request) {
       .set(updateData)
       .where(eq(users.id, userId));
 
+    // Log the update (non-blocking)
+    activityLogger
+      .logAdmin("user.updated", session.user.id, userId, "user", {
+        changes: updateData,
+      })
+      .catch(() => {});
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating user:", error);
+    logger.error("Error updating user", error);
     return NextResponse.json(
       { error: "Failed to update user" },
       { status: 500 }

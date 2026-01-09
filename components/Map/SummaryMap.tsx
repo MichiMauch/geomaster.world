@@ -5,6 +5,7 @@ import { MapContainer, Marker, Popup, GeoJSON, Polyline, Pane, ImageOverlay } fr
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getGameTypeConfig, DEFAULT_GAME_TYPE, isImageGameType } from "@/lib/game-types";
+import { logger } from "@/lib/logger";
 
 // Blue marker for user guesses
 const guessIcon = L.icon({
@@ -65,7 +66,7 @@ export default function SummaryMap({ gameType, country, markers, height = "300px
       fetch(gameTypeConfig.geoJsonFile)
         .then((res) => res.json())
         .then((data) => setGeoData(data))
-        .catch((err) => console.error("Error loading GeoJSON:", err));
+        .catch((err) => logger.error("Error loading GeoJSON", err));
     }
   }, [gameTypeConfig.geoJsonFile, isImageMap]);
 

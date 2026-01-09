@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { locations } from "@/lib/db/schema";
 import { NextResponse } from "next/server";
 import { getLocalizedName } from "@/lib/location-utils";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(localizedLocations);
   } catch (error) {
-    console.error("Error fetching locations:", error);
+    logger.error("Error fetching locations", error);
     return NextResponse.json(
       { error: "Failed to fetch locations" },
       { status: 500 }

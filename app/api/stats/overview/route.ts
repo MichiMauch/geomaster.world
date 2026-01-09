@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { countries, locations, worldLocations, worldQuizTypes } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export interface OverviewStats {
   countryCount: number;
@@ -45,7 +46,7 @@ export async function GET() {
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error("Error fetching overview stats:", error);
+    logger.error("Error fetching overview stats", error);
     return NextResponse.json(
       { error: "Failed to fetch stats" },
       { status: 500 }

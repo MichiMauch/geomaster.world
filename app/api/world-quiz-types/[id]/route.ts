@@ -4,6 +4,7 @@ import { worldQuizTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(quizType[0]);
   } catch (error) {
-    console.error("Error fetching world quiz type:", error);
+    logger.error("Error fetching world quiz type", error);
     return NextResponse.json({ error: "Failed to fetch world quiz type" }, { status: 500 });
   }
 }
@@ -75,7 +76,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating world quiz type:", error);
+    logger.error("Error updating world quiz type", error);
     return NextResponse.json({ error: "Failed to update world quiz type" }, { status: 500 });
   }
 }
@@ -99,7 +100,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting world quiz type:", error);
+    logger.error("Error deleting world quiz type", error);
     return NextResponse.json({ error: "Failed to delete world quiz type" }, { status: 500 });
   }
 }

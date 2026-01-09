@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { MedalBadge } from "@/components/ui/Badge";
+import { logger } from "@/lib/logger";
 
 interface LeaderboardTeaserSectionProps {
   locale: string;
@@ -36,7 +37,7 @@ export default function LeaderboardTeaserSection({ locale }: LeaderboardTeaserSe
           setTopPlayers(data.rankings || []);
         }
       } catch (error) {
-        console.error("Error fetching leaderboard:", error);
+        logger.error("Error fetching leaderboard", error);
       } finally {
         setLoading(false);
       }

@@ -5,6 +5,7 @@ import { locations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 interface LocationImport {
   name: string;
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
       duplicateNames: duplicates.slice(0, 10), // Return first 10 duplicate names
     });
   } catch (error) {
-    console.error("Error importing locations:", error);
+    logger.error("Error importing locations", error);
     return NextResponse.json(
       { error: "Failed to import locations" },
       { status: 500 }

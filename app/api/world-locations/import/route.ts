@@ -4,6 +4,7 @@ import { worldLocations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 interface ImportLocation {
   name: string;
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
       duplicateNames: duplicateNames.slice(0, 10), // Only return first 10 duplicate names
     });
   } catch (error) {
-    console.error("Error importing world locations:", error);
+    logger.error("Error importing world locations", error);
     return NextResponse.json({ error: "Failed to import world locations" }, { status: 500 });
   }
 }

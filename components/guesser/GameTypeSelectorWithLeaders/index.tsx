@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { nanoid } from "nanoid";
+import { logger } from "@/lib/logger";
 import { useGameTypes } from "./hooks";
 import { GameTypeCard } from "./GameTypeCard";
 import type { GameTypeSelectorWithLeadersProps } from "./types";
@@ -56,10 +57,10 @@ export default function GameTypeSelectorWithLeaders({
         router.push(`/${locale}/guesser/play/${data.gameId}`);
       } else {
         const error = await response.json();
-        console.error("Failed to create game:", error);
+        logger.error("Failed to create game", error);
       }
     } catch (error) {
-      console.error("Error starting game:", error);
+      logger.error("Error starting game", error);
     } finally {
       setStartingGame(null);
     }

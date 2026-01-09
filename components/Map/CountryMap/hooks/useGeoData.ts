@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { GameTypeConfig } from "@/lib/game-types";
+import { logger } from "@/lib/logger";
 import type { DynamicCountryConfig, DynamicWorldQuizConfig } from "../types";
 
 interface UseGeoDataOptions {
@@ -31,7 +32,7 @@ export function useGeoData({ dynamicCountry, dynamicWorldQuiz, gameTypeConfig }:
     fetch(geoJsonUrl)
       .then((res) => res.json())
       .then((data) => setGeoData(data))
-      .catch((err) => console.error("Error loading GeoJSON:", err));
+      .catch((err) => logger.error("Error loading GeoJSON", err));
   }, [geoJsonUrl]);
 
   return { mounted, geoData };

@@ -9,6 +9,7 @@ import {
   type DatabaseCountry,
   type DatabaseWorldQuizType,
 } from "@/lib/utils/country-converter";
+import { logger } from "@/lib/logger";
 import type { GameTypeData, TopPlayersMap } from "../types";
 
 interface UseGameTypesOptions {
@@ -33,7 +34,7 @@ export function useGameTypes({ excludeImageTypes = true }: UseGameTypesOptions =
           setDbCountries(data);
         }
       } catch (error) {
-        console.error("Error fetching countries:", error);
+        logger.error("Error fetching countries", error);
       } finally {
         setCountriesLoading(false);
       }
@@ -51,7 +52,7 @@ export function useGameTypes({ excludeImageTypes = true }: UseGameTypesOptions =
           setDbWorldQuizTypes(data);
         }
       } catch (error) {
-        console.error("Error fetching world quiz types:", error);
+        logger.error("Error fetching world quiz types", error);
       } finally {
         setWorldQuizTypesLoading(false);
       }
@@ -101,7 +102,7 @@ export function useGameTypes({ excludeImageTypes = true }: UseGameTypesOptions =
               );
             }
           } catch (error) {
-            console.error(`Error fetching top players for ${config.id}:`, error);
+            logger.error(`Error fetching top players for ${config.id}`, error);
           }
         })
       );

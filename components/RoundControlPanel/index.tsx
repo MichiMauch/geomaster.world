@@ -11,6 +11,7 @@ import { getGameTypesByTypeExtended } from "@/lib/game-types";
 import { OptionButton } from "./OptionButton";
 import { GameTypeSection } from "./GameTypeSection";
 import { LOCATION_OPTIONS, TIME_OPTIONS } from "./constants";
+import { logger } from "@/lib/logger";
 import type { RoundControlPanelProps, Winner } from "./types";
 
 export default function RoundControlPanel({
@@ -85,7 +86,7 @@ export default function RoundControlPanel({
         }
       }
     } catch (error) {
-      console.error("Failed to fetch winner:", error);
+      logger.error("Failed to fetch winner", error);
     }
     return null;
   };
