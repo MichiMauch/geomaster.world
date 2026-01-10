@@ -2,8 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { games, gameRounds, guesses, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getLocalizedName } from "@/lib/location-utils";
 import { GAME_TYPES, isWorldGameType, getWorldCategory, isPanoramaGameType } from "@/lib/game-types";
@@ -92,6 +92,25 @@ export async function GET(
       });
     }
 
+    // For authenticated users: fetch existing guesses to determine which rounds are completed
+    const completedRoundIds = new Set<string>();
+    if (session?.user?.id) {
+      const userGuesses = await db
+        .select()
+        .from(guesses)
+        .where(eq(guesses.userId, session.user.id));
+
+      const gameRoundIds = new Set(allRounds.map(r => r.id));
+      userGuesses.forEach(g => {
+        if (gameRoundIds.has(g.gameRoundId)) {
+          completedRoundIds.add(g.gameRoundId);
+        }
+      });
+    }
+
+    // For guests: send all coordinates (no ranking impact, client-side game)
+    const isGuest = !session?.user?.id;
+
     // Combine rounds with location info
     const rounds = allRounds.map(round => {
       const locationMap = round.locationSource === "panoramaLocations"
@@ -114,21 +133,29 @@ export async function GET(
           ? locationInfo?.name ?? "Unknown"
           : locationInfo ? getLocalizedName(locationInfo, locale) : "Unknown";
 
+      // Anti-cheat: Only send coordinates for completed rounds or guests
+      // Active round coordinates are obtained via start-location API
+      const isCompleted = completedRoundIds.has(round.id);
+      const shouldRevealCoordinates = isGuest || isCompleted;
+
       return {
         id: round.id,
         roundNumber: round.roundNumber,
         locationIndex: round.locationIndex,
         locationId: round.locationId,
         locationName,
-        latitude: locationInfo?.latitude ?? 0,
-        longitude: locationInfo?.longitude ?? 0,
+        // Only reveal coordinates for completed rounds (or guests)
+        latitude: shouldRevealCoordinates ? (locationInfo?.latitude ?? 0) : null,
+        longitude: shouldRevealCoordinates ? (locationInfo?.longitude ?? 0) : null,
         country: round.country,
         gameType: round.gameType,
         timeLimitSeconds: round.timeLimitSeconds,
-        // Panorama-specific fields
-        mapillaryImageKey: locationInfo?.mapillaryImageKey ?? null,
-        heading: locationInfo?.heading ?? null,
-        pitch: locationInfo?.pitch ?? null,
+        // Panorama-specific fields - only for guests (active round gets these from start-location)
+        mapillaryImageKey: isGuest ? (locationInfo?.mapillaryImageKey ?? null) : null,
+        heading: isGuest ? (locationInfo?.heading ?? null) : null,
+        pitch: isGuest ? (locationInfo?.pitch ?? null) : null,
+        // Status for client-side logic
+        status: isCompleted ? "completed" : "pending",
       };
     });
 

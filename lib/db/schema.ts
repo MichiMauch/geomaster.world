@@ -132,6 +132,9 @@ export const games = sqliteTable("games", {
   status: text("status", { enum: ["active", "completed"] }).notNull().default("active"),
   currentRound: integer("currentRound").notNull().default(1), // Currently released round (1 = only round 1 playable)
   leaderboardRevealed: integer("leaderboardRevealed", { mode: "boolean" }).notNull().default(false), // Admin can reveal leaderboard
+  // Anti-cheat: Server-side round tracking
+  activeLocationIndex: integer("activeLocationIndex").default(1), // Which location is currently being played (1-5)
+  locationStartedAt: integer("locationStartedAt"), // Unix timestamp (ms) when current location started
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 

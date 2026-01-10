@@ -1,14 +1,27 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
-import type { Game, GameRound, Guess, DynamicCountry, DynamicWorldQuiz } from "../types";
+import type { Game, GameRound, ActiveRound, Guess, DynamicCountry, DynamicWorldQuiz } from "../types";
 
 interface UseGameDataProps {
   gameId: string;
   locale: string;
 }
 
+interface ActiveLocationResponse {
+  round?: ActiveRound;
+  activeRound?: ActiveRound;
+  timeRemaining: number;
+  startedAt: number;
+  timeExpired?: boolean;
+  needsStart?: boolean;
+  nextLocationIndex?: number;
+  alreadyGuessed?: boolean;
+  gameComplete?: boolean;
+  refreshPenalty?: boolean; // True if user refreshed during active round (auto-timeout applied)
+}
+
 export function useGameData({ gameId, locale }: UseGameDataProps) {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [game, setGame] = useState<Game | null>(null);
   const [rounds, setRounds] = useState<GameRound[]>([]);
   const [userGuesses, setUserGuesses] = useState<Guess[]>([]);
@@ -17,7 +30,13 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
   const [loading, setLoading] = useState(true);
   const [guestId, setGuestId] = useState<string | null>(null);
 
-  const isGuest = !session?.user?.id;
+  // Active round state (for anti-cheat)
+  const [activeRound, setActiveRound] = useState<ActiveRound | null>(null);
+  const [serverTimeRemaining, setServerTimeRemaining] = useState<number | null>(null);
+  const [locationStartedAt, setLocationStartedAt] = useState<number | null>(null);
+  const startLocationCalledRef = useRef<number | null>(null);
+
+  const isGuest = !session?.user?.id && sessionStatus !== "loading";
 
   // Get or create guestId for non-logged-in users
   useEffect(() => {
@@ -68,6 +87,146 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
     setUserGuesses((prev) => [...prev, guess]);
   }, []);
 
+  // Start a new location (anti-cheat: only way to get coordinates for logged-in users)
+  const startLocation = useCallback(async (locationIndex: number): Promise<{
+    success: boolean;
+    round?: ActiveRound;
+    timeRemaining?: number;
+    error?: string;
+    alreadyGuessed?: boolean;
+  }> => {
+    // For guests, just use the pre-loaded round data
+    if (isGuest) {
+      const round = rounds.find(r => r.locationIndex === locationIndex);
+      if (round && round.latitude !== null && round.longitude !== null) {
+        const activeRoundData = round as ActiveRound;
+        setActiveRound(activeRoundData);
+        setServerTimeRemaining(round.timeLimitSeconds ?? 30);
+        setLocationStartedAt(Date.now());
+        return { success: true, round: activeRoundData, timeRemaining: round.timeLimitSeconds ?? 30 };
+      }
+      return { success: false, error: "Round not found" };
+    }
+
+    // Prevent duplicate calls for the same location
+    if (startLocationCalledRef.current === locationIndex) {
+      return { success: false, error: "Already starting this location" };
+    }
+    startLocationCalledRef.current = locationIndex;
+
+    try {
+      const res = await fetch(`/api/ranked/games/${gameId}/start-location?locale=${locale}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locationIndex }),
+      });
+
+      if (res.ok) {
+        const data: ActiveLocationResponse = await res.json();
+        const roundData = data.round || data.activeRound;
+
+        if (roundData) {
+          setActiveRound(roundData);
+          setServerTimeRemaining(data.timeRemaining);
+          setLocationStartedAt(data.startedAt);
+
+          // Update the round in the rounds array with coordinates
+          setRounds(prev => prev.map(r =>
+            r.locationIndex === locationIndex
+              ? { ...r, ...roundData, status: "pending" as const }
+              : r
+          ));
+
+          return { success: true, round: roundData, timeRemaining: data.timeRemaining };
+        }
+      } else {
+        const errorData = await res.json();
+        startLocationCalledRef.current = null; // Allow retry on error
+
+        if (errorData.alreadyGuessed) {
+          return { success: false, alreadyGuessed: true, error: "Already guessed" };
+        }
+        return { success: false, error: errorData.error || "Failed to start location" };
+      }
+    } catch (err) {
+      console.error("Error starting location:", err);
+      startLocationCalledRef.current = null; // Allow retry on error
+      return { success: false, error: "Network error" };
+    }
+
+    return { success: false, error: "Unknown error" };
+  }, [gameId, locale, isGuest, rounds]);
+
+  // Get current active location status (for recovery after refresh)
+  const getActiveLocation = useCallback(async (): Promise<{
+    activeRound: ActiveRound | null;
+    timeRemaining: number;
+    timeExpired: boolean;
+    needsStart: boolean;
+    nextLocationIndex: number | null;
+    gameComplete: boolean;
+    refreshPenalty: boolean;
+  }> => {
+    // For guests, determine state from local data
+    if (isGuest) {
+      const completedCount = userGuesses.length;
+      const nextIndex = completedCount + 1;
+      return {
+        activeRound: null,
+        timeRemaining: 0,
+        timeExpired: false,
+        needsStart: nextIndex <= 5,
+        nextLocationIndex: nextIndex <= 5 ? nextIndex : null,
+        gameComplete: completedCount >= 5,
+        refreshPenalty: false,
+      };
+    }
+
+    try {
+      const res = await fetch(`/api/ranked/games/${gameId}/start-location?locale=${locale}`);
+
+      if (res.ok) {
+        const data: ActiveLocationResponse = await res.json();
+
+        if (data.activeRound) {
+          setActiveRound(data.activeRound);
+          setServerTimeRemaining(data.timeRemaining);
+          setLocationStartedAt(data.startedAt);
+        }
+
+        return {
+          activeRound: data.activeRound || null,
+          timeRemaining: data.timeRemaining || 0,
+          timeExpired: data.timeExpired || false,
+          needsStart: data.needsStart || false,
+          nextLocationIndex: data.nextLocationIndex || null,
+          gameComplete: data.gameComplete || false,
+          refreshPenalty: data.refreshPenalty || false,
+        };
+      }
+    } catch (err) {
+      console.error("Error getting active location:", err);
+    }
+
+    return {
+      activeRound: null,
+      timeRemaining: 0,
+      timeExpired: false,
+      needsStart: true,
+      nextLocationIndex: 1,
+      gameComplete: false,
+      refreshPenalty: false,
+    };
+  }, [gameId, locale, isGuest, userGuesses.length]);
+
+  // Clear active round (after guess is submitted)
+  const clearActiveRound = useCallback(() => {
+    setActiveRound(null);
+    setServerTimeRemaining(null);
+    setLocationStartedAt(null);
+    startLocationCalledRef.current = null;
+  }, []);
+
   return {
     game,
     rounds,
@@ -79,5 +238,12 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
     guestId,
     addGuess,
     refetch: fetchGameData,
+    // Anti-cheat: active round management
+    activeRound,
+    serverTimeRemaining,
+    locationStartedAt,
+    startLocation,
+    getActiveLocation,
+    clearActiveRound,
   };
 }

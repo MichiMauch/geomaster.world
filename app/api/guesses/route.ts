@@ -243,14 +243,19 @@ export async function POST(request: Request) {
         id: gameRounds.id,
         gameId: gameRounds.gameId,
         locationId: gameRounds.locationId,
+        locationIndex: gameRounds.locationIndex,
         locationSource: gameRounds.locationSource,
         roundNumber: gameRounds.roundNumber,
         gameType: gameRounds.gameType,
+        timeLimitSeconds: gameRounds.timeLimitSeconds,
         groupId: games.groupId,
         userId: games.userId,
         mode: games.mode,
         currentRound: games.currentRound,
         country: games.country,
+        gameTimeLimitSeconds: games.timeLimitSeconds,
+        activeLocationIndex: games.activeLocationIndex,
+        locationStartedAt: games.locationStartedAt,
       })
       .from(gameRounds)
       .innerJoin(games, eq(gameRounds.gameId, games.id))
@@ -313,6 +318,42 @@ export async function POST(request: Request) {
         { error: "Already guessed this round" },
         { status: 400 }
       );
+    }
+
+    // Anti-cheat: Server-side timer validation for ranked games
+    // Only validate if locationStartedAt is set (new security feature)
+    if (round.locationStartedAt && !timeout) {
+      const effectiveGameTypeForConfig = round.gameType || `country:${round.country}`;
+      // Default time limits: 30s for regular games, 60s for panorama
+      const isPanorama = effectiveGameTypeForConfig.startsWith("panorama:");
+      const defaultTimeLimit = isPanorama ? 60 : 30;
+      const timeLimitSeconds = round.timeLimitSeconds ?? round.gameTimeLimitSeconds ?? defaultTimeLimit;
+      const timeLimitMs = timeLimitSeconds * 1000;
+
+      const elapsedMs = Date.now() - round.locationStartedAt;
+
+      // Add 2 second grace period for network latency
+      const gracePeriodMs = 2000;
+
+      if (elapsedMs > timeLimitMs + gracePeriodMs) {
+        // Time expired - treat as timeout
+        logger.info("Server-side timeout detected", {
+          gameId: round.gameId,
+          locationIndex: round.locationIndex,
+          elapsedMs,
+          timeLimitMs,
+        });
+
+        return NextResponse.json(
+          {
+            error: "Time expired",
+            timeExpired: true,
+            elapsedSeconds: Math.floor(elapsedMs / 1000),
+            timeLimitSeconds,
+          },
+          { status: 410 }
+        );
+      }
     }
 
     // Get location coordinates - query correct table based on locationSource
@@ -426,6 +467,19 @@ export async function POST(request: Request) {
       timeSeconds: timeSeconds || null,
       createdAt: new Date(),
     });
+
+    // Anti-cheat: Clear locationStartedAt after guess is submitted
+    // This prevents replay attacks and prepares for next location
+    if (round.locationStartedAt) {
+      await db
+        .update(games)
+        .set({
+          locationStartedAt: null,
+          // Note: We don't increment activeLocationIndex here
+          // The client calls start-location to begin the next round
+        })
+        .where(eq(games.id, round.gameId));
+    }
 
     // Calculate score based on game type (get scoreScaleFactor from DB for dynamic types)
     const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);

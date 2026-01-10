@@ -4,8 +4,8 @@ export interface GameRound {
   locationIndex: number;
   locationId: string;
   locationName: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;  // null for unplayed rounds (anti-cheat)
+  longitude: number | null; // null for unplayed rounds (anti-cheat)
   country: string;
   gameType?: string | null;
   timeLimitSeconds?: number | null;
@@ -13,6 +13,14 @@ export interface GameRound {
   mapillaryImageKey?: string | null;
   heading?: number | null;
   pitch?: number | null;
+  // Round status for anti-cheat
+  status?: "pending" | "completed";
+}
+
+// Active round with coordinates (from start-location API)
+export interface ActiveRound extends GameRound {
+  latitude: number;  // Always present for active round
+  longitude: number; // Always present for active round
 }
 
 export interface Guess {

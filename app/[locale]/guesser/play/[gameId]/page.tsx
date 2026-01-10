@@ -47,6 +47,13 @@ export default function GuesserPlayPage({
     isGuest,
     guestId,
     addGuess,
+    // Anti-cheat: active round management
+    activeRound,
+    serverTimeRemaining,
+    locationStartedAt,
+    startLocation,
+    getActiveLocation,
+    clearActiveRound,
   } = useGameData({ gameId, locale });
 
   // Local state
@@ -56,8 +63,29 @@ export default function GuesserPlayPage({
   const [lastResult, setLastResult] = useState<GuessResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [levelUpData, setLevelUpData] = useState<LevelUpInfo | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  const currentRound = rounds[currentRoundIndex];
+  // DISPLAY-ROUND: Immer aus rounds[] - sofort verfügbar für UI (Ortsname, etc.)
+  // Reagiert SOFORT auf currentRoundIndex Änderung
+  const displayRound = rounds[currentRoundIndex];
+
+  // PLAYABLE-ROUND: Für Koordinaten - bei logged-in Users aus activeRound (Anti-Cheat)
+  // Bei Guests direkt aus rounds[] (sie haben alle Koordinaten)
+  const playableRound = isGuest ? rounds[currentRoundIndex] : activeRound;
+
+  // currentRound für Kompatibilität: Kombiniert Display-Info mit Koordinaten
+  // Zeigt SOFORT neuen Ortsnamen, Koordinaten kommen nach wenn API fertig
+  const currentRound = displayRound ? {
+    ...displayRound,
+    // Koordinaten aus playableRound übernehmen (falls verfügbar)
+    latitude: playableRound?.latitude ?? null,
+    longitude: playableRound?.longitude ?? null,
+    // Panorama-Felder aus playableRound
+    mapillaryImageKey: playableRound?.mapillaryImageKey ?? null,
+    heading: playableRound?.heading ?? null,
+    pitch: playableRound?.pitch ?? null,
+  } : null;
 
   // Timer hook
   const handleTimeout = useCallback(async () => {
@@ -66,7 +94,7 @@ export default function GuesserPlayPage({
     setSubmitting(true);
 
     // For guests: handle timeout client-side
-    if (isGuest) {
+    if (isGuest && currentRound.latitude !== null && currentRound.longitude !== null) {
       const gameType = currentRound.gameType || (game ? getEffectiveGameType(game) : "country:switzerland");
       const config = getGameTypeConfig(gameType);
       const timeoutDistance = config.timeoutPenalty;
@@ -132,17 +160,86 @@ export default function GuesserPlayPage({
     getCurrentTimeLimit,
     stopTimer,
     resetTimer,
+    initFromServer,
     getTimerColor,
   } = useGameTimer({
     currentRound,
     game,
     userGuesses,
     showResult,
-    loading,
+    loading: loading || locationLoading,
     onTimeout: handleTimeout,
+    // Anti-cheat: Server-side time tracking
+    serverTimeRemaining,
+    locationStartedAt,
+    isGuest,
   });
 
   const totalScore = userGuesses.reduce((sum, g) => sum + g.score, 0);
+
+  // Anti-cheat: Initialize game state on first load
+  useEffect(() => {
+    if (loading || initialized || !game || rounds.length === 0) return;
+
+    const initializeGame = async () => {
+      // For guests, just set initialized (they get all coordinates)
+      if (isGuest) {
+        // Find first unguessed round
+        const completedRoundIds = new Set(userGuesses.map(g => g.gameRoundId));
+        const firstUnguessed = rounds.findIndex(r => !completedRoundIds.has(r.id));
+
+        if (firstUnguessed === -1) {
+          // All rounds completed - redirect to results
+          router.push(`/${locale}/guesser/results/${gameId}`);
+          return;
+        }
+
+        setCurrentRoundIndex(firstUnguessed);
+        setInitialized(true);
+        return;
+      }
+
+      // For logged-in users: check server state
+      setLocationLoading(true);
+      try {
+        const status = await getActiveLocation();
+
+        if (status.gameComplete) {
+          // All rounds completed - redirect to results
+          router.push(`/${locale}/guesser/results/${gameId}`);
+          return;
+        }
+
+        if (status.activeRound) {
+          // There's an active round - check if time expired
+          const roundIndex = rounds.findIndex(r => r.id === status.activeRound!.id);
+          if (roundIndex !== -1) {
+            setCurrentRoundIndex(roundIndex);
+          }
+
+          if (status.timeExpired) {
+            // Time already expired - trigger timeout
+            handleTimeout();
+          }
+        } else if (status.needsStart && status.nextLocationIndex) {
+          // Need to start the next location
+          const result = await startLocation(status.nextLocationIndex);
+
+          if (result.success && result.round) {
+            const roundIndex = rounds.findIndex(r => r.locationIndex === status.nextLocationIndex);
+            if (roundIndex !== -1) {
+              setCurrentRoundIndex(roundIndex);
+            }
+          }
+        }
+      } finally {
+        setLocationLoading(false);
+        setInitialized(true);
+      }
+    };
+
+    initializeGame();
+  }, [loading, initialized, game, rounds, isGuest, userGuesses, router, locale, gameId, getActiveLocation, startLocation, handleTimeout]);
 
   const handleGuess = async () => {
     if (!markerPosition || !currentRound || submitting) return;
@@ -155,7 +252,7 @@ export default function GuesserPlayPage({
     const isImageGame = gameType.startsWith("image:");
 
     // For guests: handle guess client-side
-    if (isGuest) {
+    if (isGuest && currentRound.latitude !== null && currentRound.longitude !== null) {
       const distanceKm = isImageGame
         ? calculatePixelDistance(
             markerPosition.lat,
@@ -231,17 +328,41 @@ export default function GuesserPlayPage({
     }
   };
 
-  const handleNextRound = () => {
+  const handleNextRound = async () => {
     const nextRoundIndex = currentRoundIndex + 1;
     if (nextRoundIndex >= rounds.length) {
       handleCompleteGame();
       return;
     }
+
+    // SOFORT neuen Index setzen - zeigt sofort neuen Ortsnamen
+    setCurrentRoundIndex(nextRoundIndex);
+
+    // Clear state for next round
+    // WICHTIG: clearActiveRound() NICHT aufrufen - startLocation() überschreibt activeRound direkt
+    // Sonst flackert die UI weil currentRound kurzzeitig null ist
     setMarkerPosition(null);
     setShowResult(false);
     setLastResult(null);
-    setCurrentRoundIndex(nextRoundIndex);
-    resetTimer(rounds[nextRoundIndex]);
+
+    // For logged-in users: start the next location via API
+    if (!isGuest) {
+      setLocationLoading(true);
+      try {
+        const nextLocationIndex = rounds[nextRoundIndex]?.locationIndex ?? nextRoundIndex + 1;
+        const result = await startLocation(nextLocationIndex);
+
+        if (!result.success && !result.alreadyGuessed) {
+          console.error("Failed to start next location:", result.error);
+          resetTimer(rounds[nextRoundIndex]);
+        }
+      } finally {
+        setLocationLoading(false);
+      }
+    } else {
+      // Guest mode: simple client-side transition
+      resetTimer(rounds[nextRoundIndex]);
+    }
   };
 
   const handleCompleteGame = async () => {
@@ -297,8 +418,9 @@ export default function GuesserPlayPage({
     router.push(`/${locale}/guesser/results/${gameId}?fromLevelUp=true`);
   };
 
-  // Loading state
-  if (loading) {
+  // Loading state (initial load or waiting for initialization)
+  // Beim Rundenwechsel ist initialized=true, daher kein Spinner
+  if (loading || (!initialized && !isGuest)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -309,8 +431,12 @@ export default function GuesserPlayPage({
     );
   }
 
-  // No game or no current round
-  if (!game || !currentRound) {
+  // No game or no display round = show error
+  // displayRound ist IMMER verfügbar wenn rounds geladen sind (reagiert sofort auf currentRoundIndex)
+  // Die Koordinaten-Verfügbarkeit wird separat in der Karten-Komponente gehandhabt
+  const hasValidRound = game && displayRound;
+
+  if (!hasValidRound) {
     return (
       <div className="min-h-screen bg-background">
         <main className="max-w-xl mx-auto px-4 py-8">
@@ -399,8 +525,8 @@ export default function GuesserPlayPage({
           />
         ) : (
           <CountryMap
-            gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
-            country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
+            gameType={game ? getEffectiveGameType(game) : undefined}
+            country={game?.country ?? DEFAULT_COUNTRY}
             dynamicCountry={dynamicCountry ?? undefined}
             dynamicWorldQuiz={dynamicWorldQuiz ?? undefined}
             onMarkerPlace={showResult ? undefined : setMarkerPosition}
