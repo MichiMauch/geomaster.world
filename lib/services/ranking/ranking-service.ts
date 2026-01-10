@@ -446,20 +446,30 @@ export class RankingService {
     const bestScore = userGames[0].totalScore;
     const totalScore = userGames.reduce((sum, g) => sum + g.totalScore, 0);
 
+    // Conditions for all games of this type (for rank calculation)
     const allConditions = [eq(rankedGameResults.gameType, gameType)];
     if (startDate) {
       allConditions.push(sql`${rankedGameResults.completedAt} >= ${toSqliteTimestamp(startDate)}`);
     }
-    allConditions.push(sql`${rankedGameResults.totalScore} > ${bestScore}`);
 
-    const higherScoreCount = await db
+    // Count total games of this type (all players)
+    const totalGamesResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(rankedGameResults)
       .where(and(...allConditions))
       .get();
+    const totalGamesCount = totalGamesResult?.count ?? 0;
+
+    // Count games with higher score than user's best (for rank)
+    const rankConditions = [...allConditions, sql`${rankedGameResults.totalScore} > ${bestScore}`];
+    const higherScoreCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(rankedGameResults)
+      .where(and(...rankConditions))
+      .get();
 
     const rank = (higherScoreCount?.count ?? 0) + 1;
 
-    return { gamesCount, bestScore, totalScore, rank };
+    return { gamesCount, bestScore, totalScore, rank, totalGamesCount };
   }
 }

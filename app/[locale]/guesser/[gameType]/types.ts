@@ -1,6 +1,7 @@
 export interface RankingEntry {
   rank: number;
   userName: string | null;
+  userImage?: string | null;
   bestScore: number;
   totalScore?: number;
   totalGames?: number;

@@ -12,6 +12,9 @@ export interface GameTypeConfig {
   defaultZoom: number;
   minZoom: number;
   defaultCenter: { lat: number; lng: number };
+  // Game page images (for leaderboard/detail page)
+  landmarkImage?: string | null; // 3D landmark image (e.g., "/images/stephansdom.webp")
+  backgroundImage?: string | null; // Full-screen background image (e.g., "/images/austria.webp")
   // Image-specific fields
   imageUrl?: string; // URL to the image file
   silhouetteUrl?: string; // URL to silhouette version (shown during gameplay)
@@ -21,50 +24,9 @@ export interface GameTypeConfig {
 }
 
 export const GAME_TYPES: Record<string, GameTypeConfig> = {
-  // Country-based game types (using existing country configs)
-  "country:switzerland": {
-    id: "country:switzerland",
-    type: "country",
-    name: { de: "Schweiz", en: "Switzerland", sl: "Švica" },
-    icon: "🇨🇭",
-    geoJsonFile: "/switzerland.geojson",
-    bounds: COUNTRIES.switzerland.bounds,
-    timeoutPenalty: 400,
-    scoreScaleFactor: 100, // ~350km country
-    defaultZoom: 8,
-    minZoom: 7,
-    defaultCenter: COUNTRIES.switzerland.bounds.center,
-  },
-  "country:slovenia": {
-    id: "country:slovenia",
-    type: "country",
-    name: { de: "Slowenien", en: "Slovenia", sl: "Slovenija" },
-    icon: "🇸🇮",
-    geoJsonFile: "/slovenia.geojson",
-    bounds: COUNTRIES.slovenia.bounds,
-    timeoutPenalty: 250,
-    scoreScaleFactor: 60, // ~200km country
-    defaultZoom: 8,
-    minZoom: 7,
-    defaultCenter: COUNTRIES.slovenia.bounds.center,
-  },
+  // Country-based game types are now loaded dynamically from the database (countries table)
   // World-based game types are now loaded dynamically from the database (worldQuizTypes table)
-
-  // Panorama-based game types (Mapillary Street View style)
-  "panorama:world": {
-    id: "panorama:world",
-    type: "panorama",
-    name: { de: "Street View Welt", en: "Street View World", sl: "Ulični pogled Svet" },
-    icon: "📷",
-    geoJsonFile: "/world.geojson",
-    bounds: null, // World map (no bounds)
-    timeoutPenalty: 5000, // 5000 km for timeouts
-    scoreScaleFactor: 3000, // 3000 km
-    defaultZoom: 2,
-    minZoom: 1,
-    defaultCenter: { lat: 20, lng: 0 },
-    defaultTimeLimitSeconds: 60, // 60 seconds default for panorama
-  },
+  // Panorama-based game types are now loaded dynamically from the database (panoramaTypes table)
 
   // Image-based game types
   // Scale: 92 pixels = 10 meters, image is 2330x2229 pixels ≈ 253m x 242m

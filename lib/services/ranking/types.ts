@@ -73,6 +73,7 @@ export interface UserGameStats {
   bestScore: number;
   totalScore: number;
   rank: number | null;
+  totalGamesCount: number; // Total games of this type (all players)
 }
 
 export interface UserStats {

@@ -57,6 +57,13 @@
       "when": 1768046109329,
       "tag": "0007_empty_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1768048018086,
+      "tag": "0008_add_game_images",
+      "breakpoints": true
     }
   ]
 }

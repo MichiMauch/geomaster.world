@@ -9,6 +9,8 @@ export interface DatabaseCountry {
   nameEn: string | null;
   nameSl: string | null;
   icon: string;
+  landmarkImage: string | null;
+  backgroundImage: string | null;
   centerLat: number;
   centerLng: number;
   defaultZoom: number;
@@ -42,6 +44,8 @@ export function countryToGameTypeConfig(country: DatabaseCountry): GameTypeConfi
       sl: country.nameSl || country.name,
     },
     icon: country.icon,
+    landmarkImage: country.landmarkImage,
+    backgroundImage: country.backgroundImage,
     geoJsonFile: `/${country.id}.geojson`,
     bounds: hasBounds
       ? {
@@ -93,6 +97,8 @@ export interface DatabaseWorldQuizType {
   nameEn: string | null;
   nameSl: string | null;
   icon: string;
+  landmarkImage: string | null;
+  backgroundImage: string | null;
   centerLat: number;
   centerLng: number;
   defaultZoom: number;
@@ -116,6 +122,8 @@ export function worldQuizToGameTypeConfig(worldQuiz: DatabaseWorldQuizType): Gam
       sl: worldQuiz.nameSl || worldQuiz.name,
     },
     icon: worldQuiz.icon,
+    landmarkImage: worldQuiz.landmarkImage,
+    backgroundImage: worldQuiz.backgroundImage,
     geoJsonFile: "/world.geojson", // All world quizzes use the same world map
     bounds: null, // World maps have no bounds
     timeoutPenalty: worldQuiz.timeoutPenalty,
@@ -126,5 +134,56 @@ export function worldQuizToGameTypeConfig(worldQuiz: DatabaseWorldQuizType): Gam
       lat: worldQuiz.centerLat,
       lng: worldQuiz.centerLng,
     },
+  };
+}
+
+/**
+ * Database PanoramaType type (from API response)
+ */
+export interface DatabasePanoramaType {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  nameSl: string | null;
+  icon: string;
+  landmarkImage: string | null;
+  backgroundImage: string | null;
+  centerLat: number;
+  centerLng: number;
+  defaultZoom: number;
+  minZoom: number;
+  timeoutPenalty: number;
+  scoreScaleFactor: number;
+  defaultTimeLimitSeconds: number;
+  isActive: boolean;
+}
+
+/**
+ * Convert a database panorama type to a GameTypeConfig
+ * This allows dynamic panorama types from the DB to be used alongside static GAME_TYPES
+ */
+export function panoramaToGameTypeConfig(panorama: DatabasePanoramaType): GameTypeConfig {
+  return {
+    id: `panorama:${panorama.id}`,
+    type: "panorama",
+    name: {
+      de: panorama.name,
+      en: panorama.nameEn || panorama.name,
+      sl: panorama.nameSl || panorama.name,
+    },
+    icon: panorama.icon,
+    landmarkImage: panorama.landmarkImage,
+    backgroundImage: panorama.backgroundImage,
+    geoJsonFile: "/world.geojson", // All panorama games use the world map
+    bounds: null, // World maps have no bounds
+    timeoutPenalty: panorama.timeoutPenalty,
+    scoreScaleFactor: panorama.scoreScaleFactor,
+    defaultZoom: panorama.defaultZoom,
+    minZoom: panorama.minZoom,
+    defaultCenter: {
+      lat: panorama.centerLat,
+      lng: panorama.centerLng,
+    },
+    defaultTimeLimitSeconds: panorama.defaultTimeLimitSeconds,
   };
 }

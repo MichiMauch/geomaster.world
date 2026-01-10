@@ -66,7 +66,19 @@
       "Bash(gh run view:*)",
       "Bash(gh secret set:*)",
       "Bash(turso db:*)",
-      "Bash(turso auth login:*)"
+      "Bash(turso auth login:*)",
+      "Bash(pip3 install:*)",
+      "Bash(rembg i:*)",
+      "Bash(python3 -m rembg:*)",
+      "Bash(python -m rembg:*)",
+      "Bash(md5:*)",
+      "Bash(jq:*)",
+      "Bash(for file in famous airport unesco capitals formula1 highmountains)",
+      "Bash(do)",
+      "Bash(done)",
+      "Bash(for file in airportbg unescobg capitalsbg mountainsbg formulabg famousbg)",
+      "Bash(for file in flags middle names)",
+      "Bash(for file in flagsbg middlebg namesbg)"
     ],
     "deny": [],
     "ask": []

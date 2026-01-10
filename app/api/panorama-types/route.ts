@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { worldQuizTypes, worldLocations } from "@/lib/db/schema";
+import { panoramaTypes, panoramaLocations } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { TranslationService } from "@/lib/services/translation-service";
 import { logger } from "@/lib/logger";
 
-// GET /api/world-quiz-types - List all world quiz types with location counts
+// GET /api/panorama-types - List all panorama types with location counts
 // Optional query param: ?active=true to only get active types
 export async function GET(req: NextRequest) {
   try {
@@ -16,54 +16,53 @@ export async function GET(req: NextRequest) {
 
     let query = db
       .select({
-        id: worldQuizTypes.id,
-        name: worldQuizTypes.name,
-        nameEn: worldQuizTypes.nameEn,
-        nameSl: worldQuizTypes.nameSl,
-        icon: worldQuizTypes.icon,
-        landmarkImage: worldQuizTypes.landmarkImage,
-        backgroundImage: worldQuizTypes.backgroundImage,
-        centerLat: worldQuizTypes.centerLat,
-        centerLng: worldQuizTypes.centerLng,
-        defaultZoom: worldQuizTypes.defaultZoom,
-        minZoom: worldQuizTypes.minZoom,
-        timeoutPenalty: worldQuizTypes.timeoutPenalty,
-        scoreScaleFactor: worldQuizTypes.scoreScaleFactor,
-        isActive: worldQuizTypes.isActive,
-        createdAt: worldQuizTypes.createdAt,
+        id: panoramaTypes.id,
+        name: panoramaTypes.name,
+        nameEn: panoramaTypes.nameEn,
+        nameSl: panoramaTypes.nameSl,
+        icon: panoramaTypes.icon,
+        landmarkImage: panoramaTypes.landmarkImage,
+        backgroundImage: panoramaTypes.backgroundImage,
+        centerLat: panoramaTypes.centerLat,
+        centerLng: panoramaTypes.centerLng,
+        defaultZoom: panoramaTypes.defaultZoom,
+        minZoom: panoramaTypes.minZoom,
+        timeoutPenalty: panoramaTypes.timeoutPenalty,
+        scoreScaleFactor: panoramaTypes.scoreScaleFactor,
+        defaultTimeLimitSeconds: panoramaTypes.defaultTimeLimitSeconds,
+        isActive: panoramaTypes.isActive,
+        createdAt: panoramaTypes.createdAt,
       })
-      .from(worldQuizTypes);
+      .from(panoramaTypes);
 
     if (activeOnly) {
-      query = query.where(eq(worldQuizTypes.isActive, true)) as typeof query;
+      query = query.where(eq(panoramaTypes.isActive, true)) as typeof query;
     }
 
-    const allTypes = await query.orderBy(worldQuizTypes.name);
+    const allTypes = await query.orderBy(panoramaTypes.name);
 
-    // Get location counts for each category
-    const locationCounts = await db
+    // Get total panorama location count
+    const locationCount = await db
       .select({
-        category: worldLocations.category,
         count: sql<number>`count(*)`.as("count"),
       })
-      .from(worldLocations)
-      .groupBy(worldLocations.category);
+      .from(panoramaLocations);
 
-    const countMap = new Map(locationCounts.map((lc) => [lc.category, lc.count]));
+    const totalLocations = locationCount[0]?.count || 0;
 
     const typesWithCounts = allTypes.map((t) => ({
       ...t,
-      locationCount: countMap.get(t.id) || 0,
+      locationCount: totalLocations, // All panorama types share the same locations for now
     }));
 
     return NextResponse.json(typesWithCounts);
   } catch (error) {
-    logger.error("Error fetching world quiz types", error);
-    return NextResponse.json({ error: "Failed to fetch world quiz types" }, { status: 500 });
+    logger.error("Error fetching panorama types", error);
+    return NextResponse.json({ error: "Failed to fetch panorama types" }, { status: 500 });
   }
 }
 
-// POST /api/world-quiz-types - Create a new world quiz type
+// POST /api/panorama-types - Create a new panorama type
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -82,6 +81,7 @@ export async function POST(req: NextRequest) {
       minZoom = 1,
       timeoutPenalty = 5000,
       scoreScaleFactor = 3000,
+      defaultTimeLimitSeconds = 60,
     } = body;
 
     // Validate required fields
@@ -93,9 +93,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if type already exists
-    const existing = await db.select().from(worldQuizTypes).where(eq(worldQuizTypes.id, id));
+    const existing = await db.select().from(panoramaTypes).where(eq(panoramaTypes.id, id));
     if (existing.length > 0) {
-      return NextResponse.json({ error: "World quiz type with this ID already exists" }, { status: 409 });
+      return NextResponse.json({ error: "Panorama type with this ID already exists" }, { status: 409 });
     }
 
     // Auto-translate name (DE → EN, SL)
@@ -110,10 +110,9 @@ export async function POST(req: NextRequest) {
       }
     } catch (translationError) {
       logger.error("Translation failed, using original name", translationError);
-      // Continue with original name if translation fails
     }
 
-    await db.insert(worldQuizTypes).values({
+    await db.insert(panoramaTypes).values({
       id,
       name,
       nameEn,
@@ -125,13 +124,14 @@ export async function POST(req: NextRequest) {
       minZoom,
       timeoutPenalty,
       scoreScaleFactor,
+      defaultTimeLimitSeconds,
       isActive: true,
       createdAt: new Date(),
     });
 
     return NextResponse.json({ success: true, id, nameEn, nameSl });
   } catch (error) {
-    logger.error("Error creating world quiz type", error);
-    return NextResponse.json({ error: "Failed to create world quiz type" }, { status: 500 });
+    logger.error("Error creating panorama type", error);
+    return NextResponse.json({ error: "Failed to create panorama type" }, { status: 500 });
   }
 }

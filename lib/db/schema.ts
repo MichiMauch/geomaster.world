@@ -261,6 +261,9 @@ export const countries = sqliteTable("countries", {
   nameSl: text("name_sl"), // "Švica"
   icon: text("icon").notNull(), // "🇨🇭"
   geoJsonData: text("geojson_data"), // GeoJSON als JSON-String
+  // Bilder für die Spieleseite
+  landmarkImage: text("landmark_image"), // z.B. "/images/stephansdom.webp"
+  backgroundImage: text("background_image"), // z.B. "/images/austria.webp"
   // Karteneinstellungen
   centerLat: real("center_lat").notNull(),
   centerLng: real("center_lng").notNull(),
@@ -286,6 +289,9 @@ export const worldQuizTypes = sqliteTable("worldQuizTypes", {
   nameEn: text("name_en"), // "World Capitals"
   nameSl: text("name_sl"), // "Prestolnice"
   icon: text("icon").notNull(), // "🏛️"
+  // Bilder für die Spieleseite
+  landmarkImage: text("landmark_image"), // z.B. "/images/capitals-landmark.webp"
+  backgroundImage: text("background_image"), // z.B. "/images/capitals-bg.webp"
   // Karteneinstellungen (World Map defaults)
   centerLat: real("center_lat").notNull().default(20),
   centerLng: real("center_lng").notNull().default(0),
@@ -294,6 +300,31 @@ export const worldQuizTypes = sqliteTable("worldQuizTypes", {
   // Scoring
   timeoutPenalty: integer("timeout_penalty").notNull().default(5000), // km
   scoreScaleFactor: integer("score_scale_factor").notNull().default(3000), // km
+  // Status
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+// Panorama Types (for Street View style games)
+export const panoramaTypes = sqliteTable("panoramaTypes", {
+  id: text("id").primaryKey(), // z.B. "world"
+  name: text("name").notNull(), // "Street View Welt"
+  nameEn: text("name_en"), // "Street View World"
+  nameSl: text("name_sl"), // "Ulični pogled Svet"
+  icon: text("icon").notNull(), // "📷"
+  // Bilder für die Spieleseite
+  landmarkImage: text("landmark_image"), // z.B. "/images/streetview.webp"
+  backgroundImage: text("background_image"), // z.B. "/images/streetview-bg.webp"
+  // Karteneinstellungen (World Map defaults)
+  centerLat: real("center_lat").notNull().default(20),
+  centerLng: real("center_lng").notNull().default(0),
+  defaultZoom: integer("default_zoom").notNull().default(2),
+  minZoom: integer("min_zoom").notNull().default(1),
+  // Scoring
+  timeoutPenalty: integer("timeout_penalty").notNull().default(5000), // km
+  scoreScaleFactor: integer("score_scale_factor").notNull().default(3000), // km
+  // Panorama-spezifisch
+  defaultTimeLimitSeconds: integer("default_time_limit_seconds").notNull().default(60),
   // Status
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
@@ -338,4 +369,5 @@ export type RankedGameResult = typeof rankedGameResults.$inferSelect;
 export type Ranking = typeof rankings.$inferSelect;
 export type Country = typeof countries.$inferSelect;
 export type WorldQuizType = typeof worldQuizTypes.$inferSelect;
+export type PanoramaType = typeof panoramaTypes.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
