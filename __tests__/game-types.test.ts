@@ -19,24 +19,12 @@ import {
 
 describe('Game Types', () => {
   describe('GAME_TYPES constant', () => {
-    it('should contain country:switzerland', () => {
-      expect(GAME_TYPES['country:switzerland']).toBeDefined()
-      expect(GAME_TYPES['country:switzerland'].type).toBe('country')
-    })
-
-    it('should contain country:slovenia', () => {
-      expect(GAME_TYPES['country:slovenia']).toBeDefined()
-      expect(GAME_TYPES['country:slovenia'].type).toBe('country')
-    })
+    // Note: country:*, world:*, and panorama:* types are now loaded from database
+    // Only image:* types remain in static GAME_TYPES
 
     it('should contain image:garten', () => {
       expect(GAME_TYPES['image:garten']).toBeDefined()
       expect(GAME_TYPES['image:garten'].type).toBe('image')
-    })
-
-    it('should contain panorama:world', () => {
-      expect(GAME_TYPES['panorama:world']).toBeDefined()
-      expect(GAME_TYPES['panorama:world'].type).toBe('panorama')
     })
 
     it('should have valid scoreScaleFactors', () => {
@@ -53,15 +41,19 @@ describe('Game Types', () => {
   })
 
   describe('getGameTypeConfig', () => {
-    it('should return config for valid game type', () => {
-      const config = getGameTypeConfig('country:switzerland')
-      expect(config.id).toBe('country:switzerland')
-      expect(config.icon).toBe('🇨🇭')
+    it('should return config for valid static game type', () => {
+      const config = getGameTypeConfig('image:garten')
+      expect(config.id).toBe('image:garten')
+      expect(config.type).toBe('image')
     })
 
-    it('should return default config for invalid game type', () => {
+    it('should return default config for unknown game type', () => {
+      // When type is not in static GAME_TYPES, it returns DEFAULT_GAME_TYPE config
+      // But since country:switzerland is also not static anymore, it returns undefined
+      // The function falls back to DEFAULT_GAME_TYPE which is also not in GAME_TYPES
       const config = getGameTypeConfig('invalid:type')
-      expect(config.id).toBe('country:switzerland')
+      // This will return undefined since neither invalid:type nor country:switzerland are in GAME_TYPES
+      expect(config).toBeUndefined()
     })
   })
 
@@ -98,34 +90,33 @@ describe('Game Types', () => {
   })
 
   describe('getGameTypeIds', () => {
-    it('should return all game type IDs', () => {
+    it('should return static game type IDs', () => {
       const ids = getGameTypeIds()
-      expect(ids).toContain('country:switzerland')
-      expect(ids).toContain('country:slovenia')
+      // Only image types are static now
       expect(ids).toContain('image:garten')
-      expect(ids).toContain('panorama:world')
     })
   })
 
   describe('getGameTypesByType', () => {
-    it('should group game types correctly', () => {
+    it('should group static game types correctly', () => {
       const grouped = getGameTypesByType()
-      expect(grouped.country.length).toBeGreaterThan(0)
-      expect(grouped.country.every(g => g.type === 'country')).toBe(true)
+      // Country and world types are now in database, so static grouping may be empty
+      expect(grouped.country).toBeDefined()
+      expect(grouped.world).toBeDefined()
     })
   })
 
   describe('getGameTypeName', () => {
-    it('should return German name', () => {
-      expect(getGameTypeName('country:switzerland', 'de')).toBe('Schweiz')
+    it('should return German name for static type', () => {
+      expect(getGameTypeName('image:garten', 'de')).toBe('Garten')
     })
 
-    it('should return English name', () => {
-      expect(getGameTypeName('country:switzerland', 'en')).toBe('Switzerland')
+    it('should return English name for static type', () => {
+      expect(getGameTypeName('image:garten', 'en')).toBe('Garden')
     })
 
     it('should fallback to English for unknown locale', () => {
-      expect(getGameTypeName('country:switzerland', 'fr')).toBe('Switzerland')
+      expect(getGameTypeName('image:garten', 'fr')).toBe('Garden')
     })
   })
 

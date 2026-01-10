@@ -12,11 +12,15 @@ import {
   SCORING_STRATEGIES,
 } from '@/lib/scoring/strategies'
 
+// Use image:garten for tests since country types are now in database
+const TEST_GAME_TYPE = 'image:garten'
+const TEST_SCALE_FACTOR = 0.035 // km (same as image:garten)
+
 describe('Scoring System', () => {
   describe('calculateScore', () => {
     it('should return max score (100) for perfect guess with v1', () => {
       const score = calculateScore(
-        { distanceKm: 0, timeSeconds: null, gameType: 'country:switzerland' },
+        { distanceKm: 0, timeSeconds: null, gameType: TEST_GAME_TYPE },
         1
       )
       expect(score).toBe(100)
@@ -24,7 +28,7 @@ describe('Scoring System', () => {
 
     it('should return lower score for larger distance with v1', () => {
       const score = calculateScore(
-        { distanceKm: 100, timeSeconds: null, gameType: 'country:switzerland' },
+        { distanceKm: 0.05, timeSeconds: null, gameType: TEST_GAME_TYPE },
         1
       )
       expect(score).toBeLessThan(100)
@@ -35,7 +39,7 @@ describe('Scoring System', () => {
       const score = calculateScore({
         distanceKm: 0,
         timeSeconds: 5,
-        gameType: 'country:switzerland',
+        gameType: TEST_GAME_TYPE,
       })
       // v2 with time bonus should give more than 100
       expect(score).toBeGreaterThan(100)
@@ -43,11 +47,11 @@ describe('Scoring System', () => {
 
     it('should respect custom scoreScaleFactor', () => {
       const scoreDefault = calculateScore(
-        { distanceKm: 50, timeSeconds: null, gameType: 'country:switzerland' },
+        { distanceKm: 0.02, timeSeconds: null, gameType: TEST_GAME_TYPE },
         1
       )
       const scoreCustom = calculateScore(
-        { distanceKm: 50, timeSeconds: null, gameType: 'country:switzerland', scoreScaleFactor: 200 },
+        { distanceKm: 0.02, timeSeconds: null, gameType: TEST_GAME_TYPE, scoreScaleFactor: 0.1 },
         1
       )
       expect(scoreCustom).toBeGreaterThan(scoreDefault)
@@ -90,17 +94,19 @@ describe('DistanceOnlyScoringStrategy (v1)', () => {
     const score = DistanceOnlyScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: null,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     expect(score).toBe(100)
   })
 
   it('should return ~37 points at scoreScaleFactor distance', () => {
-    // e^-1 ≈ 0.368
+    // e^-1 ≈ 0.368, using explicit scoreScaleFactor for clarity
+    const scaleFactor = 100 // km
     const score = DistanceOnlyScoringStrategy.calculateRoundScore({
-      distanceKm: 100, // scoreScaleFactor for switzerland
+      distanceKm: scaleFactor,
       timeSeconds: null,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
+      scoreScaleFactor: scaleFactor,
     })
     expect(score).toBeGreaterThan(35)
     expect(score).toBeLessThan(40)
@@ -108,23 +114,24 @@ describe('DistanceOnlyScoringStrategy (v1)', () => {
 
   it('should approach 0 for very large distances', () => {
     const score = DistanceOnlyScoringStrategy.calculateRoundScore({
-      distanceKm: 1000,
+      distanceKm: 1,
       timeSeconds: null,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
+      scoreScaleFactor: 0.035, // Use image:garten scale
     })
     expect(score).toBeLessThan(5)
   })
 
   it('should ignore time parameter', () => {
     const scoreNoTime = DistanceOnlyScoringStrategy.calculateRoundScore({
-      distanceKm: 50,
+      distanceKm: 0.02,
       timeSeconds: null,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     const scoreWithTime = DistanceOnlyScoringStrategy.calculateRoundScore({
-      distanceKm: 50,
+      distanceKm: 0.02,
       timeSeconds: 1,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     expect(scoreNoTime).toBe(scoreWithTime)
   })
@@ -135,7 +142,7 @@ describe('TimeBasedScoringStrategy (v2)', () => {
     const score = TimeBasedScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: 0,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     // Should be 100 * 3.0 = 300
     expect(score).toBe(300)
@@ -145,21 +152,21 @@ describe('TimeBasedScoringStrategy (v2)', () => {
     const score = TimeBasedScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: null,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     expect(score).toBe(100)
   })
 
   it('should give higher score for faster times', () => {
     const scoreFast = TimeBasedScoringStrategy.calculateRoundScore({
-      distanceKm: 50,
+      distanceKm: 0.02,
       timeSeconds: 1,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     const scoreSlow = TimeBasedScoringStrategy.calculateRoundScore({
-      distanceKm: 50,
+      distanceKm: 0.02,
       timeSeconds: 30,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     expect(scoreFast).toBeGreaterThan(scoreSlow)
   })
@@ -168,12 +175,12 @@ describe('TimeBasedScoringStrategy (v2)', () => {
     const scoreInstant = TimeBasedScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: 0,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     const scoreOneSecond = TimeBasedScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: 1,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     // Both should be 300 (3.0x multiplier cap)
     expect(scoreInstant).toBe(300)
@@ -184,7 +191,7 @@ describe('TimeBasedScoringStrategy (v2)', () => {
     const score = TimeBasedScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: -5,
-      gameType: 'country:switzerland',
+      gameType: TEST_GAME_TYPE,
     })
     expect(score).toBe(100) // No time bonus
   })
