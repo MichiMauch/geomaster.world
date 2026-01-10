@@ -103,7 +103,10 @@
     "passwordResetSuccess": "Passwort erfolgreich geändert!",
     "invalidLink": "Ungültiger Link",
     "invalidLinkDescription": "Dieser Link ist ungültig oder abgelaufen.",
-    "requestNewLink": "Neuen Link anfordern"
+    "requestNewLink": "Neuen Link anfordern",
+    "rateLimitExceeded": "Zu viele Versuche. Bitte warte {minutes}.",
+    "captchaFailed": "Sicherheitsprüfung fehlgeschlagen. Bitte versuche es erneut.",
+    "captchaRequired": "Bitte bestätige, dass du kein Roboter bist."
   },
   "join": {
     "title": "Gruppe beitreten",

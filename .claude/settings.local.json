@@ -64,7 +64,9 @@
       "Bash(npm run test:coverage:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
-      "Bash(gh secret set:*)"
+      "Bash(gh secret set:*)",
+      "Bash(turso db:*)",
+      "Bash(turso auth login:*)"
     ],
     "deny": [],
     "ask": []

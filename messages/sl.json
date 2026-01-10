@@ -103,7 +103,10 @@
     "passwordResetSuccess": "Geslo uspešno spremenjeno!",
     "invalidLink": "Neveljavna povezava",
     "invalidLinkDescription": "Ta povezava je neveljavna ali je potekla.",
-    "requestNewLink": "Zahtevaj novo povezavo"
+    "requestNewLink": "Zahtevaj novo povezavo",
+    "rateLimitExceeded": "Preveč poskusov. Prosimo počakajte {minutes}.",
+    "captchaFailed": "Varnostna preverba ni uspela. Prosimo poskusite znova.",
+    "captchaRequired": "Prosimo potrdite, da niste robot."
   },
   "join": {
     "title": "Pridruži se skupini",

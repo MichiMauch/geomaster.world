@@ -313,7 +313,16 @@ export const activityLogs = sqliteTable("activityLogs", {
   metadata: text("metadata"), // JSON string for request info (IP, user agent, etc.)
 });
 
+// Registration Rate Limiting
+export const registrationAttempts = sqliteTable("registrationAttempts", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  ip: text("ip").notNull(),
+  attemptedAt: integer("attemptedAt", { mode: "timestamp" }).notNull(),
+  success: integer("success", { mode: "boolean" }).notNull().default(false),
+});
+
 // Types
+export type RegistrationAttempt = typeof registrationAttempts.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;

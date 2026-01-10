@@ -103,7 +103,10 @@
     "passwordResetSuccess": "Password changed successfully!",
     "invalidLink": "Invalid link",
     "invalidLinkDescription": "This link is invalid or has expired.",
-    "requestNewLink": "Request new link"
+    "requestNewLink": "Request new link",
+    "rateLimitExceeded": "Too many attempts. Please wait {minutes}.",
+    "captchaFailed": "Security check failed. Please try again.",
+    "captchaRequired": "Please confirm you're not a robot."
   },
   "join": {
     "title": "Join Group",
