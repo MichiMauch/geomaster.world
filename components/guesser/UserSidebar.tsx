@@ -174,7 +174,7 @@ export function UserSidebar({ className }: UserSidebarProps) {
           <div className="mb-4">
             {/* Level name above progress bar */}
             <p className="text-sm text-success font-medium mb-2 text-center">
-              {levelData.levelName}
+              {levelData.levelName} - Level {levelData.level}
             </p>
 
             {/* Progress bar with glow */}
