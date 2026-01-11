@@ -3,14 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
-import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
+import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes, panoramaTypes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { getGameTypeConfig, isWorldGameType, getWorldCategory, isPanoramaGameType, getPanoramaCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
 import { getLocationCountryName } from "@/lib/countries";
 import { getCurrentScoringVersion } from "@/lib/scoring";
-import { countryToGameTypeConfig, worldQuizToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType } from "@/lib/utils/country-converter";
+import { countryToGameTypeConfig, worldQuizToGameTypeConfig, panoramaToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType, type DatabasePanoramaType } from "@/lib/utils/country-converter";
 import { shuffle } from "@/lib/utils";
 
 export async function POST(request: Request) {
@@ -51,6 +51,21 @@ export async function POST(request: Request) {
         if (worldQuizResult.length > 0 && worldQuizResult[0].isActive) {
           dbWorldQuiz = worldQuizResult[0] as DatabaseWorldQuizType;
           config = worldQuizToGameTypeConfig(dbWorldQuiz);
+        }
+      }
+    }
+
+    // If not in static GAME_TYPES, check for dynamic panorama type in database
+    if (!config && gameType?.startsWith("panorama:")) {
+      const category = getPanoramaCategory(gameType);
+      if (category) {
+        const panoramaResult = await db
+          .select()
+          .from(panoramaTypes)
+          .where(eq(panoramaTypes.id, category));
+
+        if (panoramaResult.length > 0 && panoramaResult[0].isActive) {
+          config = panoramaToGameTypeConfig(panoramaResult[0] as DatabasePanoramaType);
         }
       }
     }
