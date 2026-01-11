@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
-import { games, gameRounds, guesses, worldQuizTypes, countries, rankings as rankingsTable } from "@/lib/db/schema";
+import { games, gameRounds, guesses, worldQuizTypes, countries, panoramaTypes, rankings as rankingsTable } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/scoring";
@@ -58,6 +58,17 @@ export async function POST(request: Request) {
 
       if (country) {
         dbScoreScaleFactor = country.scoreScaleFactor;
+      }
+    } else if (game.gameType?.startsWith("panorama:")) {
+      const panoramaId = game.gameType.split(":")[1];
+      const panorama = await db
+        .select({ scoreScaleFactor: panoramaTypes.scoreScaleFactor })
+        .from(panoramaTypes)
+        .where(eq(panoramaTypes.id, panoramaId))
+        .get();
+
+      if (panorama) {
+        dbScoreScaleFactor = panorama.scoreScaleFactor;
       }
     }
 

@@ -2,12 +2,47 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { games, gameRounds, guesses, locations, worldLocations, panoramaLocations } from "@/lib/db/schema";
+import { games, gameRounds, guesses, locations, worldLocations, panoramaLocations, countries, worldQuizTypes, panoramaTypes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { getLocalizedName } from "@/lib/location-utils";
-import { isPanoramaGameType, getGameTypeConfig } from "@/lib/game-types";
+import { isPanoramaGameType, GAME_TYPES } from "@/lib/game-types";
+
+// Helper function to get timeoutPenalty from DB for dynamic game types
+async function getTimeoutPenaltyFromDB(gameType: string): Promise<number> {
+  // Static config first
+  const staticConfig = GAME_TYPES[gameType];
+  if (staticConfig) return staticConfig.timeoutPenalty;
+
+  if (gameType.startsWith("country:")) {
+    const countryId = gameType.split(":")[1];
+    const result = await db
+      .select({ timeoutPenalty: countries.timeoutPenalty })
+      .from(countries)
+      .where(eq(countries.id, countryId))
+      .get();
+    if (result) return result.timeoutPenalty;
+  } else if (gameType.startsWith("world:")) {
+    const worldQuizId = gameType.split(":")[1];
+    const result = await db
+      .select({ timeoutPenalty: worldQuizTypes.timeoutPenalty })
+      .from(worldQuizTypes)
+      .where(eq(worldQuizTypes.id, worldQuizId))
+      .get();
+    if (result) return result.timeoutPenalty;
+  } else if (gameType.startsWith("panorama:")) {
+    const panoramaId = gameType.split(":")[1];
+    const result = await db
+      .select({ timeoutPenalty: panoramaTypes.timeoutPenalty })
+      .from(panoramaTypes)
+      .where(eq(panoramaTypes.id, panoramaId))
+      .get();
+    if (result) return result.timeoutPenalty;
+  }
+
+  return 5000; // Default fallback (5000 km)
+}
 
 /**
  * POST /api/ranked/games/[gameId]/start-location
@@ -346,10 +381,9 @@ export async function GET(
         userId: session.user.id,
       });
 
-      // Get timeout penalty from game type config
+      // Get timeout penalty from DB (supports dynamic game types)
       const gameType = activeRound.gameType || game.gameType || "country:switzerland";
-      const config = getGameTypeConfig(gameType);
-      const timeoutPenalty = config.timeoutPenalty;
+      const timeoutPenalty = await getTimeoutPenaltyFromDB(gameType);
 
       // Calculate time limit for logging
       const isPanoramaGame = isPanoramaGameType(gameType);

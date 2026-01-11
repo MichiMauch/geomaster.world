@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { signIn } from "next-auth/react";
-import { BarChart3, Eye, Share2 } from "lucide-react";
+import { ArrowLeft, BarChart3, Eye, Share2 } from "lucide-react";
+import Link from "next/link";
 import { StarRating, ScoreDisplay, RoundReview } from "@/components/guesser/results";
 import { LevelUpCelebration } from "@/components/LevelUpCelebration";
 
@@ -350,6 +351,18 @@ export default function GuesserResultsPage() {
             <span className="hidden sm:inline">{t("viewAnswers", { defaultValue: "Antworten ansehen" })}</span>
           </Button>
         </div>
+
+        {/* Back to Game Selection */}
+        <Link href={`/${locale}/guesser`} className="w-full mt-4 block">
+          <Button
+            variant="ghost"
+            size="md"
+            className="w-full text-text-muted hover:text-text-primary"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {t("backToGames", { defaultValue: "Zurück zur Spielübersicht" })}
+          </Button>
+        </Link>
       </div>
 
       {/* Round Review Modal */}

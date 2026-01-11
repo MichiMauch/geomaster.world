@@ -13,14 +13,14 @@ import {
   panoramaLocations,
   countries,
   worldQuizTypes,
+  panoramaTypes,
 } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
-import { getTimeoutPenalty } from "@/lib/countries";
 import { calculateScore } from "@/lib/score";
-import { isImageGameType, getImageMapId, getGameTypeConfig } from "@/lib/game-types";
+import { isImageGameType, GAME_TYPES } from "@/lib/game-types";
 import { isPointInCountry, isCountryQuizGameType } from "@/lib/polygon-validation";
 
 // Helper function to get scoreScaleFactor from DB for dynamic game types
@@ -41,8 +41,51 @@ async function getScoreScaleFactorFromDB(gameType: string): Promise<number | und
       .where(eq(countries.id, countryId))
       .get();
     return country?.scoreScaleFactor;
+  } else if (gameType.startsWith("panorama:")) {
+    const panoramaId = gameType.split(":")[1];
+    const panorama = await db
+      .select({ scoreScaleFactor: panoramaTypes.scoreScaleFactor })
+      .from(panoramaTypes)
+      .where(eq(panoramaTypes.id, panoramaId))
+      .get();
+    return panorama?.scoreScaleFactor;
   }
   return undefined;
+}
+
+// Helper function to get timeoutPenalty from DB for dynamic game types
+async function getTimeoutPenaltyFromDB(gameType: string): Promise<number> {
+  // Static config first
+  const staticConfig = GAME_TYPES[gameType];
+  if (staticConfig) return staticConfig.timeoutPenalty;
+
+  if (gameType.startsWith("country:")) {
+    const countryId = gameType.split(":")[1];
+    const result = await db
+      .select({ timeoutPenalty: countries.timeoutPenalty })
+      .from(countries)
+      .where(eq(countries.id, countryId))
+      .get();
+    if (result) return result.timeoutPenalty;
+  } else if (gameType.startsWith("world:")) {
+    const worldQuizId = gameType.split(":")[1];
+    const result = await db
+      .select({ timeoutPenalty: worldQuizTypes.timeoutPenalty })
+      .from(worldQuizTypes)
+      .where(eq(worldQuizTypes.id, worldQuizId))
+      .get();
+    if (result) return result.timeoutPenalty;
+  } else if (gameType.startsWith("panorama:")) {
+    const panoramaId = gameType.split(":")[1];
+    const result = await db
+      .select({ timeoutPenalty: panoramaTypes.timeoutPenalty })
+      .from(panoramaTypes)
+      .where(eq(panoramaTypes.id, panoramaId))
+      .get();
+    if (result) return result.timeoutPenalty;
+  }
+
+  return 5000; // Default fallback (5000 km)
 }
 
 export async function GET(request: Request) {
@@ -418,9 +461,8 @@ export async function POST(request: Request) {
     let insideCountry = false;
 
     if (timeout) {
-      // Get timeout penalty from game type config (always in km)
-      const gameTypeConfig = getGameTypeConfig(effectiveGameType);
-      distanceKm = gameTypeConfig.timeoutPenalty;
+      // Get timeout penalty from DB (supports dynamic game types)
+      distanceKm = await getTimeoutPenaltyFromDB(effectiveGameType);
     } else if (isImage) {
       // For image maps: use pixel distance (92px = 10m)
       distanceKm = calculatePixelDistance(

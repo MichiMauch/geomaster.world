@@ -459,6 +459,7 @@
     "noGuesses": "Ni najdenih odgovorov",
     "timeout": "Timeout",
     "points": "Točk",
-    "creating": "Ustvarjanje igre..."
+    "creating": "Ustvarjanje igre...",
+    "backToGames": "Nazaj na igre"
   }
 }

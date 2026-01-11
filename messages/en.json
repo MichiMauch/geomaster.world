@@ -459,6 +459,7 @@
     "noGuesses": "No answers found",
     "timeout": "Timeout",
     "points": "Points",
-    "creating": "Creating game..."
+    "creating": "Creating game...",
+    "backToGames": "Back to Games"
   }
 }

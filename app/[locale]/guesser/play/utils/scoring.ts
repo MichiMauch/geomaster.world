@@ -12,7 +12,9 @@ export function calculateClientScore(
 ): number {
   const maxPoints = 100;
   const config = getGameTypeConfig(gameType);
-  const scaleFactor = scoreScaleFactor ?? config.scoreScaleFactor;
+  // Fallback for dynamic game types (country/world/panorama from DB)
+  // Default 3000km is a reasonable world-scale scoring factor
+  const scaleFactor = scoreScaleFactor ?? config?.scoreScaleFactor ?? 3000;
 
   // Calculate base distance score
   const distanceScore = maxPoints * Math.exp(-distanceKm / scaleFactor);

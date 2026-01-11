@@ -97,7 +97,8 @@ export default function GuesserPlayPage({
     if (isGuest && currentRound.latitude !== null && currentRound.longitude !== null) {
       const gameType = currentRound.gameType || (game ? getEffectiveGameType(game) : "country:switzerland");
       const config = getGameTypeConfig(gameType);
-      const timeoutDistance = config.timeoutPenalty;
+      // Fallback for dynamic game types (country/world/panorama from DB)
+      const timeoutDistance = config?.timeoutPenalty ?? 5000;
 
       setLastResult({
         distanceKm: timeoutDistance,

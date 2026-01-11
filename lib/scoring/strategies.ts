@@ -26,7 +26,8 @@ export const DistanceOnlyScoringStrategy: ScoringStrategy = {
   calculateRoundScore({ distanceKm, gameType, scoreScaleFactor }: ScoringParams): number {
     const maxPoints = 100;
     const config = getGameTypeConfig(gameType);
-    const scaleFactor = scoreScaleFactor ?? config.scoreScaleFactor;
+    // Fallback for dynamic game types where config might be undefined
+    const scaleFactor = scoreScaleFactor ?? config?.scoreScaleFactor ?? 3000;
 
     const score = maxPoints * Math.exp(-distanceKm / scaleFactor);
     return Math.round(score);
@@ -47,7 +48,8 @@ export const TimeBasedScoringStrategy: ScoringStrategy = {
   calculateRoundScore({ distanceKm, timeSeconds, gameType, scoreScaleFactor }: ScoringParams): number {
     const maxPoints = 100;
     const config = getGameTypeConfig(gameType);
-    const scaleFactor = scoreScaleFactor ?? config.scoreScaleFactor;
+    // Fallback for dynamic game types where config might be undefined
+    const scaleFactor = scoreScaleFactor ?? config?.scoreScaleFactor ?? 3000;
 
     // Calculate base distance score
     const distanceScore = maxPoints * Math.exp(-distanceKm / scaleFactor);
