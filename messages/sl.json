@@ -461,5 +461,21 @@
     "points": "Točk",
     "creating": "Ustvarjanje igre...",
     "backToGames": "Nazaj na igre"
+  },
+  "sidebar": {
+    "dayStreak": "dnevi v nizu",
+    "daysTo": "dni do",
+    "allStreakGoalsReached": "Vsi cilji doseženi!",
+    "days": "Dni",
+    "streakBadge": "Značka zaporedja",
+    "daysLeft": "dni preostalo",
+    "achieved": "Doseženo!",
+    "pointsTo": "točk do",
+    "maxLevelReached": "Najvišja raven!",
+    "levelBadges": "Značke ravni",
+    "streakBadges": "Značke zaporedja",
+    "points": "Točke",
+    "loadingError": "Napaka pri nalaganju",
+    "retry": "Poskusi znova"
   }
 }

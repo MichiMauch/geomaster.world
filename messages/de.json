@@ -461,5 +461,21 @@
     "points": "Punkte",
     "creating": "Erstelle Spiel...",
     "backToGames": "Zurück zur Spielübersicht"
+  },
+  "sidebar": {
+    "dayStreak": "Tage Streak",
+    "daysTo": "Tage bis",
+    "allStreakGoalsReached": "Alle Streak-Ziele erreicht!",
+    "days": "Tage",
+    "streakBadge": "Streak Badge",
+    "daysLeft": "Tage übrig",
+    "achieved": "Erreicht!",
+    "pointsTo": "Punkte bis",
+    "maxLevelReached": "Max Level erreicht!",
+    "levelBadges": "Level Abzeichen",
+    "streakBadges": "Streak Abzeichen",
+    "points": "Punkte",
+    "loadingError": "Fehler beim Laden",
+    "retry": "Erneut versuchen"
   }
 }

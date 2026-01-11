@@ -461,5 +461,21 @@
     "points": "Points",
     "creating": "Creating game...",
     "backToGames": "Back to Games"
+  },
+  "sidebar": {
+    "dayStreak": "Day Streak",
+    "daysTo": "days to",
+    "allStreakGoalsReached": "All streak goals reached!",
+    "days": "Days",
+    "streakBadge": "Streak Badge",
+    "daysLeft": "days left",
+    "achieved": "Achieved!",
+    "pointsTo": "points to",
+    "maxLevelReached": "Max Level reached!",
+    "levelBadges": "Level Badges",
+    "streakBadges": "Streak Badges",
+    "points": "Points",
+    "loadingError": "Error loading data",
+    "retry": "Try again"
   }
 }

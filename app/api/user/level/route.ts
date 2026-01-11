@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { rankings } from "@/lib/db/schema";
+import { rankings, userStreaks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getUserLevel, getLevelProgress, getLevelName } from "@/lib/levels";
+import { getUserLevel, getLevelProgress, getLevelName, LEVELS } from "@/lib/levels";
 import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
@@ -31,9 +31,24 @@ export async function GET(request: Request) {
     const totalPoints = userRanking?.totalScore ?? 0;
     const levelProgress = getLevelProgress(totalPoints);
 
+    // Get user's streak data
+    const streak = await db
+      .select()
+      .from(userStreaks)
+      .where(eq(userStreaks.userId, session.user.id))
+      .get();
+
     // Get locale from request headers or default to "en"
     const acceptLanguage = request.headers.get("accept-language") || "en";
     const locale = acceptLanguage.split(",")[0].split("-")[0];
+
+    // Build all levels data with localized names
+    const allLevels = LEVELS.map((lvl) => ({
+      level: lvl.level,
+      name: getLevelName(lvl, locale),
+      minPoints: lvl.minPoints,
+      achieved: totalPoints >= lvl.minPoints,
+    }));
 
     return NextResponse.json({
       level: levelProgress.currentLevel.level,
@@ -50,6 +65,14 @@ export async function GET(request: Request) {
           }
         : null,
       isMaxLevel: levelProgress.nextLevel === null,
+      // Streak data
+      streak: {
+        current: streak?.currentStreak ?? 0,
+        longest: streak?.longestStreak ?? 0,
+        lastPlayedDate: streak?.lastPlayedDate ?? null,
+      },
+      // All levels for badge display
+      allLevels,
     });
   } catch (error) {
     logger.error("Error fetching user level", error);

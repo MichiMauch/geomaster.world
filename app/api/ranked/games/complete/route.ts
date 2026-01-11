@@ -3,12 +3,70 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
-import { games, gameRounds, guesses, worldQuizTypes, countries, panoramaTypes, rankings as rankingsTable } from "@/lib/db/schema";
+import { games, gameRounds, guesses, worldQuizTypes, countries, panoramaTypes, rankings as rankingsTable, userStreaks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/scoring";
 import { RankingService } from "@/lib/services/ranking-service";
 import { checkLevelUp, getLevelName } from "@/lib/levels";
+
+/**
+ * Update user's streak after completing a game
+ */
+async function updateStreak(userId: string): Promise<{ current: number; longest: number }> {
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+  const existing = await db
+    .select()
+    .from(userStreaks)
+    .where(eq(userStreaks.userId, userId))
+    .get();
+
+  if (!existing) {
+    // First game ever - create streak record
+    await db.insert(userStreaks).values({
+      userId,
+      currentStreak: 1,
+      longestStreak: 1,
+      lastPlayedDate: today,
+      updatedAt: new Date(),
+    });
+    return { current: 1, longest: 1 };
+  }
+
+  // Already played today - no streak update needed
+  if (existing.lastPlayedDate === today) {
+    return { current: existing.currentStreak, longest: existing.longestStreak };
+  }
+
+  // Check if played yesterday (continue streak) or earlier (reset)
+  const lastPlayed = existing.lastPlayedDate ? new Date(existing.lastPlayedDate) : null;
+  const todayDate = new Date(today);
+
+  let newStreak = 1;
+  if (lastPlayed) {
+    const diffDays = Math.floor((todayDate.getTime() - lastPlayed.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) {
+      // Played yesterday - continue streak
+      newStreak = existing.currentStreak + 1;
+    }
+    // If diffDays > 1, streak resets to 1
+  }
+
+  const newLongest = Math.max(newStreak, existing.longestStreak);
+
+  await db
+    .update(userStreaks)
+    .set({
+      currentStreak: newStreak,
+      longestStreak: newLongest,
+      lastPlayedDate: today,
+      updatedAt: new Date(),
+    })
+    .where(eq(userStreaks.userId, userId));
+
+  return { current: newStreak, longest: newLongest };
+}
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -175,9 +233,13 @@ export async function POST(request: Request) {
       totalDistance,
     });
 
-    // Check for level-up
+    // Check for level-up and update streak
     let levelUp = null;
+    let streak = null;
     if (userId) {
+      // Update streak
+      streak = await updateStreak(userId);
+
       const newTotalScore = previousTotalScore + totalScore;
       const levelCheck = checkLevelUp(previousTotalScore, newTotalScore);
 
@@ -236,6 +298,7 @@ export async function POST(request: Request) {
       totalDistance,
       rankings,
       levelUp,
+      streak,
       message: userId ? "Game completed and ranked!" : "Game completed! Login to appear in rankings.",
     });
   } catch (error) {

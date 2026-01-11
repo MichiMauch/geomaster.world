@@ -14,3 +14,6 @@ coverage/
 
 # CI/CD
 .github/
+
+# Large assets (keep in repo, exclude from deploy)
+public/images/badges/big/

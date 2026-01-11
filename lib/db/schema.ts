@@ -352,7 +352,21 @@ export const registrationAttempts = sqliteTable("registrationAttempts", {
   success: integer("success", { mode: "boolean" }).notNull().default(false),
 });
 
+// User Streaks (daily play tracking)
+export const userStreaks = sqliteTable("userStreaks", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  userId: text("userId")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  currentStreak: integer("currentStreak").notNull().default(0), // Current consecutive days
+  longestStreak: integer("longestStreak").notNull().default(0), // Best streak ever
+  lastPlayedDate: text("lastPlayedDate"), // ISO date string (YYYY-MM-DD)
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+});
+
 // Types
+export type UserStreak = typeof userStreaks.$inferSelect;
 export type RegistrationAttempt = typeof registrationAttempts.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
