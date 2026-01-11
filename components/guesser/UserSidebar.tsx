@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -25,7 +25,7 @@ export function UserSidebar({ className }: UserSidebarProps) {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch level data when authenticated
-  const fetchLevelData = async () => {
+  const fetchLevelData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -45,13 +45,13 @@ export function UserSidebar({ className }: UserSidebarProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [locale]);
 
   useEffect(() => {
     if (status === "authenticated") {
       fetchLevelData();
     }
-  }, [status, locale]);
+  }, [status, fetchLevelData]);
 
   // Get highest achieved streak milestone for featured badge
   const achievedStreakMilestone = levelData

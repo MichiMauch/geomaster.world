@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import Lottie from "lottie-react";
 import fireAnimation from "@/public/animations/fire.json";
@@ -10,30 +11,29 @@ interface StreakDisplayProps {
   lastPlayedDate: string | null;
 }
 
-export function StreakDisplay({ current, lastPlayedDate }: StreakDisplayProps) {
-  const t = useTranslations("sidebar");
-
-  // Calculate display streak: if user is on site today, count today as day 1 minimum
-  const today = new Date().toISOString().split("T")[0];
-  let displayStreak = current;
+function calculateDisplayStreak(current: number, lastPlayedDate: string | null): number {
+  const now = Date.now();
+  const today = new Date(now).toISOString().split("T")[0];
+  const yesterday = new Date(now - MS_PER_DAY).toISOString().split("T")[0];
 
   if (lastPlayedDate === today) {
-    // Already played today - show actual streak
-    displayStreak = current;
+    return current;
+  } else if (lastPlayedDate === yesterday) {
+    return current;
   } else if (lastPlayedDate) {
-    // Check if played yesterday (streak still active)
-    const yesterday = new Date(Date.now() - MS_PER_DAY).toISOString().split("T")[0];
-    if (lastPlayedDate === yesterday) {
-      // Streak is active, show current (will increase when they play today)
-      displayStreak = current;
-    } else {
-      // Streak broken, but today is a fresh start
-      displayStreak = 1;
-    }
-  } else {
-    // Never played, today is day 1
-    displayStreak = 1;
+    return 1;
   }
+  return 1;
+}
+
+export function StreakDisplay({ current, lastPlayedDate }: StreakDisplayProps) {
+  const t = useTranslations("sidebar");
+  const [displayStreak, setDisplayStreak] = useState(current || 1);
+
+  // Calculate display streak after mount to avoid impure Date calls during render
+  useEffect(() => {
+    setDisplayStreak(calculateDisplayStreak(current, lastPlayedDate));
+  }, [current, lastPlayedDate]);
 
   // Calculate progress to next milestone
   const currentMilestoneIndex = STREAK_MILESTONES.findIndex(m => m > displayStreak);
