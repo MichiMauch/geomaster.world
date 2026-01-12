@@ -101,11 +101,6 @@ interface HeroGlobeProps {
   className?: string;
 }
 
-// Arc data type for callbacks
-interface ArcData {
-  layer: string;
-  color: string;
-}
 
 export default function HeroGlobe({ className }: HeroGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -248,18 +243,19 @@ export default function HeroGlobe({ className }: HeroGlobeProps) {
           pointAltitude={0.02}
           // Animated connection lines with glow
           arcsData={ARCS}
-          arcColor={(d: ArcData) => {
-            if (d.layer === "glow") {
+          arcColor={(d: object) => {
+            const arc = d as { layer: string; color: string };
+            if (arc.layer === "glow") {
               // Convert hex to rgba with 0.5 opacity for glow
-              const hex = d.color || "#00D9FF";
+              const hex = arc.color || "#00D9FF";
               const r = parseInt(hex.slice(1, 3), 16);
               const g = parseInt(hex.slice(3, 5), 16);
               const b = parseInt(hex.slice(5, 7), 16);
               return `rgba(${r}, ${g}, ${b}, 0.5)`;
             }
-            return d.color || "#00D9FF";
+            return arc.color || "#00D9FF";
           }}
-          arcStroke={(d: ArcData) => d.layer === "glow" ? 2 : 0.8}
+          arcStroke={(d: object) => (d as { layer: string }).layer === "glow" ? 2 : 0.8}
           arcAltitude={0.15}
           arcDashLength={1}
           arcDashGap={1}
