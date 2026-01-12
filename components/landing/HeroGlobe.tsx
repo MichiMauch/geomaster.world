@@ -101,9 +101,17 @@ interface HeroGlobeProps {
   className?: string;
 }
 
+// Arc data type for callbacks
+interface ArcData {
+  layer: string;
+  color: string;
+}
+
 export default function HeroGlobe({ className }: HeroGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globeRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cloudsGlobeRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isClient, setIsClient] = useState(false);
@@ -240,7 +248,7 @@ export default function HeroGlobe({ className }: HeroGlobeProps) {
           pointAltitude={0.02}
           // Animated connection lines with glow
           arcsData={ARCS}
-          arcColor={(d: any) => {
+          arcColor={(d: ArcData) => {
             if (d.layer === "glow") {
               // Convert hex to rgba with 0.5 opacity for glow
               const hex = d.color || "#00D9FF";
@@ -251,7 +259,7 @@ export default function HeroGlobe({ className }: HeroGlobeProps) {
             }
             return d.color || "#00D9FF";
           }}
-          arcStroke={(d: any) => d.layer === "glow" ? 2 : 0.8}
+          arcStroke={(d: ArcData) => d.layer === "glow" ? 2 : 0.8}
           arcAltitude={0.15}
           arcDashLength={1}
           arcDashGap={1}

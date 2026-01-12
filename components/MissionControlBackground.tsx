@@ -133,6 +133,7 @@ export default function MissionControlBackground() {
       }
     });
 
+    // eslint-disable-next-line react-hooks/immutability
     animationFrameRef.current = requestAnimationFrame(animate);
   }, [points]);
 

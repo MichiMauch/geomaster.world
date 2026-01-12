@@ -54,7 +54,6 @@ export default function StarfieldBackground() {
             animationDelay: `${star.delay}ms`,
             // @ts-expect-error CSS custom property
             "--star-opacity": star.opacity,
-            // @ts-expect-error CSS custom property
             "--drift": `${star.drift}px`,
           }}
         />
