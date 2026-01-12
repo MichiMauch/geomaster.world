@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { UserSidebar } from "@/components/guesser/UserSidebar";
+import MissionControlBackground from "@/components/MissionControlBackground";
 // Game category configuration
 const GAME_CATEGORIES = [
   {
@@ -101,6 +102,7 @@ export default function GuesserCategoriesPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/30" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent" />
+        <MissionControlBackground />
       </div>
 
       <div className="container max-w-6xl mx-auto px-4 py-6">

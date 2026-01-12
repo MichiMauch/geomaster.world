@@ -14,6 +14,7 @@ import {
   type DatabaseCountry,
 } from "@/lib/utils/country-converter";
 import type { GameTypeConfig } from "@/lib/game-types";
+import MissionControlBackground from "@/components/MissionControlBackground";
 
 // Country images mapping (country ID -> image path)
 const COUNTRY_IMAGES: Record<string, string> = {
@@ -154,6 +155,7 @@ export default function CountriesPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/30" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent" />
+        <MissionControlBackground />
       </div>
 
       <div className="container max-w-6xl mx-auto px-4 py-6">
