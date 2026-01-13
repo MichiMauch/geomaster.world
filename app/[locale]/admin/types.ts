@@ -58,6 +58,10 @@ export interface Country {
   isActive: boolean;
   createdAt: Date;
   locationCount: number;
+  landmarkImage: string | null;
+  backgroundImage: string | null;
+  cardImage: string | null;
+  flagImage: string | null;
 }
 
 export interface WorldQuizType {

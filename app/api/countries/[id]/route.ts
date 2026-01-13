@@ -60,6 +60,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       timeoutPenalty,
       scoreScaleFactor,
       isActive,
+      landmarkImage,
+      backgroundImage,
+      cardImage,
+      flagImage,
     } = body;
 
     await db
@@ -81,6 +85,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         ...(timeoutPenalty !== undefined && { timeoutPenalty }),
         ...(scoreScaleFactor !== undefined && { scoreScaleFactor }),
         ...(isActive !== undefined && { isActive }),
+        ...(landmarkImage !== undefined && { landmarkImage }),
+        ...(backgroundImage !== undefined && { backgroundImage }),
+        ...(cardImage !== undefined && { cardImage }),
+        ...(flagImage !== undefined && { flagImage }),
       })
       .where(eq(countries.id, id));
 

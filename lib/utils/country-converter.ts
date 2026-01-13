@@ -11,6 +11,8 @@ export interface DatabaseCountry {
   icon: string;
   landmarkImage: string | null;
   backgroundImage: string | null;
+  cardImage: string | null;
+  flagImage: string | null;
   centerLat: number;
   centerLng: number;
   defaultZoom: number;

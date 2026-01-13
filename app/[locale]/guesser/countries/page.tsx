@@ -16,22 +16,6 @@ import {
 import type { GameTypeConfig } from "@/lib/game-types";
 import MissionControlBackground from "@/components/MissionControlBackground";
 
-// Country images mapping (country ID -> image path)
-const COUNTRY_IMAGES: Record<string, string> = {
-  switzerland: "/images/country-ch.webp",
-  deutschland: "/images/country-de.webp",
-  austria: "/images/country-at.webp",
-  slovenia: "/images/country-sl.webp",
-};
-
-// Animated flag GIFs mapping (country ID -> flag GIF path)
-const COUNTRY_FLAGS: Record<string, string> = {
-  switzerland: "/images/flag-ch.gif",
-  deutschland: "/images/flag-de.gif",
-  austria: "/images/flag-at.gif",
-  slovenia: "/images/flag-sl.gif",
-};
-
 interface TopPlayersMap {
   [gameType: string]: TopPlayer[];
 }
@@ -131,12 +115,13 @@ export default function CountriesPage() {
     }
   };
 
-  // Helper to get image/flag for a country config
+  // Helper to get image/flag for a country config from DB data
   const getCountryAssets = (configId: string) => {
     const countryId = configId.replace("country:", "");
+    const country = dbCountries.find((c) => c.id === countryId);
     return {
-      backgroundImage: COUNTRY_IMAGES[countryId],
-      flagImage: COUNTRY_FLAGS[countryId],
+      backgroundImage: country?.cardImage || undefined,
+      flagImage: country?.flagImage || undefined,
     };
   };
 

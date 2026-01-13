@@ -264,6 +264,8 @@ export const countries = sqliteTable("countries", {
   // Bilder für die Spieleseite
   landmarkImage: text("landmark_image"), // z.B. "/images/stephansdom.webp"
   backgroundImage: text("background_image"), // z.B. "/images/austria.webp"
+  cardImage: text("card_image"), // z.B. "/images/countries/switzerland-card.webp"
+  flagImage: text("flag_image"), // z.B. "/images/countries/switzerland-flag.gif"
   // Karteneinstellungen
   centerLat: real("center_lat").notNull(),
   centerLng: real("center_lng").notNull(),

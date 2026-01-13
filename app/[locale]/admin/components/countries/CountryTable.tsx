@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
+import { GeoJSONPreview } from "./GeoJSONPreview";
 import type { Country } from "../../types";
 
 interface CountryRowProps {
@@ -23,11 +24,16 @@ const CountryRow = memo(function CountryRow({
   return (
     <tr className="hover:bg-surface-2/50 transition-colors">
       <td className="px-6 py-4">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{country.icon}</span>
-          <div>
-            <p className="font-medium text-text-primary">{country.name}</p>
-            <p className="text-caption text-text-muted">{country.id}</p>
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-14 flex-shrink-0">
+            <GeoJSONPreview countryId={country.id} height="56px" />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{country.icon}</span>
+            <div>
+              <p className="font-medium text-text-primary">{country.name}</p>
+              <p className="text-caption text-text-muted">{country.id}</p>
+            </div>
           </div>
         </div>
       </td>

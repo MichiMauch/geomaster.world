@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
         icon: countries.icon,
         landmarkImage: countries.landmarkImage,
         backgroundImage: countries.backgroundImage,
+        cardImage: countries.cardImage,
+        flagImage: countries.flagImage,
         centerLat: countries.centerLat,
         centerLng: countries.centerLng,
         defaultZoom: countries.defaultZoom,

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { EmojiPicker } from "@/components/ui/EmojiPicker";
 import { FLAG_OPTIONS, parseGeoJson, type ParsedGeoJson } from "./constants";
+import { GeoJSONPreview } from "./GeoJSONPreview";
 import type { Country } from "../../types";
 
 interface CountryFormProps {
@@ -25,6 +26,7 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
     geoJsonData: "",
     parsedData: null as ParsedGeoJson | null,
     fileName: "",
+    isoCode: "",
   });
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +65,8 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
     const { parsedData } = formData;
     const displayName = formData.name || parsedData.name;
 
-    const success = await onAdd({
+    // First create the country
+    const countryData = {
       id: parsedData.id,
       name: displayName,
       nameEn: displayName,
@@ -81,7 +84,40 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
       scoreScaleFactor: parseInt(formData.scoreScaleFactor),
       isActive: true,
       geoJsonData: formData.geoJsonData,
-    });
+      landmarkImage: null,
+      backgroundImage: null,
+      cardImage: null,
+      flagImage: null,
+    };
+
+    const success = await onAdd(countryData);
+
+    // If country was created and ISO code provided, fetch the flag
+    if (success && formData.isoCode && formData.isoCode.length === 2) {
+      try {
+        const flagResponse = await fetch("/api/countries/fetch-flag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            countryId: parsedData.id,
+            isoCode: formData.isoCode,
+          }),
+        });
+
+        if (flagResponse.ok) {
+          const flagResult = await flagResponse.json();
+          // Update the country with the flag path
+          await fetch(`/api/countries/${parsedData.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ flagImage: flagResult.path }),
+          });
+        }
+      } catch {
+        // Flag fetch failed, but country was created - that's OK
+        console.warn("Flag fetch failed, but country was created successfully");
+      }
+    }
 
     setSaving(false);
 
@@ -123,10 +159,20 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
               </p>
             </div>
           )}
+
+          {/* GeoJSON Preview */}
+          {formData.geoJsonData && (
+            <div className="mt-4">
+              <label className="block text-body-small font-medium text-text-primary mb-2">
+                Kartenvorschau
+              </label>
+              <GeoJSONPreview geoJsonData={formData.geoJsonData} height="280px" />
+            </div>
+          )}
         </div>
 
         {/* Name and Icon */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <Input
             label="Name (Deutsch)"
             type="text"
@@ -135,10 +181,18 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
             placeholder={formData.parsedData?.name || "z.B. Deutschland"}
           />
           <EmojiPicker
-            label="Flagge"
+            label="Flagge (Emoji)"
             value={formData.icon}
             onChange={(emoji) => setFormData((prev) => ({ ...prev, icon: emoji }))}
             options={FLAG_OPTIONS}
+          />
+          <Input
+            label="ISO-Code (für animierte Flagge)"
+            type="text"
+            value={formData.isoCode}
+            onChange={(e) => setFormData((prev) => ({ ...prev, isoCode: e.target.value.toLowerCase() }))}
+            placeholder="z.B. de, ch, at"
+            maxLength={2}
           />
         </div>
 
