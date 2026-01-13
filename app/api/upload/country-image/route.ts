@@ -92,8 +92,8 @@ export async function POST(request: NextRequest) {
     // Write file
     await writeFile(filepath, processedImage);
 
-    // Return the public path
-    const publicPath = `/images/countries/${filename}`;
+    // Return the API path (dynamic serving for post-build uploads)
+    const publicPath = `/api/images/countries/${filename}`;
 
     return NextResponse.json({
       success: true,
