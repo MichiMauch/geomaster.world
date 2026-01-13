@@ -7,6 +7,9 @@ import path from "path";
 const UPLOAD_DIR = path.join(process.cwd(), "public", "images", "countries");
 
 // Flag sources for animated GIFs
+// NOTE: For high-quality animated waving flags, manually download from:
+// https://www.3dflagsplus.com/ (e.g. /2015/11/france-animated-flags-pictures.html)
+// The automatic sources below provide lower quality or static alternatives.
 const FLAG_SOURCES = [
   // Flagpedia - high quality animated flags
   (iso: string) => `https://flagpedia.net/data/flags/w580/${iso.toLowerCase()}.gif`,
