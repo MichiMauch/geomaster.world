@@ -15,6 +15,8 @@ export interface GameTypeConfig {
   // Game page images (for leaderboard/detail page)
   landmarkImage?: string | null; // 3D landmark image (e.g., "/images/stephansdom.webp")
   backgroundImage?: string | null; // Full-screen background image (e.g., "/images/austria.webp")
+  // Location count (number of locations in this game type)
+  locationCount?: number;
   // Image-specific fields
   imageUrl?: string; // URL to the image file
   silhouetteUrl?: string; // URL to silhouette version (shown during gameplay)

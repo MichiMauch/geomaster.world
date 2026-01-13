@@ -24,6 +24,7 @@ export interface DatabaseCountry {
   timeoutPenalty: number;
   scoreScaleFactor: number;
   isActive: boolean;
+  locationCount?: number;
 }
 
 /**
@@ -73,6 +74,7 @@ export function countryToGameTypeConfig(country: DatabaseCountry): GameTypeConfi
       lat: country.centerLat,
       lng: country.centerLng,
     },
+    locationCount: country.locationCount,
   };
 }
 
@@ -108,6 +110,7 @@ export interface DatabaseWorldQuizType {
   timeoutPenalty: number;
   scoreScaleFactor: number;
   isActive: boolean;
+  locationCount?: number;
 }
 
 /**
@@ -136,6 +139,7 @@ export function worldQuizToGameTypeConfig(worldQuiz: DatabaseWorldQuizType): Gam
       lat: worldQuiz.centerLat,
       lng: worldQuiz.centerLng,
     },
+    locationCount: worldQuiz.locationCount,
   };
 }
 
@@ -158,6 +162,7 @@ export interface DatabasePanoramaType {
   scoreScaleFactor: number;
   defaultTimeLimitSeconds: number;
   isActive: boolean;
+  locationCount?: number;
 }
 
 /**
@@ -187,5 +192,6 @@ export function panoramaToGameTypeConfig(panorama: DatabasePanoramaType): GameTy
       lng: panorama.centerLng,
     },
     defaultTimeLimitSeconds: panorama.defaultTimeLimitSeconds,
+    locationCount: panorama.locationCount,
   };
 }

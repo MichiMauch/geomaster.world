@@ -51,6 +51,7 @@ export function GameTypeCard({
   const startGameTitle = locale === "de" ? "Spiel starten" : locale === "en" ? "Start game" : "Zacni igro";
   const leaderboardTitle = locale === "de" ? "Rangliste" : locale === "en" ? "Leaderboard" : "Lestvica";
   const noPlayersText = locale === "de" ? "Noch keine Spieler" : locale === "en" ? "No players yet" : "Se brez igralcev";
+  const locationsText = locale === "de" ? "Orte" : locale === "en" ? "locations" : "lokacij";
 
   if (variant === "overlay") {
     return (
@@ -71,13 +72,18 @@ export function GameTypeCard({
           {/* Header: Icon/Flag + Name + Action Buttons */}
           <div className="flex items-center gap-3 mb-3">
             {flagImage ? (
-              <Image src={flagImage} alt={name} width={40} height={30} className="w-10 h-auto" />
+              <Image src={flagImage} alt={name} width={40} height={30} className="w-10 h-auto" unoptimized />
             ) : (
               <span className="text-3xl">{config.icon}</span>
             )}
-            <span className="text-lg font-bold flex-1 text-white">
-              {name}
-            </span>
+            <div className="flex-1">
+              <span className="text-lg font-bold text-white">{name}</span>
+              {config.locationCount !== undefined && config.locationCount > 0 && (
+                <span className="text-xs text-white/60 ml-2">
+                  ({config.locationCount} {locationsText})
+                </span>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex items-center gap-1">
@@ -149,9 +155,14 @@ export function GameTypeCard({
       {/* Header: Icon + Name + Action Buttons */}
       <div className="flex items-center gap-3 mb-3">
         <span className="text-3xl">{config.icon}</span>
-        <span className="text-base font-semibold flex-1 text-foreground">
-          {name}
-        </span>
+        <div className="flex-1">
+          <span className="text-base font-semibold text-foreground">{name}</span>
+          {config.locationCount !== undefined && config.locationCount > 0 && (
+            <span className="text-xs text-muted-foreground ml-2">
+              ({config.locationCount} {locationsText})
+            </span>
+          )}
+        </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-1">
