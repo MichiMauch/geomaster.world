@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { EmojiPicker } from "@/components/ui/EmojiPicker";
-import { FLAG_OPTIONS, parseGeoJson } from "./constants";
+import { FLAG_OPTIONS, parseGeoJson, calculateSuggestedScoringParams } from "./constants";
 import { GeoJSONPreview } from "./GeoJSONPreview";
 import type { Country } from "../../types";
 
@@ -62,11 +62,17 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
 
     try {
       const text = await file.text();
-      JSON.parse(text); // Validate JSON
+      const geoJson = JSON.parse(text);
+      const parsed = parseGeoJson(geoJson, file.name);
+      const suggestedParams = calculateSuggestedScoringParams(parsed.bounds);
+
       setFormData((prev) => ({
         ...prev,
-        geoJsonData: text,
+        // Use converted GeoJSON if TopoJSON was uploaded, otherwise original
+        geoJsonData: parsed.geoJsonData || text,
         fileName: file.name,
+        timeoutPenalty: suggestedParams.timeoutPenalty.toString(),
+        scoreScaleFactor: suggestedParams.scoreScaleFactor.toString(),
       }));
       setError("");
     } catch (err) {

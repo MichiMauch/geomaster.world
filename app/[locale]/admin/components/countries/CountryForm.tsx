@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { EmojiPicker } from "@/components/ui/EmojiPicker";
-import { FLAG_OPTIONS, parseGeoJson, type ParsedGeoJson } from "./constants";
+import { FLAG_OPTIONS, parseGeoJson, calculateSuggestedScoringParams, type ParsedGeoJson } from "./constants";
 import { GeoJSONPreview } from "./GeoJSONPreview";
 import type { Country } from "../../types";
 
@@ -37,13 +37,17 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
       const text = await file.text();
       const geoJson = JSON.parse(text);
       const parsed = parseGeoJson(geoJson, file.name);
+      const suggestedParams = calculateSuggestedScoringParams(parsed.bounds);
 
       setFormData((prev) => ({
         ...prev,
         name: prev.name || parsed.name,
-        geoJsonData: text,
+        // Use converted GeoJSON if TopoJSON was uploaded, otherwise original
+        geoJsonData: parsed.geoJsonData || text,
         parsedData: parsed,
         fileName: file.name,
+        timeoutPenalty: suggestedParams.timeoutPenalty.toString(),
+        scoreScaleFactor: suggestedParams.scoreScaleFactor.toString(),
       }));
       setError("");
     } catch (err) {
