@@ -92,6 +92,7 @@ const COUNTRY_MAPPING: Record<string, { iso3: string; iso2: string; nameDe: stri
   "israel": { iso3: "ISR", iso2: "il", nameDe: "Israel", nameEn: "Israel", flag: "\u{1F1EE}\u{1F1F1}" },
   "united-arab-emirates": { iso3: "ARE", iso2: "ae", nameDe: "Vereinigte Arabische Emirate", nameEn: "United Arab Emirates", flag: "\u{1F1E6}\u{1F1EA}" },
   "saudi-arabia": { iso3: "SAU", iso2: "sa", nameDe: "Saudi-Arabien", nameEn: "Saudi Arabia", flag: "\u{1F1F8}\u{1F1E6}" },
+  "costa-rica": { iso3: "CRI", iso2: "cr", nameDe: "Costa Rica", nameEn: "Costa Rica", flag: "\u{1F1E8}\u{1F1F7}" },
 };
 
 interface LocationData {
