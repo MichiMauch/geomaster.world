@@ -78,7 +78,15 @@
       "Bash(done)",
       "Bash(for file in airportbg unescobg capitalsbg mountainsbg formulabg famousbg)",
       "Bash(for file in flags middle names)",
-      "Bash(for file in flagsbg middlebg namesbg)"
+      "Bash(for file in flagsbg middlebg namesbg)",
+      "Bash(unar:*)",
+      "Bash(sed:*)",
+      "Bash(base64:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(sleep:*)",
+      "Bash(cd:*)",
+      "Bash(pwd:*)"
     ],
     "deny": [],
     "ask": []
