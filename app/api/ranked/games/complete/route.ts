@@ -132,7 +132,16 @@ export async function POST(request: Request) {
 
     // Verify ownership (user must own the game or provide matching guestId)
     const userId = session?.user?.id;
-    if (userId && game.userId !== userId) {
+
+    // Explicit auth check - ranked games require authentication
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required. Please log in again." },
+        { status: 401 }
+      );
+    }
+
+    if (game.userId !== userId) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
 
@@ -158,7 +167,7 @@ export async function POST(request: Request) {
         timeSeconds: guesses.timeSeconds,
       })
       .from(guesses)
-      .where(eq(guesses.userId, userId || ""));
+      .where(eq(guesses.userId, userId));
 
     // Filter guesses for this game's rounds
     const roundIds = rounds.map((r) => r.id);
