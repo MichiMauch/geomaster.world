@@ -48,7 +48,7 @@ export function useGameTimer({
   const currentRoundGuessed = useMemo(() => {
     if (!currentRound) return false;
     return userGuesses.some(g => g.gameRoundId === currentRound.id);
-  }, [currentRound?.id, userGuesses.length]);
+  }, [currentRound, userGuesses]);
 
   // Timer activation logic - now syncs with server time for logged-in users
   useEffect(() => {
