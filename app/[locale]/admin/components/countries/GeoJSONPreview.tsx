@@ -171,7 +171,11 @@ export function GeoJSONPreview({
         touchZoom={false}
         attributionControl={false}
       >
-        <GeoJSON data={parsedGeoJson} style={geoStyle} />
+        <GeoJSON
+          key={JSON.stringify(parsedGeoJson).slice(0, 100)}
+          data={parsedGeoJson}
+          style={geoStyle}
+        />
       </MapContainer>
     </div>
   );
