@@ -18,8 +18,7 @@ interface CountryEditModalProps {
 
 export function CountryEditModal({ country, onSave, onClose }: CountryEditModalProps) {
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState<"landmark" | "background" | "card" | null>(null);
-  const [fetchingFlag, setFetchingFlag] = useState(false);
+  const [uploading, setUploading] = useState<"landmark" | "background" | "card" | "flag" | null>(null);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: country.name,
@@ -33,7 +32,6 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
     backgroundImage: country.backgroundImage || "",
     cardImage: country.cardImage || "",
     flagImage: country.flagImage || "",
-    isoCode: "",
   });
 
   // Reset form when country changes
@@ -51,7 +49,6 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
       backgroundImage: country.backgroundImage || "",
       cardImage: country.cardImage || "",
       flagImage: country.flagImage || "",
-      isoCode: "",
     });
     setError("");
   }, [country]);
@@ -82,7 +79,7 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
 
   const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    imageType: "landmark" | "background" | "card"
+    imageType: "landmark" | "background" | "card" | "flag"
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -112,6 +109,7 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
         landmark: "landmarkImage",
         background: "backgroundImage",
         card: "cardImage",
+        flag: "flagImage",
       } as const;
       setFormData((prev) => ({
         ...prev,
@@ -121,42 +119,6 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
       setError(err instanceof Error ? err.message : "Bild-Upload fehlgeschlagen");
     } finally {
       setUploading(null);
-    }
-  };
-
-  const handleFetchFlag = async () => {
-    if (!formData.isoCode || formData.isoCode.length !== 2) {
-      setError("Bitte einen gültigen 2-stelligen ISO-Code eingeben (z.B. 'ch', 'de')");
-      return;
-    }
-
-    setFetchingFlag(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/countries/fetch-flag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          countryId: country.id,
-          isoCode: formData.isoCode,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Flagge konnte nicht geladen werden");
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        flagImage: result.path,
-      }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Flagge konnte nicht geladen werden");
-    } finally {
-      setFetchingFlag(false);
     }
   };
 
@@ -369,26 +331,33 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
                   />
                 </div>
               )}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="ISO (z.B. ch)"
-                  value={formData.isoCode}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, isoCode: e.target.value.toLowerCase() }))}
-                  maxLength={2}
-                  className="flex-1 px-3 py-2 text-sm bg-surface-2 border border-border rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleFetchFlag}
-                  disabled={fetchingFlag || !formData.isoCode}
-                  isLoading={fetchingFlag}
+              <input
+                type="file"
+                accept="image/gif,image/png,image/webp"
+                onChange={(e) => handleImageUpload(e, "flag")}
+                disabled={uploading !== null}
+                className="block w-full text-sm text-text-secondary
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-lg file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-surface-3 file:text-text-primary
+                  hover:file:bg-surface-2
+                  cursor-pointer disabled:opacity-50"
+              />
+              {uploading === "flag" && (
+                <p className="text-caption text-primary mt-1">Wird hochgeladen...</p>
+              )}
+              <p className="text-caption text-text-tertiary mt-2">
+                Animierte Flaggen:{" "}
+                <a
+                  href="https://www.3dflagsplus.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
                 >
-                  Laden
-                </Button>
-              </div>
+                  3dflagsplus.com
+                </a>
+              </p>
             </div>
           </div>
 
@@ -436,7 +405,7 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
             variant="ghost"
             size="md"
             onClick={onClose}
-            disabled={saving || uploading !== null || fetchingFlag}
+            disabled={saving || uploading !== null}
             className="flex-1"
           >
             Abbrechen
@@ -446,7 +415,7 @@ export function CountryEditModal({ country, onSave, onClose }: CountryEditModalP
             size="md"
             onClick={handleSubmit}
             isLoading={saving}
-            disabled={uploading !== null || fetchingFlag}
+            disabled={uploading !== null}
             className="flex-1"
           >
             Speichern

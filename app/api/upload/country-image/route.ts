@@ -9,6 +9,9 @@ const MAX_WIDTH = 1000;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const UPLOAD_DIR = path.join(process.cwd(), "public", "images", "countries");
 
+// Flag type - keep as GIF without processing
+const FLAG_ALLOWED_TYPES = ["image/gif", "image/png", "image/webp"];
+
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
@@ -21,7 +24,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const countryId = formData.get("countryId") as string | null;
-    const imageType = formData.get("type") as "landmark" | "background" | "card" | null;
+    const imageType = formData.get("type") as "landmark" | "background" | "card" | "flag" | null;
 
     // Validate inputs
     if (!file) {
@@ -30,12 +33,17 @@ export async function POST(request: NextRequest) {
     if (!countryId) {
       return NextResponse.json({ error: "No countryId provided" }, { status: 400 });
     }
-    if (!imageType || !["landmark", "background", "card"].includes(imageType)) {
+    if (!imageType || !["landmark", "background", "card", "flag"].includes(imageType)) {
       return NextResponse.json({ error: "Invalid image type" }, { status: 400 });
     }
-    if (!ALLOWED_TYPES.includes(file.type)) {
+
+    // Flag type has different allowed types
+    const allowedTypes = imageType === "flag" ? FLAG_ALLOWED_TYPES : ALLOWED_TYPES;
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: "Invalid file type. Allowed: JPG, PNG, WebP, GIF" },
+        { error: imageType === "flag"
+          ? "Invalid file type for flag. Allowed: GIF, PNG, WebP"
+          : "Invalid file type. Allowed: JPG, PNG, WebP, GIF" },
         { status: 400 }
       );
     }
@@ -67,30 +75,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Process image with Sharp
-    // For landmark images, preserve transparency with high alpha quality
-    const webpOptions = imageType === "landmark"
-      ? { quality: 90, alphaQuality: 100 }  // Preserve transparency for landmarks
-      : { quality: 85 };
-
-    const processedImage = await sharp(buffer)
-      .resize(MAX_WIDTH, null, {
-        withoutEnlargement: true, // Don't upscale smaller images
-        fit: "inside",
-      })
-      .webp(webpOptions)
-      .toBuffer();
-
     // Ensure upload directory exists
     await mkdir(UPLOAD_DIR, { recursive: true });
 
     // Generate filename with timestamp for cache-busting
     const timestamp = Date.now();
-    const filename = `${countryId}-${imageType}-${timestamp}.webp`;
+    let filename: string;
+    let finalBuffer: Buffer;
+
+    if (imageType === "flag") {
+      // Flags: Keep original format (GIF for animations)
+      const ext = file.type === "image/gif" ? "gif" : file.type === "image/png" ? "png" : "webp";
+      filename = `${countryId}-${imageType}-${timestamp}.${ext}`;
+      finalBuffer = buffer;
+    } else {
+      // Other images: Process with Sharp, convert to WebP
+      // For landmark images, preserve transparency with high alpha quality
+      const webpOptions = imageType === "landmark"
+        ? { quality: 90, alphaQuality: 100 }  // Preserve transparency for landmarks
+        : { quality: 85 };
+
+      finalBuffer = await sharp(buffer)
+        .resize(MAX_WIDTH, null, {
+          withoutEnlargement: true, // Don't upscale smaller images
+          fit: "inside",
+        })
+        .webp(webpOptions)
+        .toBuffer();
+
+      filename = `${countryId}-${imageType}-${timestamp}.webp`;
+    }
+
     const filepath = path.join(UPLOAD_DIR, filename);
 
     // Write file
-    await writeFile(filepath, processedImage);
+    await writeFile(filepath, finalBuffer);
 
     // Return the API path (dynamic serving for post-build uploads)
     const publicPath = `/api/images/countries/${filename}`;
@@ -98,7 +117,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       path: publicPath,
-      size: processedImage.length,
+      size: finalBuffer.length,
     });
   } catch (error) {
     console.error("Error uploading image:", error);

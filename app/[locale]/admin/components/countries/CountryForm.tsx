@@ -16,6 +16,7 @@ interface CountryFormProps {
 
 export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
   const [saving, setSaving] = useState(false);
+  const [uploadingFlag, setUploadingFlag] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
@@ -26,8 +27,40 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
     geoJsonData: "",
     parsedData: null as ParsedGeoJson | null,
     fileName: "",
-    isoCode: "",
+    flagImage: "",
   });
+
+  const handleFlagUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !formData.parsedData) return;
+
+    setUploadingFlag(true);
+    setError("");
+
+    try {
+      const uploadForm = new FormData();
+      uploadForm.append("file", file);
+      uploadForm.append("countryId", formData.parsedData.id);
+      uploadForm.append("type", "flag");
+
+      const response = await fetch("/api/upload/country-image", {
+        method: "POST",
+        body: uploadForm,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Upload fehlgeschlagen");
+      }
+
+      setFormData((prev) => ({ ...prev, flagImage: result.path }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Flaggen-Upload fehlgeschlagen");
+    } finally {
+      setUploadingFlag(false);
+    }
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,38 +124,10 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
       landmarkImage: null,
       backgroundImage: null,
       cardImage: null,
-      flagImage: null,
+      flagImage: formData.flagImage || null,
     };
 
     const success = await onAdd(countryData);
-
-    // If country was created and ISO code provided, fetch the flag
-    if (success && formData.isoCode && formData.isoCode.length === 2) {
-      try {
-        const flagResponse = await fetch("/api/countries/fetch-flag", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            countryId: parsedData.id,
-            isoCode: formData.isoCode,
-          }),
-        });
-
-        if (flagResponse.ok) {
-          const flagResult = await flagResponse.json();
-          // Update the country with the flag path
-          await fetch(`/api/countries/${parsedData.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ flagImage: flagResult.path }),
-          });
-        }
-      } catch {
-        // Flag fetch failed, but country was created - that's OK
-        console.warn("Flag fetch failed, but country was created successfully");
-      }
-    }
-
     setSaving(false);
 
     if (success) {
@@ -176,7 +181,7 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
         </div>
 
         {/* Name and Icon */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <Input
             label="Name (Deutsch)"
             type="text"
@@ -190,14 +195,50 @@ export function CountryForm({ onAdd, onCancel }: CountryFormProps) {
             onChange={(emoji) => setFormData((prev) => ({ ...prev, icon: emoji }))}
             options={FLAG_OPTIONS}
           />
-          <Input
-            label="ISO-Code (für animierte Flagge)"
-            type="text"
-            value={formData.isoCode}
-            onChange={(e) => setFormData((prev) => ({ ...prev, isoCode: e.target.value.toLowerCase() }))}
-            placeholder="z.B. de, ch, at"
-            maxLength={2}
+        </div>
+
+        {/* Animated Flag Upload */}
+        <div>
+          <label className="block text-body-small font-medium text-text-primary mb-2">
+            Animierte Flagge (GIF)
+          </label>
+          {formData.flagImage && (
+            <div className="relative w-20 h-14 mb-2 rounded overflow-hidden bg-surface-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={formData.flagImage}
+                alt="Flag"
+                className="w-full h-full object-contain"
+              />
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/gif,image/png,image/webp"
+            onChange={handleFlagUpload}
+            disabled={!formData.parsedData || uploadingFlag}
+            className="block w-full text-sm text-text-secondary
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-lg file:border-0
+              file:text-sm file:font-semibold
+              file:bg-surface-3 file:text-text-primary
+              hover:file:bg-surface-2
+              cursor-pointer disabled:opacity-50"
           />
+          {uploadingFlag && (
+            <p className="text-caption text-primary mt-1">Wird hochgeladen...</p>
+          )}
+          <p className="text-caption text-text-tertiary mt-2">
+            Animierte Wellen-Flaggen findest du auf{" "}
+            <a
+              href="https://www.3dflagsplus.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              3dflagsplus.com
+            </a>
+          </p>
         </div>
 
         {/* Settings */}
