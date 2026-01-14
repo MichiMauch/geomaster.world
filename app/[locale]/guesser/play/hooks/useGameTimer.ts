@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { isPanoramaGameType } from "@/lib/game-types";
 import { DEFAULT_TIME_LIMIT, PANORAMA_TIME_LIMIT } from "../constants";
 import type { GameRound, Game, Guess } from "../types";
@@ -30,6 +30,7 @@ export function useGameTimer({
   const [timeRemaining, setTimeRemaining] = useState(DEFAULT_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
   const lastServerSyncRef = useRef<number | null>(null);
+  const initializedRoundRef = useRef<string | null>(null);
 
   // Helper to get time limit for current round
   const getCurrentTimeLimit = useCallback(() => {
@@ -43,29 +44,48 @@ export function useGameTimer({
     return DEFAULT_TIME_LIMIT;
   }, [currentRound, game]);
 
+  // Check if current round has been guessed (memoized to prevent re-renders)
+  const currentRoundGuessed = useMemo(() => {
+    if (!currentRound) return false;
+    return userGuesses.some(g => g.gameRoundId === currentRound.id);
+  }, [currentRound?.id, userGuesses.length]);
+
   // Timer activation logic - now syncs with server time for logged-in users
   useEffect(() => {
-    if (!showResult && !loading && currentRound && !userGuesses.some(g => g.gameRoundId === currentRound.id)) {
-      setTimerActive(true);
+    const roundId = currentRound?.id;
 
-      // For logged-in users: use server time if available
-      if (!isGuest && serverTimeRemaining !== null && serverTimeRemaining !== undefined && locationStartedAt) {
-        // Calculate actual remaining time based on when location started
-        const elapsedMs = Date.now() - locationStartedAt;
-        const elapsedSeconds = elapsedMs / 1000;
-        const timeLimit = getCurrentTimeLimit();
-        const actualRemaining = Math.max(0, timeLimit - elapsedSeconds);
-
-        setTimeRemaining(actualRemaining);
-        lastServerSyncRef.current = Date.now();
-      } else {
-        // Guest mode or no server data: use client-side timer
-        setTimeRemaining(getCurrentTimeLimit());
-      }
-    } else {
+    // Deactivate timer conditions
+    if (showResult || loading || !currentRound || currentRoundGuessed) {
       setTimerActive(false);
+      return;
     }
-  }, [currentRound?.id, showResult, loading, currentRound, userGuesses, getCurrentTimeLimit, serverTimeRemaining, locationStartedAt, isGuest]);
+
+    // Always activate timer when conditions are met
+    setTimerActive(true);
+
+    // Prevent re-initialization of time for the same round (but timer is already active above)
+    if (initializedRoundRef.current === roundId) {
+      return;
+    }
+
+    // Mark this round as initialized
+    initializedRoundRef.current = roundId ?? null;
+
+    // For logged-in users: use server time if available
+    if (!isGuest && serverTimeRemaining !== null && serverTimeRemaining !== undefined && locationStartedAt) {
+      // Calculate actual remaining time based on when location started
+      const elapsedMs = Date.now() - locationStartedAt;
+      const elapsedSeconds = elapsedMs / 1000;
+      const timeLimit = getCurrentTimeLimit();
+      const actualRemaining = Math.max(0, timeLimit - elapsedSeconds);
+
+      setTimeRemaining(actualRemaining);
+      lastServerSyncRef.current = Date.now();
+    } else {
+      // Guest mode or no server data: use client-side timer
+      setTimeRemaining(getCurrentTimeLimit());
+    }
+  }, [currentRound?.id, showResult, loading, currentRoundGuessed, getCurrentTimeLimit, serverTimeRemaining, locationStartedAt, isGuest]);
 
   // Countdown timer with centiseconds
   useEffect(() => {
@@ -117,6 +137,8 @@ export function useGameTimer({
     const nextTimeLimit = nextRound?.timeLimitSeconds ??
       (isPanoramaGameType(nextRound?.gameType) ? PANORAMA_TIME_LIMIT : DEFAULT_TIME_LIMIT);
     setTimeRemaining(nextTimeLimit);
+    // Clear the initialized round ref to allow re-initialization
+    initializedRoundRef.current = null;
   }, []);
 
   // Initialize timer from server time (for recovery after refresh)

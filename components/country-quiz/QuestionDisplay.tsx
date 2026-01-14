@@ -3,10 +3,10 @@
 import { cn } from "@/lib/utils";
 
 interface QuestionDisplayProps {
-  /** The question content (flag emoji or place name) */
+  /** The question content (flag emoji, place name, or emoji combination) */
   question: string;
-  /** The quiz category: "country-flags" or "place-names" */
-  category: "country-flags" | "place-names";
+  /** The quiz category: "country-flags", "place-names", or "emoji-countries" */
+  category: "country-flags" | "place-names" | "emoji-countries";
   /** Current locale for translations */
   locale: string;
 }
@@ -19,6 +19,7 @@ interface QuestionDisplayProps {
 export function QuestionDisplay({ question, category, locale }: QuestionDisplayProps) {
   // Check if the question is a flag emoji (flags are usually 2+ characters with regional indicators)
   const isFlag = category === "country-flags";
+  const isEmoji = category === "emoji-countries";
 
   // Get localized prompt
   const getPrompt = () => {
@@ -30,6 +31,15 @@ export function QuestionDisplay({ question, category, locale }: QuestionDisplayP
           return "Kateri državi pripada ta zastava?";
         default:
           return "Which country does this flag belong to?";
+      }
+    } else if (isEmoji) {
+      switch (locale) {
+        case "de":
+          return "Welches Land wird dargestellt?";
+        case "sl":
+          return "Katera država je prikazana?";
+        default:
+          return "Which country is represented?";
       }
     } else {
       switch (locale) {
@@ -56,6 +66,19 @@ export function QuestionDisplay({ question, category, locale }: QuestionDisplayP
     );
   }
 
+  if (isEmoji) {
+    return (
+      <div className="flex flex-col items-center gap-1">
+        {/* Large emoji combination */}
+        <span className="text-3xl sm:text-4xl leading-none tracking-wider">{question}</span>
+        {/* Subtle prompt below */}
+        <span className="text-[10px] sm:text-xs text-text-secondary font-normal">
+          {getPrompt()}
+        </span>
+      </div>
+    );
+  }
+
   // Place names
   return (
     <div className="flex flex-col items-center gap-1">
@@ -72,12 +95,12 @@ export function QuestionDisplay({ question, category, locale }: QuestionDisplayP
 }
 
 /**
- * Check if a game type is a country quiz
+ * Check if a game type is a country quiz (polygon-based scoring)
  */
 export function isCountryQuizGameType(gameType: string | null | undefined): boolean {
   if (!gameType?.startsWith("world:")) return false;
   const category = gameType.split(":")[1];
-  return category === "country-flags" || category === "place-names";
+  return category === "country-flags" || category === "place-names" || category === "emoji-countries";
 }
 
 /**
@@ -85,10 +108,10 @@ export function isCountryQuizGameType(gameType: string | null | undefined): bool
  */
 export function getCountryQuizCategory(
   gameType: string | null | undefined
-): "country-flags" | "place-names" | null {
+): "country-flags" | "place-names" | "emoji-countries" | null {
   if (!gameType?.startsWith("world:")) return null;
   const category = gameType.split(":")[1];
-  if (category === "country-flags" || category === "place-names") {
+  if (category === "country-flags" || category === "place-names" || category === "emoji-countries") {
     return category;
   }
   return null;

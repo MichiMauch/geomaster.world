@@ -255,7 +255,7 @@ export async function POST(
     // For panorama games, don't show the location name (GeoGuessr experience)
     const isPanorama = isPanoramaGameType(targetRound.gameType);
     const isCountryQuiz = targetRound.gameType?.startsWith("world:") &&
-      ["country-flags", "place-names"].includes(targetRound.gameType.split(":")[1]);
+      ["country-flags", "place-names", "emoji-countries"].includes(targetRound.gameType.split(":")[1]);
 
     const locationName = isPanorama
       ? ""
@@ -505,7 +505,7 @@ export async function GET(
     // For panorama games, don't show the location name
     const isPanorama = isPanoramaGameType(activeRound.gameType);
     const isCountryQuiz = activeRound.gameType?.startsWith("world:") &&
-      ["country-flags", "place-names"].includes(activeRound.gameType.split(":")[1]);
+      ["country-flags", "place-names", "emoji-countries"].includes(activeRound.gameType.split(":")[1]);
 
     const locationName = isPanorama
       ? ""

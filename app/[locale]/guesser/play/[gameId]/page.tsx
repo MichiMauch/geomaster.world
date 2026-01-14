@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useGameData } from "../hooks/useGameData";
 import { useGameTimer } from "../hooks/useGameTimer";
 import { GameBadgeBar } from "../components/GameBadgeBar";
+import { EmojiQuestionOverlay } from "../components/EmojiQuestionOverlay";
 import { calculateClientScore } from "../utils/scoring";
 import type { GuessResult, LevelUpInfo, Guess } from "../types";
 
@@ -556,6 +557,15 @@ export default function GuesserPlayPage({
           getTimerColor={getTimerColor}
           buttonConfig={getButtonConfig()}
           submitting={submitting}
+        />
+      )}
+
+      {/* Emoji Question Overlay - only for emoji-countries quiz */}
+      {currentRound?.gameType === "world:emoji-countries" && !levelUpData && (
+        <EmojiQuestionOverlay
+          question={currentRound.locationName}
+          locale={locale}
+          hidden={showResult}
         />
       )}
 

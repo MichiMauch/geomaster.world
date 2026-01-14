@@ -16,13 +16,14 @@ import type { GameTypeConfig } from "@/lib/game-types";
 import MissionControlBackground from "@/components/MissionControlBackground";
 
 // Special quiz type IDs - these have unique gameplay mechanics
-const SPECIAL_QUIZ_IDS = ["country-flags", "visual-middle", "place-names"];
+const SPECIAL_QUIZ_IDS = ["country-flags", "visual-middle", "place-names", "emoji-countries"];
 
 // Special quiz images mapping (quiz ID -> image path)
 const SPECIAL_IMAGES: Record<string, string> = {
   "world:country-flags": "/images/flags.webp",
   "world:visual-middle": "/images/middle.webp",
   "world:place-names": "/images/specialnames.webp",
+  "world:emoji-countries": "/images/quizzes/emoji-countries-card.webp",
 };
 
 interface TopPlayersMap {

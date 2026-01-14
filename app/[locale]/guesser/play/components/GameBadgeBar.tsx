@@ -55,6 +55,7 @@ export const GameBadgeBar = memo(function GameBadgeBar({
 }: GameBadgeBarProps) {
   const countryQuizCategory = getCountryQuizCategory(currentRound.gameType);
   const isCountryQuiz = !!countryQuizCategory;
+  const isEmojiQuiz = countryQuizCategory === "emoji-countries";
 
   // For country quizzes, success is based on insideCountry, not distance
   const isSuccess = isCountryQuiz
@@ -71,10 +72,14 @@ export const GameBadgeBar = memo(function GameBadgeBar({
       !showResult && timeRemaining <= 10 && timeRemaining > 5 && "border-accent",
       !showResult && timeRemaining <= 5 && "border-error",
       showResult && isSuccess && "border-success",
-      showResult && !isSuccess && "border-surface-3"
+      showResult && !isSuccess && "border-surface-3",
+      // Match width with emoji overlay for emoji quiz
+      isEmojiQuiz && "min-w-[380px] justify-center"
     )}>
-      {/* Question/Location Display */}
-      {isPanorama ? (
+      {/* Question/Location Display - hidden for emoji quiz (shown in separate overlay) */}
+      {isEmojiQuiz ? (
+        <span className="text-xl">😀</span>
+      ) : isPanorama ? (
         <span className="text-sm sm:text-base font-bold text-text-primary flex items-center gap-2">
           <span>📷</span>
           <span>{locale === "de" ? "Wo ist das?" : locale === "sl" ? "Kje je to?" : "Where is this?"}</span>

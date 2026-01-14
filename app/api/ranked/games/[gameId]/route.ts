@@ -120,10 +120,10 @@ export async function GET(
           : countryLocationsMap;
       const locationInfo = locationMap.get(round.locationId);
 
-      // For Country-Quiz (flags or place names): use name directly (flag emoji or place name)
+      // For Country-Quiz (flags, place names, or emoji): use name directly (flag emoji, place name, or emoji combination)
       // For others: use localized name
       const isCountryQuiz = round.gameType?.startsWith("world:") &&
-        ["country-flags", "place-names"].includes(round.gameType.split(":")[1]);
+        ["country-flags", "place-names", "emoji-countries"].includes(round.gameType.split(":")[1]);
 
       // For panorama games, we don't show the location name during gameplay (GeoGuessr experience)
       const isPanorama = isPanoramaGameType(round.gameType);

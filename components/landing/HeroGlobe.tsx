@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 
-// Dynamically import Globe to avoid SSR issues (three.js doesn't work on server)
-const Globe = dynamic(() => import("react-globe.gl"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-    </div>
-  ),
-});
+// Check if WebGL is available (needed for Three.js/react-globe.gl)
+function isWebGLAvailable(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+    );
+  } catch {
+    return false;
+  }
+}
 
 // Connection routes between cities (with glow layer)
 const ARC_ROUTES = [
@@ -110,12 +112,29 @@ export default function HeroGlobe({ className }: HeroGlobeProps) {
   const cloudsGlobeRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isClient, setIsClient] = useState(false);
+  const [webglSupported, setWebglSupported] = useState(true);
   const [globeReady, setGlobeReady] = useState(false);
   const [cloudsReady, setCloudsReady] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [GlobeComponent, setGlobeComponent] = useState<ComponentType<any> | null>(null);
 
-  // Handle client-side mounting
+  // Handle client-side mounting, WebGL detection, and dynamic Globe import
   useEffect(() => {
     setIsClient(true);
+
+    if (isWebGLAvailable()) {
+      setWebglSupported(true);
+      // Only import Globe when WebGL is available (prevents Three.js crash)
+      import("react-globe.gl")
+        .then((mod) => {
+          setGlobeComponent(() => mod.default);
+        })
+        .catch(() => {
+          setWebglSupported(false);
+        });
+    } else {
+      setWebglSupported(false);
+    }
   }, []);
 
   // Handle responsive sizing
@@ -209,11 +228,37 @@ export default function HeroGlobe({ className }: HeroGlobeProps) {
     );
   }
 
+  // Fallback for devices without WebGL support (e.g. some mobile browsers)
+  if (!webglSupported) {
+    return (
+      <div ref={containerRef} className={className}>
+        <div className="w-full h-full flex items-center justify-center">
+          <img
+            src="/images/globe-fallback.webp"
+            alt="Globe"
+            className="w-full h-full object-contain opacity-80"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading spinner while Globe component is being loaded
+  if (!GlobeComponent) {
+    return (
+      <div ref={containerRef} className={className}>
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className={`${className} relative`}>
       {/* Main Earth Globe */}
       {dimensions.width > 0 && dimensions.height > 0 && (
-        <Globe
+        <GlobeComponent
           ref={globeRef}
           onGlobeReady={() => setGlobeReady(true)}
           // Globe appearance - custom night lights texture
@@ -274,7 +319,7 @@ export default function HeroGlobe({ className }: HeroGlobeProps) {
             mixBlendMode: "screen", // Makes black background transparent
           }}
         >
-          <Globe
+          <GlobeComponent
             ref={cloudsGlobeRef}
             onGlobeReady={() => setCloudsReady(true)}
             globeImageUrl="/images/earth-clouds.png"

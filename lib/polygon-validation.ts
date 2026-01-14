@@ -77,5 +77,5 @@ export function isCountryQuizGameType(gameType: string): boolean {
   if (!gameType.startsWith("world:")) return false;
 
   const quizType = gameType.split(":")[1];
-  return quizType === "country-flags" || quizType === "place-names";
+  return quizType === "country-flags" || quizType === "place-names" || quizType === "emoji-countries";
 }
