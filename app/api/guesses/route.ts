@@ -181,6 +181,7 @@ export async function GET(request: Request) {
         latitude: guesses.latitude,
         longitude: guesses.longitude,
         distanceKm: guesses.distanceKm,
+        timeSeconds: guesses.timeSeconds,
         roundNumber: gameRounds.roundNumber,
         locationIndex: gameRounds.locationIndex,
         gameType: gameRounds.gameType,
@@ -248,7 +249,7 @@ export async function GET(request: Request) {
           score = calculateScore(
             {
               distanceKm: guess.distanceKm,
-              timeSeconds: null, // Not available in historical data
+              timeSeconds: guess.timeSeconds,
               gameType: effectiveGameType,
               scoreScaleFactor: dbScoreScaleFactor,
               isCorrectCountry,
@@ -256,8 +257,16 @@ export async function GET(request: Request) {
             3 // V3 scoring for world quizzes
           );
         } else {
-          // Other game types: V1 distance-based scoring (for historical consistency)
-          score = calculateScoreV1(guess.distanceKm, effectiveGameType, dbScoreScaleFactor);
+          // Other game types: V2 time-based scoring
+          score = calculateScore(
+            {
+              distanceKm: guess.distanceKm,
+              timeSeconds: guess.timeSeconds,
+              gameType: effectiveGameType,
+              scoreScaleFactor: dbScoreScaleFactor,
+            },
+            2 // V2 time-based scoring
+          );
         }
 
         return {
