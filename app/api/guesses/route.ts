@@ -21,7 +21,7 @@ import { NextResponse } from "next/server";
 import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
 import { calculateScore as calculateScoreV1 } from "@/lib/score";
 import { calculateScore } from "@/lib/scoring";
-import { isImageGameType, GAME_TYPES, isWorldGameType } from "@/lib/game-types";
+import { isImageGameType, GAME_TYPES, isWorldGameType, isSpecialQuizGameType } from "@/lib/game-types";
 import { isPointInCountry as isPointInCountryPolygon } from "@/lib/utils/geo-check";
 import { isPointInCountry, isCountryQuizGameType } from "@/lib/polygon-validation";
 
@@ -239,12 +239,12 @@ export async function GET(request: Request) {
         // Get scoreScaleFactor from DB for dynamic game types
         const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);
 
-        // Calculate score - use V3 for world:* game types
+        // Calculate score - use V3 for special quizzes only (country hit detection)
         let score: number;
         let isCorrectCountry: boolean | undefined;
 
-        if (isWorldGameType(effectiveGameType) && guess.latitude !== null && guess.longitude !== null && locationData?.countryCode) {
-          // World quiz: V3 scoring with country hit bonus
+        if (isSpecialQuizGameType(effectiveGameType) && guess.latitude !== null && guess.longitude !== null && locationData?.countryCode) {
+          // Special quiz: V3 scoring with country hit bonus
           isCorrectCountry = await isPointInCountryPolygon(guess.latitude, guess.longitude, locationData.countryCode);
           score = calculateScore(
             {
@@ -254,10 +254,10 @@ export async function GET(request: Request) {
               scoreScaleFactor: dbScoreScaleFactor,
               isCorrectCountry,
             },
-            3 // V3 scoring for world quizzes
+            3 // V3 scoring for special quizzes
           );
         } else {
-          // Other game types: V2 time-based scoring
+          // Country and World quizzes: V2 time-based scoring
           score = calculateScore(
             {
               distanceKm: guess.distanceKm,
@@ -282,7 +282,7 @@ export async function GET(request: Request) {
           targetLongitude: locationData?.longitude || 0,
           locationName: locationData?.name || "Unknown",
           gameType: effectiveGameType,
-          ...(isWorldGameType(effectiveGameType) && { insideCountry: isCorrectCountry }),
+          ...(isSpecialQuizGameType(effectiveGameType) && { insideCountry: isCorrectCountry }),
         };
       })
     );
@@ -560,12 +560,12 @@ export async function POST(request: Request) {
     // Calculate score based on game type (get scoreScaleFactor from DB for dynamic types)
     const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);
 
-    // Determine scoring version and check country hit for world quizzes
+    // Determine scoring version and check country hit for special quizzes
     let score: number;
     let isCorrectCountry: boolean | undefined;
 
-    if (isWorldGameType(effectiveGameType) && !timeout && latitude !== null && longitude !== null) {
-      // World quiz: V3 scoring with country hit bonus
+    if (isSpecialQuizGameType(effectiveGameType) && !timeout && latitude !== null && longitude !== null) {
+      // Special quiz: V3 scoring with country hit bonus
       if (location.countryCode) {
         isCorrectCountry = await isPointInCountryPolygon(latitude, longitude, location.countryCode);
       }
@@ -577,10 +577,10 @@ export async function POST(request: Request) {
           scoreScaleFactor: dbScoreScaleFactor,
           isCorrectCountry,
         },
-        3 // V3 scoring for world quizzes
+        3 // V3 scoring for special quizzes
       );
     } else {
-      // Country/Panorama quizzes: V2 time-based scoring
+      // Country/World/Panorama quizzes: V2 time-based scoring
       score = calculateScore(
         {
           distanceKm,
@@ -599,8 +599,8 @@ export async function POST(request: Request) {
       gameType: effectiveGameType,
       targetLatitude: location.latitude,
       targetLongitude: location.longitude,
-      // For country quizzes and world quizzes: indicate if click was inside the correct country
-      ...((isCountryQuiz || isWorldGameType(effectiveGameType)) && {
+      // For country quizzes and special quizzes: indicate if click was inside the correct country
+      ...((isCountryQuiz || isSpecialQuizGameType(effectiveGameType)) && {
         insideCountry: isCountryQuiz ? insideCountry : isCorrectCountry,
         targetCountryCode: location.countryCode,
       }),

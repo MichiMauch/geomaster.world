@@ -8,6 +8,7 @@ import { isPointInCountry } from "@/lib/utils/geo-check";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/scoring";
+import { isSpecialQuizGameType } from "@/lib/game-types";
 import { RankingService } from "@/lib/services/ranking-service";
 import { checkLevelUp, getLevelName } from "@/lib/levels";
 
@@ -188,8 +189,8 @@ export async function POST(request: Request) {
     let totalScore = 0;
     let totalDistance = 0;
 
-    // Determine if this is a world quiz (uses V3 scoring with country hit detection)
-    const isWorldQuiz = game.gameType?.startsWith("world:");
+    // Determine if this is a special quiz (uses V3 scoring with country hit detection)
+    const isSpecialQuiz = isSpecialQuizGameType(game.gameType);
 
     for (const guess of gameGuesses) {
       const round = rounds.find((r) => r.id === guess.gameRoundId);
@@ -197,10 +198,10 @@ export async function POST(request: Request) {
 
       const gameType = round.gameType || game.gameType || "country:switzerland";
 
-      // For world quizzes: check if the click was in the correct country
+      // For special quizzes: check if the click was in the correct country
       let isCorrectCountry: boolean | undefined;
 
-      if (isWorldQuiz && guess.latitude !== null && guess.longitude !== null) {
+      if (isSpecialQuiz && guess.latitude !== null && guess.longitude !== null) {
         // Get the target country code from worldLocations
         const worldLocation = await db
           .select({ countryCode: worldLocations.countryCode })
@@ -218,8 +219,8 @@ export async function POST(request: Request) {
         }
       }
 
-      // Use V3 scoring for world quizzes, otherwise use game's scoring version
-      const scoringVersion = isWorldQuiz ? 3 : (game.scoringVersion || 1);
+      // Use V3 scoring for special quizzes, V2 for everything else
+      const scoringVersion = isSpecialQuiz ? 3 : 2;
 
       const score = calculateScore(
         {

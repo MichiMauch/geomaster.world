@@ -117,6 +117,24 @@ export function isWorldGameType(gameTypeId: string | null | undefined): boolean 
 }
 
 /**
+ * Special quiz IDs - these use V3 scoring (country hit detection)
+ * Regular world quizzes use V2 scoring (distance-based)
+ */
+const SPECIAL_QUIZ_IDS = ["country-flags", "visual-middle", "place-names", "emoji-countries"];
+
+/**
+ * Check if a game type is a special quiz (uses V3 country-hit scoring)
+ * e.g., "world:emoji-countries" -> true
+ * e.g., "world:capitals" -> false
+ */
+export function isSpecialQuizGameType(gameTypeId: string | null | undefined): boolean {
+  if (!gameTypeId) return false;
+  if (!gameTypeId.startsWith("world:")) return false;
+  const quizId = gameTypeId.split(":")[1];
+  return SPECIAL_QUIZ_IDS.includes(quizId);
+}
+
+/**
  * Get the category from a world game type ID
  * e.g., "world:capitals" -> "capitals"
  */
