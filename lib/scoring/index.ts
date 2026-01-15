@@ -10,9 +10,9 @@ const CURRENT_SCORING_VERSION = 2;
  * Calculate score using the specified scoring version
  * If no version specified, uses current version
  *
- * @param params - Scoring parameters (distance, time, game type)
- * @param version - Scoring version (1 = distance only, 2 = time-based)
- * @returns Calculated score (0-100 for v1, potentially higher for v2 with time bonuses)
+ * @param params - Scoring parameters (distance, time, game type, isCorrectCountry for world quizzes)
+ * @param version - Scoring version (1 = distance only, 2 = time-based, 3 = world quiz with country hit bonus)
+ * @returns Calculated score (0-100 for v1, higher for v2/v3 with time bonuses)
  */
 export function calculateScore(params: ScoringParams, version?: number): number {
   const scoringVersion = version ?? CURRENT_SCORING_VERSION;

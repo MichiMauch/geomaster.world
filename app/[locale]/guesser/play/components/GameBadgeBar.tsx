@@ -109,7 +109,17 @@ export const GameBadgeBar = memo(function GameBadgeBar({
         ) : getTimerColor()
       )}>
         {showResult && lastResult ? (
-          isCountryQuiz ? getCountryQuizResultText(lastResult, locale) : <>{lastResult.distanceKm.toFixed(1)} km</>
+          isCountryQuiz ? (
+            <>
+              {getCountryQuizResultText(lastResult, locale)}
+              {lastResult.score > 0 && <span className="ml-1 text-xs opacity-70">({lastResult.score} Pts)</span>}
+            </>
+          ) : (
+            <>
+              {lastResult.distanceKm.toFixed(0)} km
+              <span className="ml-1 text-xs opacity-70">({lastResult.score} Pts)</span>
+            </>
+          )
         ) : (
           <>{timeRemaining.toFixed(2)}</>
         )}

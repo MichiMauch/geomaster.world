@@ -5,6 +5,7 @@ export interface ScoringParams {
   timeSeconds: number | null;
   gameType: string;
   scoreScaleFactor?: number; // Optional override for dynamic game types (e.g., world quizzes from DB)
+  isCorrectCountry?: boolean; // For world quizzes: true if click was inside target country
 }
 
 export interface ScoringStrategy {
@@ -88,11 +89,51 @@ function calculateTimeMultiplier(timeSeconds: number | null): number {
 }
 
 /**
+ * v3: World Quiz Scoring (for world:* game types)
+ * Rewards hitting the correct country with bonus points
+ * - Hit correct country: 750 base points * time multiplier
+ * - Miss: Distance-based scoring * time multiplier (like v2)
+ *
+ * Max per round: 750 * 3.0 = 2250 points
+ * Max per game: 5 * 2250 = 11,250 points
+ */
+export const WorldQuizScoringStrategy: ScoringStrategy = {
+  version: 3,
+  name: "World Quiz Scoring",
+  description: "Bonus points for hitting the correct country, distance-based for misses",
+
+  calculateRoundScore({ distanceKm, timeSeconds, scoreScaleFactor, isCorrectCountry }: ScoringParams): number {
+    // Base score depends on whether the correct country was hit
+    let baseScore: number;
+
+    if (isCorrectCountry === true) {
+      // Hit! Award 100 base points (with time multiplier: 100-300 per round)
+      baseScore = 100;
+    } else {
+      // Miss - use distance-based scoring
+      const maxPoints = 100;
+      const scaleFactor = scoreScaleFactor ?? 3000;
+      baseScore = maxPoints * Math.exp(-distanceKm / scaleFactor);
+    }
+
+    // Apply time multiplier (1.0 to 3.0x)
+    const timeMultiplier = calculateTimeMultiplier(timeSeconds);
+    const finalScore = baseScore * timeMultiplier;
+
+    return Math.round(finalScore);
+  }
+};
+
+// Export the time multiplier calculation for use in UI
+export { calculateTimeMultiplier };
+
+/**
  * Registry of all scoring strategies
  */
 export const SCORING_STRATEGIES: Record<number, ScoringStrategy> = {
   1: DistanceOnlyScoringStrategy,
   2: TimeBasedScoringStrategy,
+  3: WorldQuizScoringStrategy,
 };
 
 /**

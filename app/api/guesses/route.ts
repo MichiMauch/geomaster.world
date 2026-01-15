@@ -19,8 +19,10 @@ import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
-import { calculateScore } from "@/lib/score";
-import { isImageGameType, GAME_TYPES } from "@/lib/game-types";
+import { calculateScore as calculateScoreV1 } from "@/lib/score";
+import { calculateScore } from "@/lib/scoring";
+import { isImageGameType, GAME_TYPES, isWorldGameType } from "@/lib/game-types";
+import { isPointInCountry as isPointInCountryPolygon } from "@/lib/utils/geo-check";
 import { isPointInCountry, isCountryQuizGameType } from "@/lib/polygon-validation";
 
 // Helper function to get scoreScaleFactor from DB for dynamic game types
@@ -193,14 +195,14 @@ export async function GET(request: Request) {
     // Fetch location details for each guess
     const guessesWithLocations = await Promise.all(
       userGuessesRaw.map(async (guess) => {
-        let locationData: { name: string; latitude: number; longitude: number } | null = null;
+        let locationData: { name: string; latitude: number; longitude: number; countryCode?: string | null } | null = null;
 
         // Fallback for old rounds without gameType
         const effectiveGameType = guess.gameType || `country:${guess.country || 'switzerland'}`;
 
         if (guess.locationSource === "worldLocations") {
           const loc = await db
-            .select({ name: worldLocations.name, latitude: worldLocations.latitude, longitude: worldLocations.longitude })
+            .select({ name: worldLocations.name, latitude: worldLocations.latitude, longitude: worldLocations.longitude, countryCode: worldLocations.countryCode })
             .from(worldLocations)
             .where(eq(worldLocations.id, guess.locationId))
             .get();
@@ -236,19 +238,42 @@ export async function GET(request: Request) {
         // Get scoreScaleFactor from DB for dynamic game types
         const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);
 
+        // Calculate score - use V3 for world:* game types
+        let score: number;
+        let isCorrectCountry: boolean | undefined;
+
+        if (isWorldGameType(effectiveGameType) && guess.latitude !== null && guess.longitude !== null && locationData?.countryCode) {
+          // World quiz: V3 scoring with country hit bonus
+          isCorrectCountry = await isPointInCountryPolygon(guess.latitude, guess.longitude, locationData.countryCode);
+          score = calculateScore(
+            {
+              distanceKm: guess.distanceKm,
+              timeSeconds: null, // Not available in historical data
+              gameType: effectiveGameType,
+              scoreScaleFactor: dbScoreScaleFactor,
+              isCorrectCountry,
+            },
+            3 // V3 scoring for world quizzes
+          );
+        } else {
+          // Other game types: V1 distance-based scoring (for historical consistency)
+          score = calculateScoreV1(guess.distanceKm, effectiveGameType, dbScoreScaleFactor);
+        }
+
         return {
           id: guess.id,
           gameRoundId: guess.gameRoundId,
           latitude: guess.latitude,
           longitude: guess.longitude,
           distanceKm: guess.distanceKm,
-          score: calculateScore(guess.distanceKm, effectiveGameType, dbScoreScaleFactor),
+          score,
           roundNumber: guess.roundNumber,
           locationIndex: guess.locationIndex,
           targetLatitude: locationData?.latitude || 0,
           targetLongitude: locationData?.longitude || 0,
           locationName: locationData?.name || "Unknown",
           gameType: effectiveGameType,
+          ...(isWorldGameType(effectiveGameType) && { insideCountry: isCorrectCountry }),
         };
       })
     );
@@ -525,7 +550,38 @@ export async function POST(request: Request) {
 
     // Calculate score based on game type (get scoreScaleFactor from DB for dynamic types)
     const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);
-    const score = calculateScore(distanceKm, effectiveGameType, dbScoreScaleFactor);
+
+    // Determine scoring version and check country hit for world quizzes
+    let score: number;
+    let isCorrectCountry: boolean | undefined;
+
+    if (isWorldGameType(effectiveGameType) && !timeout && latitude !== null && longitude !== null) {
+      // World quiz: V3 scoring with country hit bonus
+      if (location.countryCode) {
+        isCorrectCountry = await isPointInCountryPolygon(latitude, longitude, location.countryCode);
+      }
+      score = calculateScore(
+        {
+          distanceKm,
+          timeSeconds: timeSeconds || null,
+          gameType: effectiveGameType,
+          scoreScaleFactor: dbScoreScaleFactor,
+          isCorrectCountry,
+        },
+        3 // V3 scoring for world quizzes
+      );
+    } else {
+      // Country/Panorama quizzes: V2 time-based scoring
+      score = calculateScore(
+        {
+          distanceKm,
+          timeSeconds: timeSeconds || null,
+          gameType: effectiveGameType,
+          scoreScaleFactor: dbScoreScaleFactor,
+        },
+        2 // V2 time-based scoring
+      );
+    }
 
     return NextResponse.json({
       id: guessId,
@@ -534,8 +590,11 @@ export async function POST(request: Request) {
       gameType: effectiveGameType,
       targetLatitude: location.latitude,
       targetLongitude: location.longitude,
-      // For country quizzes: indicate if click was inside the correct country
-      ...(isCountryQuiz && { insideCountry, targetCountryCode: location.countryCode }),
+      // For country quizzes and world quizzes: indicate if click was inside the correct country
+      ...((isCountryQuiz || isWorldGameType(effectiveGameType)) && {
+        insideCountry: isCountryQuiz ? insideCountry : isCorrectCountry,
+        targetCountryCode: location.countryCode,
+      }),
     });
   } catch (error) {
     logger.error("Error creating guess", error);

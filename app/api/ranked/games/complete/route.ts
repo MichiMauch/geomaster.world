@@ -3,7 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
-import { games, gameRounds, guesses, worldQuizTypes, countries, panoramaTypes, rankings as rankingsTable, userStreaks } from "@/lib/db/schema";
+import { games, gameRounds, guesses, worldQuizTypes, countries, panoramaTypes, rankings as rankingsTable, userStreaks, worldLocations } from "@/lib/db/schema";
+import { isPointInCountry } from "@/lib/utils/geo-check";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/scoring";
@@ -158,13 +159,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch all guesses for this game
+    // Fetch all guesses for this game (including click coordinates for world quiz scoring)
     const userGuesses = await db
       .select({
         id: guesses.id,
         gameRoundId: guesses.gameRoundId,
         distanceKm: guesses.distanceKm,
         timeSeconds: guesses.timeSeconds,
+        latitude: guesses.latitude,
+        longitude: guesses.longitude,
       })
       .from(guesses)
       .where(eq(guesses.userId, userId));
@@ -185,21 +188,48 @@ export async function POST(request: Request) {
     let totalScore = 0;
     let totalDistance = 0;
 
+    // Determine if this is a world quiz (uses V3 scoring with country hit detection)
+    const isWorldQuiz = game.gameType?.startsWith("world:");
+
     for (const guess of gameGuesses) {
       const round = rounds.find((r) => r.id === guess.gameRoundId);
       if (!round) continue;
 
       const gameType = round.gameType || game.gameType || "country:switzerland";
 
-      // Use new scoring service with version and time data
+      // For world quizzes: check if the click was in the correct country
+      let isCorrectCountry: boolean | undefined;
+
+      if (isWorldQuiz && guess.latitude !== null && guess.longitude !== null) {
+        // Get the target country code from worldLocations
+        const worldLocation = await db
+          .select({ countryCode: worldLocations.countryCode })
+          .from(worldLocations)
+          .where(eq(worldLocations.id, round.locationId))
+          .get();
+
+        if (worldLocation?.countryCode) {
+          // Check if click is inside the target country
+          isCorrectCountry = await isPointInCountry(
+            guess.latitude,
+            guess.longitude,
+            worldLocation.countryCode
+          );
+        }
+      }
+
+      // Use V3 scoring for world quizzes, otherwise use game's scoring version
+      const scoringVersion = isWorldQuiz ? 3 : (game.scoringVersion || 1);
+
       const score = calculateScore(
         {
           distanceKm: guess.distanceKm,
           timeSeconds: guess.timeSeconds,
           gameType,
-          scoreScaleFactor: dbScoreScaleFactor, // Pass DB value for dynamic game types
+          scoreScaleFactor: dbScoreScaleFactor,
+          isCorrectCountry,
         },
-        game.scoringVersion || 1 // Use game's scoring version, default to v1 for old games
+        scoringVersion
       );
 
       totalScore += score;
