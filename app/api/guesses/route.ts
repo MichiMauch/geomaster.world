@@ -257,16 +257,13 @@ export async function GET(request: Request) {
             3 // V3 scoring for special quizzes
           );
         } else {
-          // Country and World quizzes: V2 time-based scoring
-          score = calculateScore(
-            {
-              distanceKm: guess.distanceKm,
-              timeSeconds: guess.timeSeconds,
-              gameType: effectiveGameType,
-              scoreScaleFactor: dbScoreScaleFactor,
-            },
-            2 // V2 time-based scoring
-          );
+          // Country and World quizzes: use current scoring version (V4)
+          score = calculateScore({
+            distanceKm: guess.distanceKm,
+            timeSeconds: guess.timeSeconds,
+            gameType: effectiveGameType,
+            scoreScaleFactor: dbScoreScaleFactor,
+          });
         }
 
         return {
@@ -581,16 +578,13 @@ export async function POST(request: Request) {
         3 // V3 scoring for special quizzes
       );
     } else {
-      // Country/World/Panorama quizzes: V2 time-based scoring
-      score = calculateScore(
-        {
-          distanceKm,
-          timeSeconds: timeSeconds || null,
-          gameType: effectiveGameType,
-          scoreScaleFactor: dbScoreScaleFactor,
-        },
-        2 // V2 time-based scoring
-      );
+      // Country/World/Panorama quizzes: use current scoring version (V4)
+      score = calculateScore({
+        distanceKm,
+        timeSeconds: timeSeconds || null,
+        gameType: effectiveGameType,
+        scoreScaleFactor: dbScoreScaleFactor,
+      });
     }
 
     return NextResponse.json({
