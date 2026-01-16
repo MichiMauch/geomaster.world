@@ -63,7 +63,11 @@ export async function GET(req: NextRequest) {
       locationCount: countMap.get(c.nameEn || c.name) || 0,
     }));
 
-    return NextResponse.json(countriesWithCounts);
+    return NextResponse.json(countriesWithCounts, {
+      headers: {
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
   } catch (error) {
     logger.error("Error fetching countries", error);
     return NextResponse.json({ error: "Failed to fetch countries" }, { status: 500 });

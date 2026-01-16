@@ -55,7 +55,11 @@ export async function GET(req: NextRequest) {
       locationCount: totalLocations, // All panorama types share the same locations for now
     }));
 
-    return NextResponse.json(typesWithCounts);
+    return NextResponse.json(typesWithCounts, {
+      headers: {
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
   } catch (error) {
     logger.error("Error fetching panorama types", error);
     return NextResponse.json({ error: "Failed to fetch panorama types" }, { status: 500 });

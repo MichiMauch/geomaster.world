@@ -33,7 +33,11 @@ export async function GET(req: NextRequest) {
 
     const locations = await query.orderBy(worldLocations.name);
 
-    return NextResponse.json(locations);
+    return NextResponse.json(locations, {
+      headers: {
+        "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",
+      },
+    });
   } catch (error) {
     logger.error("Error fetching world locations", error);
     return NextResponse.json({ error: "Failed to fetch world locations" }, { status: 500 });

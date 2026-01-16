@@ -56,7 +56,11 @@ export async function GET(req: NextRequest) {
       locationCount: countMap.get(t.id) || 0,
     }));
 
-    return NextResponse.json(typesWithCounts);
+    return NextResponse.json(typesWithCounts, {
+      headers: {
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
   } catch (error) {
     logger.error("Error fetching world quiz types", error);
     return NextResponse.json({ error: "Failed to fetch world quiz types" }, { status: 500 });

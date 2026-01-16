@@ -20,7 +20,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "World quiz type not found" }, { status: 404 });
     }
 
-    return NextResponse.json(quizType[0]);
+    return NextResponse.json(quizType[0], {
+      headers: {
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
   } catch (error) {
     logger.error("Error fetching world quiz type", error);
     return NextResponse.json({ error: "Failed to fetch world quiz type" }, { status: 500 });
