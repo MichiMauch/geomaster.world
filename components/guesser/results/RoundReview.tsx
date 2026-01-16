@@ -16,6 +16,7 @@ interface Guess {
   roundNumber: number;
   locationName: string;
   gameType: string | null;
+  timeSeconds: number | null;
 }
 
 interface RoundReviewProps {
@@ -150,7 +151,14 @@ export function RoundReview({ gameId, isOpen, onClose }: RoundReviewProps) {
                           <span className="text-sm text-text-muted">
                             {wasTimeout
                               ? t("timeout", { defaultValue: "Timeout" })
-                              : formatDistance(guess.distanceKm, guess.gameType)}
+                              : (
+                                <>
+                                  {formatDistance(guess.distanceKm, guess.gameType)}
+                                  {guess.timeSeconds !== null && (
+                                    <span className="ml-1">· {guess.timeSeconds.toFixed(1)}s</span>
+                                  )}
+                                </>
+                              )}
                           </span>
                           <span className={cn("font-semibold tabular-nums", rating.color)}>
                             {guess.score} {t("points", { defaultValue: "Punkte" })}
