@@ -219,19 +219,24 @@ export async function POST(request: Request) {
         }
       }
 
-      // Use V3 scoring for special quizzes, V2 for everything else
-      const scoringVersion = isSpecialQuiz ? 3 : 2;
-
-      const score = calculateScore(
-        {
-          distanceKm: guess.distanceKm,
-          timeSeconds: guess.timeSeconds,
-          gameType,
-          scoreScaleFactor: dbScoreScaleFactor,
-          isCorrectCountry,
-        },
-        scoringVersion
-      );
+      // Use V3 scoring for special quizzes, current version (V4) for everything else
+      const score = isSpecialQuiz
+        ? calculateScore(
+            {
+              distanceKm: guess.distanceKm,
+              timeSeconds: guess.timeSeconds,
+              gameType,
+              scoreScaleFactor: dbScoreScaleFactor,
+              isCorrectCountry,
+            },
+            3 // V3 for special quizzes
+          )
+        : calculateScore({
+            distanceKm: guess.distanceKm,
+            timeSeconds: guess.timeSeconds,
+            gameType,
+            scoreScaleFactor: dbScoreScaleFactor,
+          });
 
       totalScore += score;
       totalDistance += guess.distanceKm;
