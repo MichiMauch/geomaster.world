@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { NextIntlClientProvider, AbstractIntlMessages } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -7,6 +8,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { CursorGlow } from "./CursorGlow";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
+import { checkAndClearCaches } from "@/lib/cache-buster";
 
 interface LocaleProvidersProps {
   children: React.ReactNode;
@@ -18,6 +20,11 @@ interface LocaleProvidersProps {
 export function LocaleProviders({ children, messages, locale, timeZone }: LocaleProvidersProps) {
   const pathname = usePathname();
   const { status } = useSession();
+
+  // Check and clear caches on version change (for mobile cache issues)
+  useEffect(() => {
+    checkAndClearCaches();
+  }, []);
 
   // Hide header and footer on game play and results pages for immersive experience
   const isPlayPage = pathname?.includes("/guesser/play/");
