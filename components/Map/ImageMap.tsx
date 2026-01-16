@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MapContainer, Marker, Popup, useMapEvents, ImageOverlay, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -39,6 +39,7 @@ interface ImageMapProps {
   showTarget?: boolean;
   interactive?: boolean;
   height?: string;
+  onReady?: () => void;
 }
 
 function MapClickHandler({ onMarkerPlace }: { onMarkerPlace?: (position: MarkerPosition) => void }) {
@@ -61,13 +62,28 @@ export default function ImageMap({
   showTarget = false,
   interactive = true,
   height = "400px",
+  onReady,
 }: ImageMapProps) {
   const [mounted, setMounted] = useState(false);
+  const onReadyCalledRef = useRef(false);
   const gameTypeConfig = getGameTypeConfig(gameType);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Call onReady when map is mounted (only once)
+  useEffect(() => {
+    if (mounted && onReady && !onReadyCalledRef.current) {
+      onReadyCalledRef.current = true;
+      onReady();
+    }
+  }, [mounted, onReady]);
+
+  // Reset onReady flag when gameType changes
+  useEffect(() => {
+    onReadyCalledRef.current = false;
+  }, [gameType]);
 
   if (!mounted) {
     return (

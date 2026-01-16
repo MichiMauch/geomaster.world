@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { MapContainer, Marker, Popup, GeoJSON, Circle, Polyline, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -25,8 +26,10 @@ export default function CountryMap({
   interactive = true,
   height = "400px",
   hintCircle = null,
+  onReady,
 }: CountryMapProps) {
   const isMobile = useIsMobile();
+  const onReadyCalledRef = useRef(false);
 
   // For dynamic countries/world quizzes, we use a different approach
   const useDynamicCountry = !!dynamicCountry;
@@ -42,6 +45,19 @@ export default function CountryMap({
 
   const { mounted, geoData } = useGeoData({ dynamicCountry, dynamicWorldQuiz, gameTypeConfig });
 
+  // Call onReady when map is fully loaded (only once per mount)
+  useEffect(() => {
+    if (mounted && geoData && onReady && !onReadyCalledRef.current) {
+      onReadyCalledRef.current = true;
+      onReady();
+    }
+  }, [mounted, geoData, onReady]);
+
+  // Reset onReady flag when key props change (new round)
+  useEffect(() => {
+    onReadyCalledRef.current = false;
+  }, [dynamicCountry?.id, dynamicWorldQuiz?.id, gameType]);
+
   // If this is an image-based map, delegate to ImageMap component
   if (isImageMap && gameTypeConfig) {
     return (
@@ -53,6 +69,7 @@ export default function CountryMap({
         showTarget={showTarget}
         interactive={interactive}
         height={height}
+        onReady={onReady}
       />
     );
   }

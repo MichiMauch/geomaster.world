@@ -186,11 +186,10 @@ export async function POST(request: Request) {
     }
 
     // Calculate total score and distance
+    // All game types use V4 (Fair Time Scoring) for consistent max 500 points/round
+    // Special quizzes (flags, emoji, etc.) get bonus: correct country = 0 distance = max base points
     let totalScore = 0;
     let totalDistance = 0;
-
-    // Determine if this is a special quiz (uses V3 scoring with country hit detection)
-    const isSpecialQuiz = isSpecialQuizGameType(game.gameType);
 
     for (const guess of gameGuesses) {
       const round = rounds.find((r) => r.id === guess.gameRoundId);
@@ -198,11 +197,12 @@ export async function POST(request: Request) {
 
       const gameType = round.gameType || game.gameType || "country:switzerland";
 
-      // For special quizzes: check if the click was in the correct country
-      let isCorrectCountry: boolean | undefined;
+      // For special quizzes: check if click was in correct country
+      // If yes, treat as 0 distance (gives 333 base points with V4)
+      let effectiveDistance = guess.distanceKm;
 
-      if (isSpecialQuiz && guess.latitude !== null && guess.longitude !== null) {
-        // Get the target country code from worldLocations
+      if (isSpecialQuizGameType(gameType) && guess.latitude !== null && guess.longitude !== null) {
+        // Get target country code from worldLocations
         const worldLocation = await db
           .select({ countryCode: worldLocations.countryCode })
           .from(worldLocations)
@@ -210,36 +210,26 @@ export async function POST(request: Request) {
           .get();
 
         if (worldLocation?.countryCode) {
-          // Check if click is inside the target country
-          isCorrectCountry = await isPointInCountry(
+          const isCorrect = await isPointInCountry(
             guess.latitude,
             guess.longitude,
             worldLocation.countryCode
           );
+          if (isCorrect) {
+            effectiveDistance = 0; // Full base points for hitting correct country
+          }
         }
       }
 
-      // Use V3 scoring for special quizzes, current version (V4) for everything else
-      const score = isSpecialQuiz
-        ? calculateScore(
-            {
-              distanceKm: guess.distanceKm,
-              timeSeconds: guess.timeSeconds,
-              gameType,
-              scoreScaleFactor: dbScoreScaleFactor,
-              isCorrectCountry,
-            },
-            3 // V3 for special quizzes
-          )
-        : calculateScore({
-            distanceKm: guess.distanceKm,
-            timeSeconds: guess.timeSeconds,
-            gameType,
-            scoreScaleFactor: dbScoreScaleFactor,
-          });
+      const score = calculateScore({
+        distanceKm: effectiveDistance,
+        timeSeconds: guess.timeSeconds,
+        gameType,
+        scoreScaleFactor: dbScoreScaleFactor,
+      });
 
       totalScore += score;
-      totalDistance += guess.distanceKm;
+      totalDistance += guess.distanceKm; // Keep actual distance for stats
     }
 
     const averageScore = totalScore / 5;

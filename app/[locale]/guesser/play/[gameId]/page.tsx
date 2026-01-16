@@ -55,6 +55,7 @@ export default function GuesserPlayPage({
     startLocation,
     getActiveLocation,
     clearActiveRound,
+    notifyMapReady,
   } = useGameData({ gameId, locale });
 
   // Local state
@@ -66,6 +67,25 @@ export default function GuesserPlayPage({
   const [levelUpData, setLevelUpData] = useState<LevelUpInfo | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+
+  // Handle map ready callback - starts the timer
+  const handleMapReady = useCallback(async () => {
+    // Only trigger once per round
+    if (mapReady) return;
+    setMapReady(true);
+
+    // For logged-in users: notify server to start the timer
+    if (!isGuest && currentRoundIndex !== null) {
+      const locationIndex = rounds[currentRoundIndex]?.locationIndex ?? currentRoundIndex + 1;
+      await notifyMapReady(locationIndex);
+    }
+  }, [mapReady, isGuest, currentRoundIndex, rounds, notifyMapReady]);
+
+  // Reset mapReady when round changes
+  useEffect(() => {
+    setMapReady(false);
+  }, [currentRoundIndex]);
 
   // DISPLAY-ROUND: Immer aus rounds[] - sofort verfügbar für UI (Ortsname, etc.)
   // Reagiert SOFORT auf currentRoundIndex Änderung
@@ -175,6 +195,8 @@ export default function GuesserPlayPage({
     serverTimeRemaining,
     locationStartedAt,
     isGuest,
+    // Timer only starts when map is visible
+    mapReady,
   });
 
   const totalScore = userGuesses.reduce((sum, g) => sum + g.score, 0);
@@ -524,6 +546,7 @@ export default function GuesserPlayPage({
             showTarget={showResult}
             interactive={!showResult}
             height="100%"
+            onReady={handleMapReady}
           />
         ) : (
           <CountryMap
@@ -541,6 +564,7 @@ export default function GuesserPlayPage({
             showTarget={showResult}
             interactive={!showResult}
             height="100%"
+            onReady={handleMapReady}
           />
         )}
       </div>

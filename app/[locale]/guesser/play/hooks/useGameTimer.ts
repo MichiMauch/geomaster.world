@@ -14,6 +14,8 @@ interface UseGameTimerProps {
   serverTimeRemaining?: number | null;
   locationStartedAt?: number | null;
   isGuest?: boolean;
+  // Map ready state - timer only starts when map is visible
+  mapReady?: boolean;
 }
 
 export function useGameTimer({
@@ -26,6 +28,7 @@ export function useGameTimer({
   serverTimeRemaining,
   locationStartedAt,
   isGuest = false,
+  mapReady = false,
 }: UseGameTimerProps) {
   const [timeRemaining, setTimeRemaining] = useState(DEFAULT_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
@@ -51,16 +54,24 @@ export function useGameTimer({
   }, [currentRound, userGuesses]);
 
   // Timer activation logic - now syncs with server time for logged-in users
+  // IMPORTANT: Timer only starts when mapReady is true (map is visible to player)
   useEffect(() => {
     const roundId = currentRound?.id;
 
     // Deactivate timer conditions
-    if (showResult || loading || !currentRound || currentRoundGuessed) {
+    // Key change: also require mapReady to be true before starting timer
+    if (showResult || loading || !currentRound || currentRoundGuessed || !mapReady) {
       setTimerActive(false);
       return;
     }
 
-    // Always activate timer when conditions are met
+    // For logged-in users: also require locationStartedAt to be set (from map-ready API)
+    if (!isGuest && !locationStartedAt) {
+      setTimerActive(false);
+      return;
+    }
+
+    // Activate timer when all conditions are met
     setTimerActive(true);
 
     // Prevent re-initialization of time for the same round (but timer is already active above)
@@ -85,7 +96,7 @@ export function useGameTimer({
       // Guest mode or no server data: use client-side timer
       setTimeRemaining(getCurrentTimeLimit());
     }
-  }, [currentRound?.id, showResult, loading, currentRoundGuessed, getCurrentTimeLimit, serverTimeRemaining, locationStartedAt, isGuest]);
+  }, [currentRound?.id, showResult, loading, currentRoundGuessed, getCurrentTimeLimit, serverTimeRemaining, locationStartedAt, isGuest, mapReady]);
 
   // Countdown timer with centiseconds
   useEffect(() => {

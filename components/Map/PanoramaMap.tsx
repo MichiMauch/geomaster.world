@@ -43,6 +43,7 @@ interface PanoramaMapProps {
   showTarget?: boolean;
   interactive?: boolean;
   height?: string;
+  onReady?: () => void;
 }
 
 function MapClickHandler({ onMarkerPlace }: { onMarkerPlace?: (position: MarkerPosition) => void }) {
@@ -108,12 +109,15 @@ export default function PanoramaMap({
   showTarget = false,
   interactive = true,
   height = "100%",
+  onReady,
 }: PanoramaMapProps) {
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [viewerReady, setViewerReady] = useState(false);
   const viewerContainerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const currentImageKeyRef = useRef<string | null>(null);
+  const onReadyCalledRef = useRef(false);
   const isMobile = useIsMobile();
 
   // Initialize component
@@ -155,16 +159,18 @@ export default function PanoramaMap({
     viewerRef.current = viewer;
     currentImageKeyRef.current = mapillaryImageKey;
 
-    // Set initial camera position if provided
-    if (heading !== undefined || pitch !== undefined) {
-      viewer.on("image", () => {
+    // Set viewerReady when image loads
+    viewer.on("image", () => {
+      setViewerReady(true);
+      // Set initial camera position if provided
+      if (heading !== undefined || pitch !== undefined) {
         // Mapillary uses bearing (0-360) and tilt (-90 to 90)
         const bearing = heading ?? 0;
         const tilt = pitch ?? 0;
         viewer.setCenter([0.5, 0.5]); // Center
         // Note: setBearing and setTilt may need to be called after image loads
-      });
-    }
+      }
+    });
 
     return () => {
       if (viewerRef.current) {
@@ -178,10 +184,24 @@ export default function PanoramaMap({
   useEffect(() => {
     if (viewerRef.current && mapillaryImageKey && currentImageKeyRef.current !== mapillaryImageKey) {
       currentImageKeyRef.current = mapillaryImageKey;
+      setViewerReady(false); // Reset viewer ready state for new image
       viewerRef.current.moveTo(mapillaryImageKey).catch((err) => {
         logger.error("Error moving to image", err);
       });
     }
+  }, [mapillaryImageKey]);
+
+  // Call onReady when both geoData is loaded and viewer is ready (only once per image)
+  useEffect(() => {
+    if (mounted && geoData && viewerReady && onReady && !onReadyCalledRef.current) {
+      onReadyCalledRef.current = true;
+      onReady();
+    }
+  }, [mounted, geoData, viewerReady, onReady]);
+
+  // Reset onReady flag when image key changes
+  useEffect(() => {
+    onReadyCalledRef.current = false;
   }, [mapillaryImageKey]);
 
   if (!mounted) {

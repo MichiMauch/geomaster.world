@@ -10,14 +10,24 @@ interface UseGameDataProps {
 interface ActiveLocationResponse {
   round?: ActiveRound;
   activeRound?: ActiveRound;
-  timeRemaining: number;
-  startedAt: number;
+  timeRemaining?: number;
+  timeLimit?: number;
+  startedAt?: number;
   timeExpired?: boolean;
   needsStart?: boolean;
   nextLocationIndex?: number;
   alreadyGuessed?: boolean;
   gameComplete?: boolean;
   refreshPenalty?: boolean; // True if user refreshed during active round (auto-timeout applied)
+  waitingForMapReady?: boolean; // True if timer hasn't started yet (waiting for map to load)
+  needsMapReady?: boolean; // True if client should call /map-ready
+}
+
+interface MapReadyResponse {
+  success: boolean;
+  locationStartedAt: number;
+  serverTimeRemaining: number;
+  alreadyStarted?: boolean;
 }
 
 export function useGameData({ gameId, locale }: UseGameDataProps) {
@@ -94,6 +104,7 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
     timeRemaining?: number;
     error?: string;
     alreadyGuessed?: boolean;
+    waitingForMapReady?: boolean;
   }> => {
     // For guests, just use the pre-loaded round data
     if (isGuest) {
@@ -127,8 +138,10 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
 
         if (roundData) {
           setActiveRound(roundData);
-          setServerTimeRemaining(data.timeRemaining);
-          setLocationStartedAt(data.startedAt);
+          // Timer not started yet - will be set by notifyMapReady
+          // For now, just store the time limit
+          setServerTimeRemaining(data.timeLimit ?? data.timeRemaining ?? 30);
+          // Don't set locationStartedAt here - wait for map to be ready
 
           // Update the round in the rounds array with coordinates
           setRounds(prev => prev.map(r =>
@@ -137,7 +150,12 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
               : r
           ));
 
-          return { success: true, round: roundData, timeRemaining: data.timeRemaining };
+          return {
+            success: true,
+            round: roundData,
+            timeRemaining: data.timeLimit ?? data.timeRemaining ?? 30,
+            waitingForMapReady: data.waitingForMapReady,
+          };
         }
       } else {
         const errorData = await res.json();
@@ -190,8 +208,8 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
 
         if (data.activeRound) {
           setActiveRound(data.activeRound);
-          setServerTimeRemaining(data.timeRemaining);
-          setLocationStartedAt(data.startedAt);
+          setServerTimeRemaining(data.timeRemaining ?? null);
+          setLocationStartedAt(data.startedAt ?? null);
         }
 
         return {
@@ -227,6 +245,39 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
     startLocationCalledRef.current = null;
   }, []);
 
+  // Notify server that map is ready (starts the timer)
+  const notifyMapReady = useCallback(async (locationIndex: number): Promise<{
+    success: boolean;
+    serverTimeRemaining?: number;
+  }> => {
+    // For guests, just set the start time locally
+    if (isGuest) {
+      setLocationStartedAt(Date.now());
+      return { success: true, serverTimeRemaining: serverTimeRemaining ?? 30 };
+    }
+
+    try {
+      const res = await fetch(`/api/ranked/games/${gameId}/map-ready`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locationIndex }),
+      });
+
+      if (res.ok) {
+        const data: MapReadyResponse = await res.json();
+        setLocationStartedAt(data.locationStartedAt);
+        setServerTimeRemaining(data.serverTimeRemaining);
+        return { success: true, serverTimeRemaining: data.serverTimeRemaining };
+      } else {
+        console.error("Failed to notify map ready");
+        return { success: false };
+      }
+    } catch (err) {
+      console.error("Error notifying map ready:", err);
+      return { success: false };
+    }
+  }, [gameId, isGuest, serverTimeRemaining]);
+
   return {
     game,
     rounds,
@@ -245,5 +296,6 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
     startLocation,
     getActiveLocation,
     clearActiveRound,
+    notifyMapReady,
   };
 }

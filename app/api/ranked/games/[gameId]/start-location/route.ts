@@ -163,12 +163,13 @@ export async function POST(
     }
 
     // Update game with new active location
-    const now = Date.now();
+    // Note: locationStartedAt is NOT set here - it will be set when map-ready is called
+    // This ensures the timer only starts when the map is actually visible to the player
     await db
       .update(games)
       .set({
         activeLocationIndex: requestedIndex,
-        locationStartedAt: now,
+        locationStartedAt: null, // Reset to null, will be set by /map-ready endpoint
       })
       .where(eq(games.id, gameId));
 
@@ -279,8 +280,9 @@ export async function POST(
         heading: locationInfo.heading ?? null,
         pitch: locationInfo.pitch ?? null,
       },
-      timeRemaining: timeLimitSeconds,
-      startedAt: now,
+      timeLimit: timeLimitSeconds,
+      // Note: Timer not started yet - will start when /map-ready is called
+      waitingForMapReady: true,
     });
   } catch (error) {
     logger.error("Error starting location", error);
@@ -319,12 +321,42 @@ export async function GET(
       return NextResponse.json({ error: "Game not found" }, { status: 404 });
     }
 
-    // No active location started yet
-    if (!game.locationStartedAt || !game.activeLocationIndex) {
+    // No active location set yet
+    if (!game.activeLocationIndex) {
       return NextResponse.json({
         activeRound: null,
         needsStart: true,
         nextLocationIndex: 1,
+      });
+    }
+
+    // Active location set but timer not started yet (map still loading)
+    // Return location data but indicate timer hasn't started
+    if (!game.locationStartedAt) {
+      // Fetch the active round to return location data
+      const allRounds = await db
+        .select()
+        .from(gameRounds)
+        .where(eq(gameRounds.gameId, gameId))
+        .orderBy(gameRounds.locationIndex);
+
+      const activeRound = allRounds.find(r => r.locationIndex === game.activeLocationIndex);
+      if (!activeRound) {
+        return NextResponse.json({
+          activeRound: null,
+          needsStart: true,
+          nextLocationIndex: game.activeLocationIndex,
+        });
+      }
+
+      // Return waiting state - map needs to call /map-ready
+      return NextResponse.json({
+        activeRound: {
+          id: activeRound.id,
+          locationIndex: activeRound.locationIndex,
+        },
+        waitingForMapReady: true,
+        needsMapReady: true,
       });
     }
 

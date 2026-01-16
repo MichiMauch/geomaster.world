@@ -43,4 +43,5 @@ export interface CountryMapProps {
   interactive?: boolean;
   height?: string;
   hintCircle?: HintCircle | null;
+  onReady?: () => void; // Called when map is fully loaded and visible
 }
