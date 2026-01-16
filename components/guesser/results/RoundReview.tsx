@@ -154,7 +154,7 @@ export function RoundReview({ gameId, isOpen, onClose }: RoundReviewProps) {
                               : (
                                 <>
                                   {formatDistance(guess.distanceKm, guess.gameType)}
-                                  {guess.timeSeconds !== null && (
+                                  {guess.timeSeconds != null && (
                                     <span className="ml-1">· {guess.timeSeconds.toFixed(1)}s</span>
                                   )}
                                 </>
