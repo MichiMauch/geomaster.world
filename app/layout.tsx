@@ -5,9 +5,6 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
 
-// Cache version - increment to force all clients to clear caches
-const CACHE_VERSION = "v2";
-
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
@@ -86,39 +83,54 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                var CACHE_VERSION = "${CACHE_VERSION}";
-                var CACHE_KEY = "geomaster-cache-version";
-                try {
-                  var stored = localStorage.getItem(CACHE_KEY);
-                  if (stored !== CACHE_VERSION) {
-                    console.log("[CacheBuster] Version mismatch, clearing caches...");
-                    // Clear caches
-                    if (window.caches) {
-                      caches.keys().then(function(names) {
-                        names.forEach(function(name) {
-                          console.log("[CacheBuster] Deleting cache:", name);
-                          caches.delete(name);
+                var CACHE_KEY = "geomaster-app-version";
+                var VERSION_URL = "/api/version?t=" + Date.now();
+
+                // Check server version and compare with stored version
+                fetch(VERSION_URL, { cache: "no-store" })
+                  .then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    var serverVersion = data.version;
+                    var storedVersion = localStorage.getItem(CACHE_KEY);
+
+                    console.log("[CacheBuster] Server version:", serverVersion, "Stored:", storedVersion);
+
+                    if (storedVersion !== serverVersion) {
+                      console.log("[CacheBuster] Version mismatch, clearing caches...");
+
+                      // Clear all caches
+                      if (window.caches) {
+                        caches.keys().then(function(names) {
+                          Promise.all(names.map(function(name) {
+                            console.log("[CacheBuster] Deleting cache:", name);
+                            return caches.delete(name);
+                          }));
                         });
-                      });
-                    }
-                    // Update and reload service workers
-                    if (navigator.serviceWorker) {
-                      navigator.serviceWorker.getRegistrations().then(function(regs) {
-                        regs.forEach(function(reg) {
-                          console.log("[CacheBuster] Updating service worker");
-                          reg.update();
-                          reg.unregister();
+                      }
+
+                      // Unregister all service workers
+                      if (navigator.serviceWorker) {
+                        navigator.serviceWorker.getRegistrations().then(function(regs) {
+                          regs.forEach(function(reg) {
+                            console.log("[CacheBuster] Unregistering service worker");
+                            reg.unregister();
+                          });
                         });
-                      });
+                      }
+
+                      // Store new version
+                      localStorage.setItem(CACHE_KEY, serverVersion);
+
+                      // Reload if we had an old version (not first visit)
+                      if (storedVersion !== null) {
+                        console.log("[CacheBuster] Reloading page...");
+                        setTimeout(function() {
+                          window.location.reload();
+                        }, 500);
+                      }
                     }
-                    localStorage.setItem(CACHE_KEY, CACHE_VERSION);
-                    // Reload to get fresh content
-                    if (stored !== null) {
-                      console.log("[CacheBuster] Reloading page...");
-                      window.location.reload();
-                    }
-                  }
-                } catch(e) { console.error("[CacheBuster] Error:", e); }
+                  })
+                  .catch(function(e) { console.error("[CacheBuster] Error:", e); });
               })();
             `,
           }}
