@@ -34,6 +34,12 @@ export async function GET() {
       nickname: user.nickname,
       email: user.email,
       image: user.image,
+    }, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
     });
   } catch (error) {
     logger.error("Error fetching profile", error);

@@ -73,6 +73,12 @@ export async function GET(request: Request) {
       },
       // All levels for badge display
       allLevels,
+    }, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
     });
   } catch (error) {
     logger.error("Error fetching user level", error);

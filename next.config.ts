@@ -8,6 +8,7 @@ const withPWA = withPWAInit({
   dest: "public",
   register: true,
   disable: process.env.NODE_ENV === "development",
+  // Note: Cache-Control headers are set in API routes to prevent aggressive caching
 });
 
 const nextConfig: NextConfig = {

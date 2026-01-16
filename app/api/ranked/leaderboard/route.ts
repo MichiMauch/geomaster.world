@@ -49,6 +49,12 @@ export async function GET(request: Request) {
         gameType,
         mode: "games",
         total: topGames.length,
+      }, {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
+        },
       });
     }
 
@@ -106,6 +112,12 @@ export async function GET(request: Request) {
       gameType,
       mode: "rankings",
       total: rankings.length,
+    }, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
     });
   } catch (error) {
     logger.error("Error fetching leaderboard", error);

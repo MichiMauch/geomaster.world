@@ -291,7 +291,13 @@ export async function GET(request: Request) {
       return a.locationIndex - b.locationIndex;
     });
 
-    return NextResponse.json({ guesses: guessesWithLocations });
+    return NextResponse.json({ guesses: guessesWithLocations }, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
+    });
   } catch (error) {
     logger.error("Error fetching guesses", error);
     return NextResponse.json(

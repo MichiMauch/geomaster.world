@@ -17,7 +17,13 @@ export async function GET() {
   try {
     const stats = await RankingService.getUserStats(session.user.id);
 
-    return NextResponse.json({ stats });
+    return NextResponse.json({ stats }, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
+    });
   } catch (error) {
     logger.error("Error fetching user stats", error);
     return NextResponse.json(
