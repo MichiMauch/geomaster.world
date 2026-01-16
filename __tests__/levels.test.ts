@@ -48,23 +48,23 @@ describe('Levels System', () => {
       expect(level.level).toBe(1)
     })
 
-    it('should return level 2 at 500 points', () => {
-      const level = getUserLevel(500)
+    it('should return level 2 at 1000 points', () => {
+      const level = getUserLevel(1000)
       expect(level.level).toBe(2)
     })
 
-    it('should return level 2 at 999 points', () => {
-      const level = getUserLevel(999)
+    it('should return level 2 at 2999 points', () => {
+      const level = getUserLevel(2999)
       expect(level.level).toBe(2)
     })
 
-    it('should return level 3 at 1500 points', () => {
-      const level = getUserLevel(1500)
+    it('should return level 3 at 3000 points', () => {
+      const level = getUserLevel(3000)
       expect(level.level).toBe(3)
     })
 
-    it('should return level 20 at 1200000 points', () => {
-      const level = getUserLevel(1200000)
+    it('should return level 20 at 2400000 points', () => {
+      const level = getUserLevel(2400000)
       expect(level.level).toBe(20)
     })
 
@@ -76,24 +76,24 @@ describe('Levels System', () => {
 
   describe('getLevelProgress', () => {
     it('should return 0 progress at level start', () => {
-      const progress = getLevelProgress(500) // Start of level 2
+      const progress = getLevelProgress(1000) // Start of level 2
       expect(progress.currentLevel.level).toBe(2)
       expect(progress.progress).toBe(0)
       expect(progress.pointsInCurrentLevel).toBe(0)
     })
 
     it('should calculate progress correctly mid-level', () => {
-      // Level 2: 500-1499 (1000 points range)
-      const progress = getLevelProgress(1000) // 500 points into level 2
+      // Level 2: 1000-2999 (2000 points range)
+      const progress = getLevelProgress(2000) // 1000 points into level 2
       expect(progress.currentLevel.level).toBe(2)
       expect(progress.nextLevel?.level).toBe(3)
       expect(progress.progress).toBe(0.5)
-      expect(progress.pointsInCurrentLevel).toBe(500)
-      expect(progress.pointsToNext).toBe(500)
+      expect(progress.pointsInCurrentLevel).toBe(1000)
+      expect(progress.pointsToNext).toBe(1000)
     })
 
     it('should handle max level', () => {
-      const progress = getLevelProgress(1500000) // Well above max
+      const progress = getLevelProgress(2500000) // Well above max
       expect(progress.currentLevel.level).toBe(20)
       expect(progress.nextLevel).toBe(null)
       expect(progress.progress).toBe(1)
@@ -101,35 +101,35 @@ describe('Levels System', () => {
     })
 
     it('should cap progress at 1', () => {
-      const progress = getLevelProgress(1499) // Almost level 3
+      const progress = getLevelProgress(2999) // Almost level 3
       expect(progress.progress).toBeLessThanOrEqual(1)
     })
   })
 
   describe('checkLevelUp', () => {
     it('should detect level up', () => {
-      const result = checkLevelUp(400, 600)
+      const result = checkLevelUp(900, 1100)
       expect(result.leveledUp).toBe(true)
       expect(result.previousLevel.level).toBe(1)
       expect(result.newLevel.level).toBe(2)
     })
 
     it('should not detect level up within same level', () => {
-      const result = checkLevelUp(100, 400)
+      const result = checkLevelUp(100, 800)
       expect(result.leveledUp).toBe(false)
       expect(result.previousLevel.level).toBe(1)
       expect(result.newLevel.level).toBe(1)
     })
 
     it('should detect multi-level jump', () => {
-      const result = checkLevelUp(0, 3000)
+      const result = checkLevelUp(0, 6000)
       expect(result.leveledUp).toBe(true)
       expect(result.previousLevel.level).toBe(1)
       expect(result.newLevel.level).toBe(4)
     })
 
     it('should handle same points', () => {
-      const result = checkLevelUp(500, 500)
+      const result = checkLevelUp(1000, 1000)
       expect(result.leveledUp).toBe(false)
     })
   })
