@@ -78,59 +78,42 @@ export default async function RootLayout({
     <html lang={lang} className="dark">
       <head>
         <Script
-          id="cache-buster"
+          id="sw-killer"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                var CACHE_KEY = "geomaster-app-version";
-                var VERSION_URL = "/api/version?t=" + Date.now();
+                // AGGRESSIVE: Always unregister service workers and clear caches
+                console.log("[SW-Killer] Removing all service workers and caches...");
 
-                // Check server version and compare with stored version
-                fetch(VERSION_URL, { cache: "no-store" })
-                  .then(function(r) { return r.json(); })
-                  .then(function(data) {
-                    var serverVersion = data.version;
-                    var storedVersion = localStorage.getItem(CACHE_KEY);
-
-                    console.log("[CacheBuster] Server version:", serverVersion, "Stored:", storedVersion);
-
-                    if (storedVersion !== serverVersion) {
-                      console.log("[CacheBuster] Version mismatch, clearing caches...");
-
-                      // Clear all caches
-                      if (window.caches) {
-                        caches.keys().then(function(names) {
-                          Promise.all(names.map(function(name) {
-                            console.log("[CacheBuster] Deleting cache:", name);
-                            return caches.delete(name);
-                          }));
-                        });
-                      }
-
-                      // Unregister all service workers
-                      if (navigator.serviceWorker) {
-                        navigator.serviceWorker.getRegistrations().then(function(regs) {
-                          regs.forEach(function(reg) {
-                            console.log("[CacheBuster] Unregistering service worker");
-                            reg.unregister();
-                          });
-                        });
-                      }
-
-                      // Store new version
-                      localStorage.setItem(CACHE_KEY, serverVersion);
-
-                      // Reload if we had an old version (not first visit)
-                      if (storedVersion !== null) {
-                        console.log("[CacheBuster] Reloading page...");
-                        setTimeout(function() {
-                          window.location.reload();
-                        }, 500);
-                      }
+                // Unregister ALL service workers immediately
+                if (navigator.serviceWorker) {
+                  navigator.serviceWorker.getRegistrations().then(function(regs) {
+                    if (regs.length > 0) {
+                      console.log("[SW-Killer] Found " + regs.length + " service workers");
+                      Promise.all(regs.map(function(reg) {
+                        return reg.unregister();
+                      })).then(function() {
+                        console.log("[SW-Killer] All service workers unregistered");
+                      });
                     }
-                  })
-                  .catch(function(e) { console.error("[CacheBuster] Error:", e); });
+                  });
+                }
+
+                // Clear ALL caches
+                if (window.caches) {
+                  caches.keys().then(function(names) {
+                    if (names.length > 0) {
+                      console.log("[SW-Killer] Found " + names.length + " caches");
+                      Promise.all(names.map(function(name) {
+                        console.log("[SW-Killer] Deleting cache:", name);
+                        return caches.delete(name);
+                      })).then(function() {
+                        console.log("[SW-Killer] All caches deleted");
+                      });
+                    }
+                  });
+                }
               })();
             `,
           }}

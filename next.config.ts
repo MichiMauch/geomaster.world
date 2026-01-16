@@ -7,7 +7,7 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const withPWA = withPWAInit({
   dest: "public",
   register: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: true, // TEMPORARILY DISABLED to clear old service workers
   // Note: Cache-Control headers are set in API routes to prevent aggressive caching
   // Cache busting is handled by inline script in layout.tsx
 });
