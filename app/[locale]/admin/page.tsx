@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapPin, Globe, Image, Users, UsersRound, Gamepad2, ScrollText, TrendingUp } from "lucide-react";
+import { MapPin, Globe, Users, UsersRound, Gamepad2, ScrollText, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 

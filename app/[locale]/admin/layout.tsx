@@ -8,12 +8,8 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   MapPin,
-  Globe,
-  Image,
   Users,
-  UsersRound,
   Gamepad2,
-  ScrollText,
   ChevronDown,
   ChevronRight,
   Menu,
@@ -104,14 +100,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname?.startsWith(fullHref);
   };
 
-  const NavContent = () => (
+  const renderNavContent = (closeMobileMenu: boolean) => (
     <nav className="space-y-1">
       {navItems.map((item) => (
         <div key={item.label}>
           {item.href ? (
             <Link
               href={`/${locale}${item.href}`}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={closeMobileMenu ? () => setMobileMenuOpen(false) : undefined}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
                 isActive(item.href)
@@ -144,7 +140,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={child.href}
                       href={`/${locale}${child.href}`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={closeMobileMenu ? () => setMobileMenuOpen(false) : undefined}
                       className={cn(
                         "block px-3 py-2 rounded-lg text-sm transition-colors",
                         isActive(child.href)
@@ -196,7 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <h2 className="text-lg font-semibold text-text-primary">Admin</h2>
         </div>
         <div className="p-4">
-          <NavContent />
+          {renderNavContent(true)}
         </div>
       </aside>
 
@@ -207,7 +203,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <p className="text-sm text-text-secondary">GeoMaster World</p>
         </div>
         <div className="p-4">
-          <NavContent />
+          {renderNavContent(false)}
         </div>
       </aside>
 
