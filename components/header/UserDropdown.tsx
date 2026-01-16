@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { Newspaper } from "lucide-react";
 
 interface UserDropdownProps {
   user: {
@@ -84,6 +85,14 @@ export function UserDropdown({ user, locale }: UserDropdownProps) {
           </div>
 
           {/* Menu Items */}
+          <Link
+            href={`/${locale}/news`}
+            onClick={closeDropdown}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-3 transition-colors"
+          >
+            <Newspaper className="w-4 h-4" />
+            {t("news")}
+          </Link>
           <Link
             href={`/${locale}/profile`}
             onClick={closeDropdown}

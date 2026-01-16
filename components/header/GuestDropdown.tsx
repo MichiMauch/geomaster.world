@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { Newspaper } from "lucide-react";
 
 interface GuestDropdownProps {
   locale: string;
@@ -66,6 +67,16 @@ export function GuestDropdown({ locale }: GuestDropdownProps) {
             <p className="text-sm text-text-secondary">{guestText}</p>
             <p className="text-xs text-text-muted mt-1">{saveResultsText}</p>
           </div>
+
+          {/* News Link */}
+          <Link
+            href={`/${locale}/news`}
+            onClick={closeDropdown}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-3 transition-colors"
+          >
+            <Newspaper className="w-4 h-4" />
+            {t("news")}
+          </Link>
 
           {/* Login Button */}
           <Link

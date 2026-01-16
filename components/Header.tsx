@@ -33,6 +33,9 @@ export function Header() {
   // Check if on guesser game type page (e.g., /de/guesser/country:switzerland)
   const isGuesserGamePage = pathname?.match(new RegExp(`^/${locale}/guesser/[^/]+$`));
 
+  // Check if on news page
+  const isNewsPage = pathname === `/${locale}/news`;
+
   // Show profile prompt toast for users without a name
   useEffect(() => {
     if (status === "authenticated" && session?.user && !session.user.name) {
@@ -104,8 +107,8 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Link to Game Selection - only on guesser game pages */}
-          {isGuesserGamePage && (
+          {/* Link to Game Selection - on guesser game pages and news page */}
+          {(isGuesserGamePage || isNewsPage) && (
             <Link
               href={`/${locale}/guesser`}
               className="flex items-center gap-2 ml-4 pl-4 border-l border-glass-border text-text-secondary hover:text-primary transition-colors"

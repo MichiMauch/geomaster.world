@@ -2,9 +2,11 @@
 
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { UserSidebar } from "@/components/guesser/UserSidebar";
+import { NewsModal } from "@/components/news/NewsModal";
 import MissionControlBackground from "@/components/MissionControlBackground";
 // Game category configuration
 const GAME_CATEGORIES = [
@@ -79,13 +81,53 @@ const categoryDescriptions: Record<string, Record<string, string>> = {
   },
 };
 
+interface NewsItem {
+  id: string;
+  title: string;
+  titleEn: string | null;
+  content: string;
+  contentEn: string | null;
+  link: string | null;
+  linkText: string | null;
+  linkTextEn: string | null;
+}
+
 export default function GuesserCategoriesPage() {
   const locale = useLocale();
   const router = useRouter();
+  const [latestNews, setLatestNews] = useState<NewsItem | null>(null);
+
+  useEffect(() => {
+    const fetchLatestNews = async () => {
+      try {
+        const response = await fetch("/api/news?limit=1", {
+          cache: "no-store",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            setLatestNews(data[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching news:", error);
+      }
+    };
+    fetchLatestNews();
+  }, []);
 
   const handleCategoryClick = (categoryId: string) => {
     router.push(`/${locale}/guesser/${categoryId}`);
   };
+
+  // Get localized news content
+  const getLocalizedNews = (news: NewsItem) => ({
+    id: news.id,
+    title: locale === "en" ? (news.titleEn || news.title) : news.title,
+    content: locale === "en" ? (news.contentEn || news.content) : news.content,
+    link: news.link,
+    linkText: locale === "en" ? (news.linkTextEn || news.linkText) : news.linkText,
+  });
 
   return (
     <div className="relative min-h-screen">
@@ -105,19 +147,21 @@ export default function GuesserCategoriesPage() {
         <MissionControlBackground />
       </div>
 
+      {/* News Modal */}
+      {latestNews && (
+        <NewsModal news={getLocalizedNews(latestNews)} locale={locale} />
+      )}
+
       <div className="container max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
             <span className="text-4xl">🎯</span>
-            {locale === "de" ? "Wähle deine Herausforderung" :
-             locale === "en" ? "Choose Your Challenge" :
-             "Izberi svoj izziv"}
+            {locale === "de" ? "Wähle deine Herausforderung" : "Choose Your Challenge"}
           </h1>
           <p className="text-muted-foreground">
             {locale === "de" ? "Verschiedene Quiz-Kategorien warten auf dich. Wie gut kennst du die Welt?" :
-             locale === "en" ? "Different quiz categories await you. How well do you know the world?" :
-             "Različne kategorije kvizov te čakajo. Kako dobro poznaš svet?"}
+             "Different quiz categories await you. How well do you know the world?"}
           </p>
         </div>
 

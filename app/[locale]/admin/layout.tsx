@@ -36,6 +36,7 @@ const navItems: NavItem[] = [
       { label: "Länder", href: "/admin/content/countries" },
       { label: "Welt-Quizze", href: "/admin/content/world" },
       { label: "Bild-Maps", href: "/admin/content/images" },
+      { label: "News", href: "/admin/content/news" },
     ],
   },
   {

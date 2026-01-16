@@ -346,6 +346,19 @@ export const activityLogs = sqliteTable("activityLogs", {
   metadata: text("metadata"), // JSON string for request info (IP, user agent, etc.)
 });
 
+// News Items (for landing page and guesser announcements)
+export const newsItems = sqliteTable("newsItems", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  title: text("title").notNull(), // German title
+  titleEn: text("title_en"), // English title
+  content: text("content").notNull(), // German content
+  contentEn: text("content_en"), // English content
+  link: text("link"), // Optional URL
+  linkText: text("link_text"), // German link text
+  linkTextEn: text("link_text_en"), // English link text
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
 // Registration Rate Limiting
 export const registrationAttempts = sqliteTable("registrationAttempts", {
   id: text("id").primaryKey().$defaultFn(() => nanoid()),
@@ -387,3 +400,4 @@ export type Country = typeof countries.$inferSelect;
 export type WorldQuizType = typeof worldQuizTypes.$inferSelect;
 export type PanoramaType = typeof panoramaTypes.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
+export type NewsItem = typeof newsItems.$inferSelect;

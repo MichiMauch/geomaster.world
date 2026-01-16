@@ -96,6 +96,18 @@ export interface WorldLocation {
   difficulty: string;
 }
 
+export interface NewsItem {
+  id: string;
+  title: string;
+  titleEn: string | null;
+  content: string;
+  contentEn: string | null;
+  link: string | null;
+  linkText: string | null;
+  linkTextEn: string | null;
+  createdAt: Date;
+}
+
 export interface TranslationStatus {
   untranslatedCount: number;
   totalCount: number;

@@ -7,6 +7,11 @@ export interface TranslationResult {
   nameSl: string;
 }
 
+export interface NewsTranslationResult {
+  original: string;
+  english: string;
+}
+
 export class TranslationService {
   private static openai: OpenAI | null = null;
 
@@ -96,6 +101,66 @@ Return ONLY valid JSON, no markdown or explanation.`;
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]) as TranslationResult[];
+      }
+      throw new Error("Failed to parse translation response");
+    }
+  }
+
+  /**
+   * Translate news content from German to English using GPT-4o-mini
+   * Optimized for longer text like news titles and content
+   */
+  static async translateNewsContent(texts: string[]): Promise<NewsTranslationResult[]> {
+    if (texts.length === 0) return [];
+
+    const client = this.getClient();
+
+    const prompt = `Translate the following German texts to English.
+These are news announcements and titles for a geography quiz game called "GeoMaster".
+
+Input texts (JSON array):
+${JSON.stringify(texts)}
+
+Return a JSON array with objects containing:
+- original: the original German text
+- english: the English translation
+
+Important rules:
+1. Keep the tone friendly and engaging
+2. Keep product names like "GeoMaster" unchanged
+3. Translate naturally, not word-by-word
+4. Keep emojis if present
+
+Return ONLY valid JSON, no markdown or explanation.`;
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional translator. Translate German to English naturally. Return only valid JSON arrays.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 4000,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No response from OpenAI");
+    }
+
+    try {
+      const parsed = JSON.parse(content);
+      return parsed as NewsTranslationResult[];
+    } catch {
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]) as NewsTranslationResult[];
       }
       throw new Error("Failed to parse translation response");
     }

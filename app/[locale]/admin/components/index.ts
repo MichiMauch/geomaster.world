@@ -7,3 +7,4 @@ export { WorldLocationsTab } from "./WorldLocationsTab";
 export { ImageLocationsTab } from "./ImageLocationsTab";
 export { LogsTab } from "./LogsTab";
 export { GamesTab } from "./GamesTab";
+export { NewsTab } from "./NewsTab";
