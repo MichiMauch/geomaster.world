@@ -201,40 +201,40 @@ describe('TimeBasedScoringStrategy (v2)', () => {
 })
 
 describe('FairTimeScoringStrategy (v4)', () => {
-  it('should return 150 for perfect guess with instant time (50% bonus)', () => {
+  it('should return 500 for perfect guess with instant time (50% bonus)', () => {
     const score = FairTimeScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: 0,
       gameType: TEST_GAME_TYPE,
       timeLimitSeconds: 30,
     })
-    // Should be 100 * 1.5 = 150
-    expect(score).toBe(150)
+    // Should be 333 * 1.5 = 499.5 → 500
+    expect(score).toBe(500)
   })
 
-  it('should return 125 for perfect guess at half time (25% bonus)', () => {
+  it('should return 416 for perfect guess at half time (25% bonus)', () => {
     const score = FairTimeScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: 15,
       gameType: TEST_GAME_TYPE,
       timeLimitSeconds: 30,
     })
-    // Should be 100 * 1.25 = 125
-    expect(score).toBe(125)
+    // Should be 333 * 1.25 = 416.25 → 416
+    expect(score).toBe(416)
   })
 
-  it('should return 100 for perfect guess at time limit (no bonus)', () => {
+  it('should return 333 for perfect guess at time limit (no bonus)', () => {
     const score = FairTimeScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: 30,
       gameType: TEST_GAME_TYPE,
       timeLimitSeconds: 30,
     })
-    // Should be 100 * 1.0 = 100
-    expect(score).toBe(100)
+    // Should be 333 * 1.0 = 333
+    expect(score).toBe(333)
   })
 
-  it('should return 100 for perfect guess with no time data', () => {
+  it('should return 333 for perfect guess with no time data', () => {
     const score = FairTimeScoringStrategy.calculateRoundScore({
       distanceKm: 0,
       timeSeconds: null,
@@ -242,7 +242,7 @@ describe('FairTimeScoringStrategy (v4)', () => {
       timeLimitSeconds: 30,
     })
     // No time data = no bonus
-    expect(score).toBe(100)
+    expect(score).toBe(333)
   })
 
   it('should give higher score for faster times', () => {
@@ -270,9 +270,9 @@ describe('FairTimeScoringStrategy (v4)', () => {
       gameType: TEST_GAME_TYPE,
       timeLimitSeconds: 30,
     })
-    // Max is 150 (100 * 1.5)
-    expect(scoreInstant).toBe(150)
-    expect(scoreInstant).toBeLessThanOrEqual(150)
+    // Max is 500 (333 * 1.5)
+    expect(scoreInstant).toBe(500)
+    expect(scoreInstant).toBeLessThanOrEqual(500)
   })
 
   it('should use default 30s time limit when not specified', () => {
@@ -282,7 +282,7 @@ describe('FairTimeScoringStrategy (v4)', () => {
       gameType: TEST_GAME_TYPE,
     })
     // 15s of 30s = 50% through, bonus = 0.5 * 0.5 = 0.25
-    expect(score).toBe(125)
+    expect(score).toBe(416)
   })
 
   it('should handle time exceeding limit', () => {
@@ -293,7 +293,7 @@ describe('FairTimeScoringStrategy (v4)', () => {
       timeLimitSeconds: 30,
     })
     // Time clamped to limit, no bonus
-    expect(score).toBe(100)
+    expect(score).toBe(333)
   })
 })
 

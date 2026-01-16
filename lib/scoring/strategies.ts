@@ -130,10 +130,13 @@ export const WorldQuizScoringStrategy: ScoringStrategy = {
  * Precision is the most important factor, time gives a moderate bonus (max 50%)
  * Formula: finalScore = distanceScore * (1 + 0.5 * (1 - time/timeLimit))
  *
+ * Max points per round: 500 (333 base * 1.5 time bonus)
+ * Max points per game: 2500 (5 rounds * 500)
+ *
  * Examples (with 30s time limit):
- * - Instant (0s): Base * 1.5 (50% bonus)
- * - Quick (15s): Base * 1.25 (25% bonus)
- * - At limit (30s): Base * 1.0 (no bonus, but no penalty)
+ * - Instant (0s): Base * 1.5 (50% bonus) = max 500
+ * - Quick (15s): Base * 1.25 (25% bonus) = max 417
+ * - At limit (30s): Base * 1.0 (no bonus) = max 333
  *
  * This rewards precision more than speed:
  * - Slow + precise = still good score
@@ -142,10 +145,10 @@ export const WorldQuizScoringStrategy: ScoringStrategy = {
 export const FairTimeScoringStrategy: ScoringStrategy = {
   version: 4,
   name: "Fair Time Scoring",
-  description: "Precision-focused scoring with moderate time bonus (max 50%)",
+  description: "Precision-focused scoring with moderate time bonus (max 50%, max 500/round)",
 
   calculateRoundScore({ distanceKm, timeSeconds, gameType, scoreScaleFactor, timeLimitSeconds }: ScoringParams): number {
-    const maxPoints = 100;
+    const maxPoints = 333; // 333 * 1.5 = ~500 max per round
     const config = getGameTypeConfig(gameType);
     const scaleFactor = scoreScaleFactor ?? config?.scoreScaleFactor ?? 3000;
 
