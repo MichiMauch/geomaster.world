@@ -42,7 +42,7 @@ export async function GET(
     return new NextResponse(fileBuffer, {
       headers: {
         "Content-Type": mimeType,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
       },
     });
   } catch (error) {
