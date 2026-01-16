@@ -8,6 +8,7 @@ import {
 import {
   DistanceOnlyScoringStrategy,
   TimeBasedScoringStrategy,
+  FairTimeScoringStrategy,
   getScoringStrategyByVersion,
   SCORING_STRATEGIES,
 } from '@/lib/scoring/strategies'
@@ -41,7 +42,7 @@ describe('Scoring System', () => {
         timeSeconds: 5,
         gameType: TEST_GAME_TYPE,
       })
-      // v2 with time bonus should give more than 100
+      // v4 with time bonus should give more than 100
       expect(score).toBeGreaterThan(100)
     })
 
@@ -61,7 +62,7 @@ describe('Scoring System', () => {
   describe('getCurrentScoringVersion', () => {
     it('should return current scoring version', () => {
       const version = getCurrentScoringVersion()
-      expect(version).toBe(2)
+      expect(version).toBe(4)
     })
   })
 
@@ -85,7 +86,8 @@ describe('Scoring System', () => {
       expect(versions).toContain(1)
       expect(versions).toContain(2)
       expect(versions).toContain(3)
-      expect(versions).toEqual([1, 2, 3])
+      expect(versions).toContain(4)
+      expect(versions).toEqual([1, 2, 3, 4])
     })
   })
 })
@@ -198,10 +200,109 @@ describe('TimeBasedScoringStrategy (v2)', () => {
   })
 })
 
+describe('FairTimeScoringStrategy (v4)', () => {
+  it('should return 150 for perfect guess with instant time (50% bonus)', () => {
+    const score = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 0,
+      timeSeconds: 0,
+      gameType: TEST_GAME_TYPE,
+      timeLimitSeconds: 30,
+    })
+    // Should be 100 * 1.5 = 150
+    expect(score).toBe(150)
+  })
+
+  it('should return 125 for perfect guess at half time (25% bonus)', () => {
+    const score = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 0,
+      timeSeconds: 15,
+      gameType: TEST_GAME_TYPE,
+      timeLimitSeconds: 30,
+    })
+    // Should be 100 * 1.25 = 125
+    expect(score).toBe(125)
+  })
+
+  it('should return 100 for perfect guess at time limit (no bonus)', () => {
+    const score = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 0,
+      timeSeconds: 30,
+      gameType: TEST_GAME_TYPE,
+      timeLimitSeconds: 30,
+    })
+    // Should be 100 * 1.0 = 100
+    expect(score).toBe(100)
+  })
+
+  it('should return 100 for perfect guess with no time data', () => {
+    const score = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 0,
+      timeSeconds: null,
+      gameType: TEST_GAME_TYPE,
+      timeLimitSeconds: 30,
+    })
+    // No time data = no bonus
+    expect(score).toBe(100)
+  })
+
+  it('should give higher score for faster times', () => {
+    const scoreFast = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 100,
+      timeSeconds: 5,
+      gameType: TEST_GAME_TYPE,
+      scoreScaleFactor: 3000,
+      timeLimitSeconds: 30,
+    })
+    const scoreSlow = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 100,
+      timeSeconds: 25,
+      gameType: TEST_GAME_TYPE,
+      scoreScaleFactor: 3000,
+      timeLimitSeconds: 30,
+    })
+    expect(scoreFast).toBeGreaterThan(scoreSlow)
+  })
+
+  it('should cap time bonus at 50% (max multiplier 1.5x)', () => {
+    const scoreInstant = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 0,
+      timeSeconds: 0,
+      gameType: TEST_GAME_TYPE,
+      timeLimitSeconds: 30,
+    })
+    // Max is 150 (100 * 1.5)
+    expect(scoreInstant).toBe(150)
+    expect(scoreInstant).toBeLessThanOrEqual(150)
+  })
+
+  it('should use default 30s time limit when not specified', () => {
+    const score = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 0,
+      timeSeconds: 15,
+      gameType: TEST_GAME_TYPE,
+    })
+    // 15s of 30s = 50% through, bonus = 0.5 * 0.5 = 0.25
+    expect(score).toBe(125)
+  })
+
+  it('should handle time exceeding limit', () => {
+    const score = FairTimeScoringStrategy.calculateRoundScore({
+      distanceKm: 0,
+      timeSeconds: 60,
+      gameType: TEST_GAME_TYPE,
+      timeLimitSeconds: 30,
+    })
+    // Time clamped to limit, no bonus
+    expect(score).toBe(100)
+  })
+})
+
 describe('getScoringStrategyByVersion', () => {
   it('should return correct strategy for valid version', () => {
     expect(getScoringStrategyByVersion(1)).toBe(SCORING_STRATEGIES[1])
     expect(getScoringStrategyByVersion(2)).toBe(SCORING_STRATEGIES[2])
+    expect(getScoringStrategyByVersion(3)).toBe(SCORING_STRATEGIES[3])
+    expect(getScoringStrategyByVersion(4)).toBe(SCORING_STRATEGIES[4])
   })
 
   it('should fallback to v1 for unknown version', () => {

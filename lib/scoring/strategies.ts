@@ -6,6 +6,7 @@ export interface ScoringParams {
   gameType: string;
   scoreScaleFactor?: number; // Optional override for dynamic game types (e.g., world quizzes from DB)
   isCorrectCountry?: boolean; // For world quizzes: true if click was inside target country
+  timeLimitSeconds?: number; // Time limit for the round (default: 30)
 }
 
 export interface ScoringStrategy {
@@ -124,6 +125,45 @@ export const WorldQuizScoringStrategy: ScoringStrategy = {
   }
 };
 
+/**
+ * v4: Fair Time Scoring
+ * Precision is the most important factor, time gives a moderate bonus (max 50%)
+ * Formula: finalScore = distanceScore * (1 + 0.5 * (1 - time/timeLimit))
+ *
+ * Examples (with 30s time limit):
+ * - Instant (0s): Base * 1.5 (50% bonus)
+ * - Quick (15s): Base * 1.25 (25% bonus)
+ * - At limit (30s): Base * 1.0 (no bonus, but no penalty)
+ *
+ * This rewards precision more than speed:
+ * - Slow + precise = still good score
+ * - Fast + precise = highscore
+ */
+export const FairTimeScoringStrategy: ScoringStrategy = {
+  version: 4,
+  name: "Fair Time Scoring",
+  description: "Precision-focused scoring with moderate time bonus (max 50%)",
+
+  calculateRoundScore({ distanceKm, timeSeconds, gameType, scoreScaleFactor, timeLimitSeconds }: ScoringParams): number {
+    const maxPoints = 100;
+    const config = getGameTypeConfig(gameType);
+    const scaleFactor = scoreScaleFactor ?? config?.scoreScaleFactor ?? 3000;
+
+    // Calculate base distance score
+    const baseScore = maxPoints * Math.exp(-distanceKm / scaleFactor);
+
+    // Calculate time bonus (0% to 50%)
+    const timeLimit = timeLimitSeconds || 30;
+    const time = timeSeconds ?? timeLimit; // No time data = no bonus
+    const clampedTime = Math.max(0, Math.min(time, timeLimit));
+    const timeBonus = 0.5 * (1 - clampedTime / timeLimit);
+
+    // Final score = base * (1 + timeBonus)
+    const finalScore = baseScore * (1 + timeBonus);
+    return Math.round(finalScore);
+  }
+};
+
 // Export the time multiplier calculation for use in UI
 export { calculateTimeMultiplier };
 
@@ -134,6 +174,7 @@ export const SCORING_STRATEGIES: Record<number, ScoringStrategy> = {
   1: DistanceOnlyScoringStrategy,
   2: TimeBasedScoringStrategy,
   3: WorldQuizScoringStrategy,
+  4: FairTimeScoringStrategy,
 };
 
 /**
