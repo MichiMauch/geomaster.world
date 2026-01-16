@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Open_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
+
+// Cache version - increment to force all clients to clear caches
+const CACHE_VERSION = "v2";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -75,6 +79,51 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} className="dark">
+      <head>
+        <Script
+          id="cache-buster"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var CACHE_VERSION = "${CACHE_VERSION}";
+                var CACHE_KEY = "geomaster-cache-version";
+                try {
+                  var stored = localStorage.getItem(CACHE_KEY);
+                  if (stored !== CACHE_VERSION) {
+                    console.log("[CacheBuster] Version mismatch, clearing caches...");
+                    // Clear caches
+                    if (window.caches) {
+                      caches.keys().then(function(names) {
+                        names.forEach(function(name) {
+                          console.log("[CacheBuster] Deleting cache:", name);
+                          caches.delete(name);
+                        });
+                      });
+                    }
+                    // Update and reload service workers
+                    if (navigator.serviceWorker) {
+                      navigator.serviceWorker.getRegistrations().then(function(regs) {
+                        regs.forEach(function(reg) {
+                          console.log("[CacheBuster] Updating service worker");
+                          reg.update();
+                          reg.unregister();
+                        });
+                      });
+                    }
+                    localStorage.setItem(CACHE_KEY, CACHE_VERSION);
+                    // Reload to get fresh content
+                    if (stored !== null) {
+                      console.log("[CacheBuster] Reloading page...");
+                      window.location.reload();
+                    }
+                  }
+                } catch(e) { console.error("[CacheBuster] Error:", e); }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${montserrat.variable} ${openSans.variable} font-sans antialiased bg-background text-text-primary`}>
         <Providers>{children}</Providers>
         <Toaster
