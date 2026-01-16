@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAdminData } from "./hooks/useAdminData";
-import { GroupsTab, UsersTab, CountriesTab, WorldQuizTypesTab, LocationsTab, WorldLocationsTab, ImageLocationsTab, LogsTab } from "./components";
+import { GroupsTab, UsersTab, CountriesTab, WorldQuizTypesTab, LocationsTab, WorldLocationsTab, ImageLocationsTab, LogsTab, GamesTab } from "./components";
 import type { AdminTab } from "./types";
 
 export default function AdminPage() {
@@ -131,6 +131,11 @@ export default function AdminPage() {
             onClick={() => setActiveTab("logs")}
             label="Logs"
           />
+          <TabButton
+            active={activeTab === "games"}
+            onClick={() => setActiveTab("games")}
+            label="Spiele"
+          />
         </div>
 
         {/* Content */}
@@ -207,6 +212,8 @@ export default function AdminPage() {
         )}
 
         {activeTab === "logs" && <LogsTab />}
+
+        {activeTab === "games" && <GamesTab />}
       </main>
     </div>
   );
