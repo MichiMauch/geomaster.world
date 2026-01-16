@@ -275,6 +275,7 @@ export async function GET(request: Request) {
           latitude: guess.latitude,
           longitude: guess.longitude,
           distanceKm: guess.distanceKm,
+          timeSeconds: guess.timeSeconds,
           score,
           roundNumber: guess.roundNumber,
           locationIndex: guess.locationIndex,
