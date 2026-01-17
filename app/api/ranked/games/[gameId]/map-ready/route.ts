@@ -58,12 +58,13 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Verify this is the active location
+    // If activeLocationIndex doesn't match, update it
+    // This handles race conditions where map-ready is called before start-location completes
     if (game.activeLocationIndex !== locationIndex) {
-      return NextResponse.json(
-        { error: "Location index mismatch" },
-        { status: 400 }
-      );
+      await db
+        .update(games)
+        .set({ activeLocationIndex: locationIndex })
+        .where(eq(games.id, gameId));
     }
 
     // Check if timer already started (idempotent - don't restart)

@@ -141,7 +141,9 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
           // Timer not started yet - will be set by notifyMapReady
           // For now, just store the time limit
           setServerTimeRemaining(data.timeLimit ?? data.timeRemaining ?? 30);
-          // Don't set locationStartedAt here - wait for map to be ready
+          // WICHTIG: locationStartedAt wird NICHT hier zurückgesetzt!
+          // Das würde den Timestamp überschreiben den notifyMapReady gerade gesetzt hat
+          // (Race Condition: startLocation API kehrt nach notifyMapReady zurück)
 
           // Update the round in the rounds array with coordinates
           setRounds(prev => prev.map(r =>
@@ -245,6 +247,13 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
     startLocationCalledRef.current = null;
   }, []);
 
+  // Reset just timer-related state (for round transitions without clearing activeRound)
+  // This prevents the timer from using the old locationStartedAt when calculating remaining time
+  const resetTimerState = useCallback(() => {
+    setLocationStartedAt(null);
+    setServerTimeRemaining(null);
+  }, []);
+
   // Notify server that map is ready (starts the timer)
   const notifyMapReady = useCallback(async (locationIndex: number): Promise<{
     success: boolean;
@@ -296,6 +305,7 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
     startLocation,
     getActiveLocation,
     clearActiveRound,
+    resetTimerState,
     notifyMapReady,
   };
 }

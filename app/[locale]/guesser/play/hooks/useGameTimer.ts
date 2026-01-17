@@ -88,9 +88,17 @@ export function useGameTimer({
       const elapsedMs = Date.now() - locationStartedAt;
       const elapsedSeconds = elapsedMs / 1000;
       const timeLimit = getCurrentTimeLimit();
-      const actualRemaining = Math.max(0, timeLimit - elapsedSeconds);
 
-      setTimeRemaining(actualRemaining);
+      // If timer just started (< 1 second elapsed), show full time to avoid jumpy display
+      // This happens during normal round transitions. For page refreshes mid-round,
+      // elapsed time will be > 1 second and we show the actual remaining time.
+      if (elapsedSeconds < 1) {
+        setTimeRemaining(timeLimit);
+      } else {
+        const actualRemaining = Math.max(0, timeLimit - elapsedSeconds);
+        setTimeRemaining(actualRemaining);
+      }
+
       lastServerSyncRef.current = Date.now();
     } else {
       // Guest mode or no server data: use client-side timer

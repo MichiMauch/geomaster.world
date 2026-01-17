@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useCallback } from "react";
+import { useState, useEffect, use, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { CountryMap, PanoramaMap } from "@/components/Map";
@@ -55,6 +55,7 @@ export default function GuesserPlayPage({
     startLocation,
     getActiveLocation,
     clearActiveRound,
+    resetTimerState,
     notifyMapReady,
   } = useGameData({ gameId, locale });
 
@@ -69,23 +70,41 @@ export default function GuesserPlayPage({
   const [initialized, setInitialized] = useState(false);
   const [mapReady, setMapReady] = useState(false);
 
+  // Ref-based guard for handleMapReady to avoid stale closure issues
+  const mapReadyCalledRef = useRef(false);
+  const prevRoundIndexRef = useRef(currentRoundIndex);
+
+  // Synchronously reset the ref when round changes (during render, not in effect!)
+  // This ensures the ref is reset BEFORE CountryMap's effects run
+  if (prevRoundIndexRef.current !== currentRoundIndex) {
+    prevRoundIndexRef.current = currentRoundIndex;
+    mapReadyCalledRef.current = false;
+  }
+
   // Handle map ready callback - starts the timer
   const handleMapReady = useCallback(async () => {
-    // Only trigger once per round
-    if (mapReady) return;
+    // Ref-based guard - no stale closure issues!
+    if (mapReadyCalledRef.current) return;
+    mapReadyCalledRef.current = true;
     setMapReady(true);
 
     // For logged-in users: notify server to start the timer
-    if (!isGuest && currentRoundIndex !== null) {
+    // Only call if game is already initialized (otherwise the effect below handles it)
+    if (!isGuest && initialized && currentRoundIndex !== null) {
       const locationIndex = rounds[currentRoundIndex]?.locationIndex ?? currentRoundIndex + 1;
       await notifyMapReady(locationIndex);
     }
-  }, [mapReady, isGuest, currentRoundIndex, rounds, notifyMapReady]);
+  }, [isGuest, initialized, currentRoundIndex, rounds, notifyMapReady]);
 
-  // Reset mapReady when round changes
+
+  // Call notifyMapReady when initialization completes and map is already ready
+  // This handles the case where the map loads faster than game initialization
   useEffect(() => {
-    setMapReady(false);
-  }, [currentRoundIndex]);
+    if (initialized && mapReady && !isGuest && !locationStartedAt) {
+      const locationIndex = rounds[currentRoundIndex]?.locationIndex ?? currentRoundIndex + 1;
+      notifyMapReady(locationIndex);
+    }
+  }, [initialized, mapReady, isGuest, locationStartedAt, currentRoundIndex, rounds, notifyMapReady]);
 
   // DISPLAY-ROUND: Immer aus rounds[] - sofort verfügbar für UI (Ortsname, etc.)
   // Reagiert SOFORT auf currentRoundIndex Änderung
@@ -359,6 +378,17 @@ export default function GuesserPlayPage({
       return;
     }
 
+    // Reset timer state FIRST - so timer waits for new locationStartedAt
+    // (otherwise timer calculates with OLD locationStartedAt = wrong time!)
+    resetTimerState();
+
+    // Also reset the displayed time to 30 immediately (don't show old value)
+    resetTimer(rounds[nextRoundIndex]);
+
+    // Reset mapReady - must happen before currentRoundIndex changes
+    // (useEffect would run AFTER CountryMap's onReady, causing race condition)
+    setMapReady(false);
+
     // SOFORT neuen Index setzen - zeigt sofort neuen Ortsnamen
     setCurrentRoundIndex(nextRoundIndex);
 
@@ -533,6 +563,7 @@ export default function GuesserPlayPage({
       >
         {isPanorama && currentRound?.mapillaryImageKey ? (
           <PanoramaMap
+            roundId={currentRound?.id}
             mapillaryImageKey={currentRound.mapillaryImageKey}
             heading={currentRound.heading ?? undefined}
             pitch={currentRound.pitch ?? undefined}
@@ -550,6 +581,7 @@ export default function GuesserPlayPage({
           />
         ) : (
           <CountryMap
+            roundId={currentRound?.id}
             gameType={game ? getEffectiveGameType(game) : undefined}
             country={game?.country ?? DEFAULT_COUNTRY}
             dynamicCountry={dynamicCountry ?? undefined}

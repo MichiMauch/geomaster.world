@@ -40,6 +40,7 @@ interface ImageMapProps {
   interactive?: boolean;
   height?: string;
   onReady?: () => void;
+  roundId?: string; // Unique ID per round to trigger onReady reset
 }
 
 function MapClickHandler({ onMarkerPlace }: { onMarkerPlace?: (position: MarkerPosition) => void }) {
@@ -63,6 +64,7 @@ export default function ImageMap({
   interactive = true,
   height = "400px",
   onReady,
+  roundId,
 }: ImageMapProps) {
   const [mounted, setMounted] = useState(false);
   const onReadyCalledRef = useRef(false);
@@ -72,18 +74,19 @@ export default function ImageMap({
     setMounted(true);
   }, []);
 
-  // Call onReady when map is mounted (only once)
+  // Reset onReady flag when gameType or round changes (MUST be defined BEFORE the call effect!)
+  useEffect(() => {
+    onReadyCalledRef.current = false;
+  }, [gameType, roundId]);
+
+  // Call onReady when map is mounted (only once per round)
+  // WICHTIG: roundId muss in den Dependencies sein damit der Effect bei Rundenwechsel läuft!
   useEffect(() => {
     if (mounted && onReady && !onReadyCalledRef.current) {
       onReadyCalledRef.current = true;
       onReady();
     }
-  }, [mounted, onReady]);
-
-  // Reset onReady flag when gameType changes
-  useEffect(() => {
-    onReadyCalledRef.current = false;
-  }, [gameType]);
+  }, [mounted, onReady, roundId]);
 
   if (!mounted) {
     return (

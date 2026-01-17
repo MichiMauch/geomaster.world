@@ -27,6 +27,7 @@ export default function CountryMap({
   height = "400px",
   hintCircle = null,
   onReady,
+  roundId,
 }: CountryMapProps) {
   const isMobile = useIsMobile();
   const onReadyCalledRef = useRef(false);
@@ -45,18 +46,19 @@ export default function CountryMap({
 
   const { mounted, geoData } = useGeoData({ dynamicCountry, dynamicWorldQuiz, gameTypeConfig });
 
-  // Call onReady when map is fully loaded (only once per mount)
+  // Reset onReady flag when round changes (MUST be defined BEFORE the call effect!)
+  useEffect(() => {
+    onReadyCalledRef.current = false;
+  }, [dynamicCountry?.id, dynamicWorldQuiz?.id, gameType, roundId]);
+
+  // Call onReady when map is fully loaded (only once per round)
+  // WICHTIG: roundId muss in den Dependencies sein damit der Effect bei Rundenwechsel läuft!
   useEffect(() => {
     if (mounted && geoData && onReady && !onReadyCalledRef.current) {
       onReadyCalledRef.current = true;
       onReady();
     }
-  }, [mounted, geoData, onReady]);
-
-  // Reset onReady flag when key props change (new round)
-  useEffect(() => {
-    onReadyCalledRef.current = false;
-  }, [dynamicCountry?.id, dynamicWorldQuiz?.id, gameType]);
+  }, [mounted, geoData, onReady, roundId]);
 
   // If this is an image-based map, delegate to ImageMap component
   if (isImageMap && gameTypeConfig) {

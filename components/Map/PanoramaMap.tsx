@@ -44,6 +44,7 @@ interface PanoramaMapProps {
   interactive?: boolean;
   height?: string;
   onReady?: () => void;
+  roundId?: string; // Unique ID per round to trigger onReady reset
 }
 
 function MapClickHandler({ onMarkerPlace }: { onMarkerPlace?: (position: MarkerPosition) => void }) {
@@ -110,6 +111,7 @@ export default function PanoramaMap({
   interactive = true,
   height = "100%",
   onReady,
+  roundId,
 }: PanoramaMapProps) {
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
@@ -191,18 +193,19 @@ export default function PanoramaMap({
     }
   }, [mapillaryImageKey]);
 
-  // Call onReady when both geoData is loaded and viewer is ready (only once per image)
+  // Reset onReady flag when image key or round changes (MUST be defined BEFORE the call effect!)
+  useEffect(() => {
+    onReadyCalledRef.current = false;
+  }, [mapillaryImageKey, roundId]);
+
+  // Call onReady when both geoData is loaded and viewer is ready (only once per round)
+  // WICHTIG: roundId muss in den Dependencies sein damit der Effect bei Rundenwechsel läuft!
   useEffect(() => {
     if (mounted && geoData && viewerReady && onReady && !onReadyCalledRef.current) {
       onReadyCalledRef.current = true;
       onReady();
     }
-  }, [mounted, geoData, viewerReady, onReady]);
-
-  // Reset onReady flag when image key changes
-  useEffect(() => {
-    onReadyCalledRef.current = false;
-  }, [mapillaryImageKey]);
+  }, [mounted, geoData, viewerReady, onReady, roundId]);
 
   if (!mounted) {
     return (

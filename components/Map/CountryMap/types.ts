@@ -44,4 +44,5 @@ export interface CountryMapProps {
   height?: string;
   hintCircle?: HintCircle | null;
   onReady?: () => void; // Called when map is fully loaded and visible
+  roundId?: string; // Unique ID per round to trigger onReady reset
 }
