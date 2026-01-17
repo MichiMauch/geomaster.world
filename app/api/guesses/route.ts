@@ -239,23 +239,21 @@ export async function GET(request: Request) {
         // Get scoreScaleFactor from DB for dynamic game types
         const dbScoreScaleFactor = await getScoreScaleFactorFromDB(effectiveGameType);
 
-        // Calculate score - use V3 for special quizzes only (country hit detection)
+        // Calculate score - V4 for all game types
         let score: number;
         let isCorrectCountry: boolean | undefined;
 
         if (isSpecialQuizGameType(effectiveGameType) && guess.latitude !== null && guess.longitude !== null && locationData?.countryCode) {
-          // Special quiz: V3 scoring with country hit bonus
+          // Special quiz: check if click was in correct country
+          // If yes, treat as 0 distance (gives 333 base points with V4)
           isCorrectCountry = await isPointInCountryPolygon(guess.latitude, guess.longitude, locationData.countryCode);
-          score = calculateScore(
-            {
-              distanceKm: guess.distanceKm,
-              timeSeconds: guess.timeSeconds,
-              gameType: effectiveGameType,
-              scoreScaleFactor: dbScoreScaleFactor,
-              isCorrectCountry,
-            },
-            3 // V3 scoring for special quizzes
-          );
+          const effectiveDistance = isCorrectCountry ? 0 : guess.distanceKm;
+          score = calculateScore({
+            distanceKm: effectiveDistance,
+            timeSeconds: guess.timeSeconds,
+            gameType: effectiveGameType,
+            scoreScaleFactor: dbScoreScaleFactor,
+          });
         } else {
           // Country and World quizzes: use current scoring version (V4)
           score = calculateScore({
@@ -569,20 +567,18 @@ export async function POST(request: Request) {
     let isCorrectCountry: boolean | undefined;
 
     if (isSpecialQuizGameType(effectiveGameType) && !timeout && latitude !== null && longitude !== null) {
-      // Special quiz: V3 scoring with country hit bonus
+      // Special quiz: check if click was in correct country
+      // If yes, treat as 0 distance (gives 333 base points with V4)
       if (location.countryCode) {
         isCorrectCountry = await isPointInCountryPolygon(latitude, longitude, location.countryCode);
       }
-      score = calculateScore(
-        {
-          distanceKm,
-          timeSeconds: timeSeconds || null,
-          gameType: effectiveGameType,
-          scoreScaleFactor: dbScoreScaleFactor,
-          isCorrectCountry,
-        },
-        3 // V3 scoring for special quizzes
-      );
+      const effectiveDistance = isCorrectCountry ? 0 : distanceKm;
+      score = calculateScore({
+        distanceKm: effectiveDistance,
+        timeSeconds: timeSeconds || null,
+        gameType: effectiveGameType,
+        scoreScaleFactor: dbScoreScaleFactor,
+      });
     } else {
       // Country/World/Panorama quizzes: use current scoring version (V4)
       score = calculateScore({
