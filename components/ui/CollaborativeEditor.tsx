@@ -8,7 +8,7 @@ import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 import { Bold, Italic, Heading2, Heading3, List, ListOrdered, Quote, Code, Users, Loader2, AlertCircle } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 interface CollaborativeEditorProps {
   documentId: string;
@@ -37,30 +37,20 @@ export function CollaborativeEditor({
   const [collaborators, setCollaborators] = useState<AwarenessUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Use refs to track Y.js instances for proper cleanup
-  const ydocRef = useRef<Y.Doc | null>(null);
-  const providerRef = useRef<HocuspocusProvider | null>(null);
+  // Use state for Y.js instances so they can be used in render
+  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
+  const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
 
   // Initialize Y.js document and provider
   useEffect(() => {
-    // Clean up previous instances
-    if (providerRef.current) {
-      providerRef.current.destroy();
-    }
-    if (ydocRef.current) {
-      ydocRef.current.destroy();
-    }
-
     setStatus("connecting");
     setError(null);
 
-    const ydoc = new Y.Doc();
-    ydocRef.current = ydoc;
-
-    const provider = new HocuspocusProvider({
+    const newYdoc = new Y.Doc();
+    const newProvider = new HocuspocusProvider({
       url: serverUrl,
       name: documentId,
-      document: ydoc,
+      document: newYdoc,
       token,
       connect: true,
       onConnect: () => {
@@ -84,46 +74,58 @@ export function CollaborativeEditor({
         setCollaborators(users);
       },
     });
-    providerRef.current = provider;
+
+    setYdoc(newYdoc);
+    setProvider(newProvider);
 
     // Cleanup on unmount or when dependencies change
     return () => {
-      provider.destroy();
-      ydoc.destroy();
-      ydocRef.current = null;
-      providerRef.current = null;
+      newProvider.destroy();
+      newYdoc.destroy();
+      setYdoc(null);
+      setProvider(null);
     };
   }, [documentId, token, serverUrl]);
 
+  // Memoize extensions to prevent recreating on every render
+  const extensions = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const baseExtensions: any[] = [
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+        horizontalRule: false,
+      }),
+      Placeholder.configure({
+        placeholder: placeholder || "Text eingeben...",
+      }),
+    ];
+
+    if (ydoc) {
+      baseExtensions.push(
+        Collaboration.configure({
+          document: ydoc,
+        })
+      );
+    }
+
+    if (provider) {
+      baseExtensions.push(
+        CollaborationCursor.configure({
+          provider: provider,
+          user: {
+            name: "Loading...",
+            color: "#6366f1",
+          },
+        })
+      );
+    }
+
+    return baseExtensions;
+  }, [ydoc, provider, placeholder]);
+
   const editor = useEditor(
     {
-      extensions: [
-        StarterKit.configure({
-          heading: { levels: [2, 3] },
-          horizontalRule: false,
-        }),
-        Placeholder.configure({
-          placeholder: placeholder || "Text eingeben...",
-        }),
-        ...(ydocRef.current
-          ? [
-              Collaboration.configure({
-                document: ydocRef.current,
-              }),
-            ]
-          : []),
-        ...(providerRef.current
-          ? [
-              CollaborationCursor.configure({
-                provider: providerRef.current,
-                user: {
-                  name: "Loading...",
-                  color: "#6366f1",
-                },
-              }),
-            ]
-          : []),
-      ],
+      extensions,
       editorProps: {
         attributes: {
           class: "outline-none min-h-[80px]",
@@ -131,7 +133,7 @@ export function CollaborativeEditor({
       },
       immediatelyRender: false,
     },
-    [ydocRef.current, providerRef.current]
+    [extensions]
   );
 
   // Cleanup editor on unmount
@@ -180,43 +182,19 @@ export function CollaborativeEditor({
     );
   }
 
-  const ToolbarButton = ({
-    onClick,
-    isActive,
-    title,
-    children,
-  }: {
-    onClick: () => void;
-    isActive: boolean;
-    title: string;
-    children: React.ReactNode;
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`p-2 rounded text-text-secondary transition-colors ${
-        isActive
-          ? "bg-primary/20 text-primary"
-          : "hover:bg-surface-2 hover:text-text-primary"
-      }`}
-      title={title}
-    >
-      {children}
-    </button>
-  );
-
-  const Separator = () => <div className="w-px h-6 bg-glass-border mx-1" />;
-
   return (
     <div className={`rounded-lg bg-surface-3 border border-glass-border focus-within:ring-2 focus-within:ring-primary ${className || ""}`}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b border-glass-border">
         {/* Connection status */}
-        <div className="flex items-center gap-2 mr-2" title={
-          status === "connecting" ? "Verbindung wird hergestellt..." :
-          status === "connected" ? "Verbunden" :
-          "Getrennt - Versuche Wiederverbindung..."
-        }>
+        <div
+          className="flex items-center gap-2 mr-2"
+          title={
+            status === "connecting" ? "Verbindung wird hergestellt..." :
+            status === "connected" ? "Verbunden" :
+            "Getrennt - Versuche Wiederverbindung..."
+          }
+        >
           {status === "connecting" && (
             <Loader2 className="w-4 h-4 animate-spin text-yellow-500" />
           )}
@@ -361,4 +339,36 @@ export function CollaborativeEditor({
       />
     </div>
   );
+}
+
+// Helper components moved outside to avoid recreating during render
+function ToolbarButton({
+  onClick,
+  isActive,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  isActive: boolean;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`p-2 rounded text-text-secondary transition-colors ${
+        isActive
+          ? "bg-primary/20 text-primary"
+          : "hover:bg-surface-2 hover:text-text-primary"
+      }`}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Separator() {
+  return <div className="w-px h-6 bg-glass-border mx-1" />;
 }

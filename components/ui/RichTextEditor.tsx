@@ -19,7 +19,6 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
       StarterKit.configure({
         heading: { levels: [2, 3] },
         horizontalRule: false,
-        // bulletList, orderedList, blockquote, codeBlock, code are enabled by default
       }),
       Placeholder.configure({
         placeholder: placeholder || "Text eingeben...",
@@ -43,35 +42,6 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
   }, [value, editor]);
 
   if (!editor) return null;
-
-  const ToolbarButton = ({
-    onClick,
-    isActive,
-    title,
-    children,
-  }: {
-    onClick: () => void;
-    isActive: boolean;
-    title: string;
-    children: React.ReactNode;
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`p-2 rounded text-text-secondary transition-colors ${
-        isActive
-          ? "bg-primary/20 text-primary"
-          : "hover:bg-surface-2 hover:text-text-primary"
-      }`}
-      title={title}
-    >
-      {children}
-    </button>
-  );
-
-  const Separator = () => (
-    <div className="w-px h-6 bg-glass-border mx-1" />
-  );
 
   return (
     <div className={`rounded-lg bg-surface-3 border border-glass-border focus-within:ring-2 focus-within:ring-primary ${className || ""}`}>
@@ -169,4 +139,36 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
       />
     </div>
   );
+}
+
+// Helper components moved outside to avoid recreating during render
+function ToolbarButton({
+  onClick,
+  isActive,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  isActive: boolean;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`p-2 rounded text-text-secondary transition-colors ${
+        isActive
+          ? "bg-primary/20 text-primary"
+          : "hover:bg-surface-2 hover:text-text-primary"
+      }`}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Separator() {
+  return <div className="w-px h-6 bg-glass-border mx-1" />;
 }
