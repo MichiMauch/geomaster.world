@@ -37,9 +37,10 @@ export function NewsCard({ news, locale }: NewsCardProps) {
         {news.title}
       </h3>
 
-      <p className="text-text-secondary text-sm flex-1 mb-4 line-clamp-3">
-        {news.content}
-      </p>
+      <div
+        className="text-text-secondary text-sm flex-1 mb-4 line-clamp-3 [&_p]:inline [&_h2]:inline [&_h3]:inline [&_ul]:inline [&_ol]:inline [&_li]:inline [&_blockquote]:inline [&_strong]:font-semibold [&_em]:italic [&_code]:text-primary"
+        dangerouslySetInnerHTML={{ __html: news.content }}
+      />
 
       {news.link && (
         <Link

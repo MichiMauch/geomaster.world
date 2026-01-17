@@ -85,9 +85,21 @@ export function NewsModal({ news, locale }: NewsModalProps) {
 
           {/* Content */}
           <div className="px-6 py-4">
-            <p className="text-text-secondary leading-relaxed">
-              {news.content}
-            </p>
+            <div
+              className="text-text-secondary leading-relaxed prose prose-invert max-w-none
+                [&_p]:my-2
+                [&_strong]:font-semibold [&_strong]:text-text-primary
+                [&_em]:italic
+                [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-text-primary [&_h2]:mt-3 [&_h2]:mb-1
+                [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-text-primary [&_h3]:mt-2 [&_h3]:mb-1
+                [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2
+                [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2
+                [&_li]:my-1
+                [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-3 [&_blockquote]:italic
+                [&_code]:bg-surface-3 [&_code]:px-1 [&_code]:rounded [&_code]:text-primary [&_code]:text-sm
+                [&_pre]:bg-surface-3 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:overflow-x-auto"
+              dangerouslySetInnerHTML={{ __html: news.content }}
+            />
 
             {news.link && (
               <Link

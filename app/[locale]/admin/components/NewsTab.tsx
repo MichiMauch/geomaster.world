@@ -3,9 +3,10 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import { FloatingInput } from "@/components/ui/FloatingInput";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import ConfirmModal from "@/components/ConfirmModal";
 import type { NewsItem } from "../types";
-import { Pencil, Trash2, ExternalLink, X } from "lucide-react";
+import { Pencil, Trash2, ExternalLink, X, Type } from "lucide-react";
 
 interface NewsTabProps {
   news: NewsItem[];
@@ -34,6 +35,8 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
     link: "",
     linkText: "",
   });
+  const [saving, setSaving] = useState(false);
+  const [useRichText, setUseRichText] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -48,20 +51,25 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
     e.preventDefault();
     if (!formData.title || !formData.content) return;
 
-    // English fields are auto-translated by the API
-    const success = await onAdd({
-      title: formData.title,
-      titleEn: null,
-      content: formData.content,
-      contentEn: null,
-      link: formData.link || null,
-      linkText: formData.linkText || null,
-      linkTextEn: null,
-    });
+    setSaving(true);
+    try {
+      // English fields are auto-translated by the API
+      const success = await onAdd({
+        title: formData.title,
+        titleEn: null,
+        content: formData.content,
+        contentEn: null,
+        link: formData.link || null,
+        linkText: formData.linkText || null,
+        linkTextEn: null,
+      });
 
-    if (success) {
-      resetForm();
-      setShowForm(false);
+      if (success) {
+        resetForm();
+        setShowForm(false);
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -86,18 +94,23 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
-    const success = await onUpdate(editNews.id, {
-      title: formData.get("title") as string,
-      titleEn: (formData.get("titleEn") as string) || null,
-      content: formData.get("content") as string,
-      contentEn: (formData.get("contentEn") as string) || null,
-      link: (formData.get("link") as string) || null,
-      linkText: (formData.get("linkText") as string) || null,
-      linkTextEn: (formData.get("linkTextEn") as string) || null,
-    });
+    setSaving(true);
+    try {
+      const success = await onUpdate(editNews.id, {
+        title: formData.get("title") as string,
+        titleEn: (formData.get("titleEn") as string) || null,
+        content: formData.get("content") as string,
+        contentEn: (formData.get("contentEn") as string) || null,
+        link: (formData.get("link") as string) || null,
+        linkText: (formData.get("linkText") as string) || null,
+        linkTextEn: (formData.get("linkTextEn") as string) || null,
+      });
 
-    if (success) {
-      setEditNews(null);
+      if (success) {
+        setEditNews(null);
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -141,13 +154,31 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
             />
 
             <div>
-              <label className="block text-sm text-text-secondary mb-1">Text *</label>
-              <textarea
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                className="w-full h-24 px-3 py-2 rounded-lg bg-surface-3 border border-glass-border text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm text-text-secondary">Text *</label>
+                <button
+                  type="button"
+                  onClick={() => setUseRichText(!useRichText)}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  <Type className="w-3 h-3" />
+                  {useRichText ? "Einfacher Text" : "Rich Text"}
+                </button>
+              </div>
+              {useRichText ? (
+                <RichTextEditor
+                  value={formData.content}
+                  onChange={(html) => setFormData({ ...formData, content: html })}
+                  placeholder="News-Text eingeben..."
+                />
+              ) : (
+                <textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className="w-full h-24 px-3 py-2 rounded-lg bg-surface-3 border border-glass-border text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                  required
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,7 +197,7 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" variant="primary" disabled={!formData.title || !formData.content}>
+              <Button type="submit" variant="primary" isLoading={saving} disabled={!formData.title || !formData.content}>
                 News erstellen
               </Button>
               <Button type="button" variant="ghost" onClick={() => { resetForm(); setShowForm(false); }}>
@@ -316,10 +347,10 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button type="submit" variant="primary">
+                <Button type="submit" variant="primary" isLoading={saving}>
                   Speichern
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setEditNews(null)}>
+                <Button type="button" variant="ghost" onClick={() => setEditNews(null)} disabled={saving}>
                   Abbrechen
                 </Button>
               </div>

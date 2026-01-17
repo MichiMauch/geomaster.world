@@ -52,7 +52,10 @@ export function NewsBanner({ news, locale }: NewsBannerProps) {
 
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-text-primary mb-1">{news.title}</h3>
-          <p className="text-sm text-text-secondary line-clamp-2">{news.content}</p>
+          <div
+            className="text-sm text-text-secondary line-clamp-2 [&_p]:inline [&_h2]:inline [&_h3]:inline [&_ul]:inline [&_ol]:inline [&_li]:inline [&_blockquote]:inline [&_strong]:font-semibold [&_em]:italic [&_code]:text-primary"
+            dangerouslySetInnerHTML={{ __html: news.content }}
+          />
 
           {news.link && (
             <Link
