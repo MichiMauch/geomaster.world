@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Exclude @libsql/client from bundling - it has native bindings
+  // that don't work when bundled by webpack/turbopack
+  serverExternalPackages: ['@libsql/client'],
 };
 
 export default withPWA(withNextIntl(nextConfig));
