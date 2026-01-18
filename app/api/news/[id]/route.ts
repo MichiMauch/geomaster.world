@@ -4,6 +4,7 @@ import { newsItems } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { TranslationService } from "@/lib/services/translation-service";
 import { logger } from "@/lib/logger";
 
 interface RouteParams {
@@ -53,16 +54,60 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       linkTextEn,
     } = body;
 
+    // Auto-translate German to English if not provided
+    let finalTitleEn = titleEn;
+    let finalContentEn = contentEn;
+    let finalLinkTextEn = linkTextEn;
+
+    if (title && !titleEn) {
+      finalTitleEn = title;
+    }
+    if (content && !contentEn) {
+      finalContentEn = content;
+    }
+    if (linkText && !linkTextEn) {
+      finalLinkTextEn = linkText;
+    }
+
+    // Translate if we have German content without English
+    if ((title && !titleEn) || (content && !contentEn)) {
+      try {
+        const textsToTranslate: string[] = [];
+        if (title && !titleEn) textsToTranslate.push(title);
+        if (content && !contentEn) textsToTranslate.push(content);
+        if (linkText && !linkTextEn) textsToTranslate.push(linkText);
+
+        if (textsToTranslate.length > 0) {
+          const translations = await TranslationService.translateNewsContent(textsToTranslate);
+
+          let idx = 0;
+          if (title && !titleEn && translations[idx]) {
+            finalTitleEn = translations[idx].english || title;
+            idx++;
+          }
+          if (content && !contentEn && translations[idx]) {
+            finalContentEn = translations[idx].english || content;
+            idx++;
+          }
+          if (linkText && !linkTextEn && translations[idx]) {
+            finalLinkTextEn = translations[idx].english || linkText;
+          }
+        }
+      } catch (translationError) {
+        logger.error("Translation failed, using original text", translationError);
+      }
+    }
+
     await db
       .update(newsItems)
       .set({
         ...(title !== undefined && { title }),
-        ...(titleEn !== undefined && { titleEn }),
+        ...(finalTitleEn !== undefined && { titleEn: finalTitleEn }),
         ...(content !== undefined && { content }),
-        ...(contentEn !== undefined && { contentEn }),
+        ...(finalContentEn !== undefined && { contentEn: finalContentEn }),
         ...(link !== undefined && { link }),
         ...(linkText !== undefined && { linkText }),
-        ...(linkTextEn !== undefined && { linkTextEn }),
+        ...(finalLinkTextEn !== undefined && { linkTextEn: finalLinkTextEn }),
       })
       .where(eq(newsItems.id, id));
 

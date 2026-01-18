@@ -6,7 +6,7 @@ import { FloatingInput } from "@/components/ui/FloatingInput";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import ConfirmModal from "@/components/ConfirmModal";
 import type { NewsItem } from "../types";
-import { Pencil, Trash2, ExternalLink, X, Type } from "lucide-react";
+import { Pencil, Trash2, ExternalLink, X } from "lucide-react";
 
 interface NewsTabProps {
   news: NewsItem[];
@@ -18,6 +18,12 @@ interface NewsTabProps {
 export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [editNews, setEditNews] = useState<NewsItem | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    content: "",
+    link: "",
+    linkText: "",
+  });
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     newsId: string | null;
@@ -36,7 +42,6 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
     linkText: "",
   });
   const [saving, setSaving] = useState(false);
-  const [useRichText, setUseRichText] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -75,6 +80,12 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
 
   const handleEdit = useCallback((item: NewsItem) => {
     setEditNews(item);
+    setEditFormData({
+      title: item.title,
+      content: item.content,
+      link: item.link || "",
+      linkText: item.linkText || "",
+    });
   }, []);
 
   const handleDelete = useCallback((newsId: string, newsTitle: string) => {
@@ -89,21 +100,19 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editNews) return;
-
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
+    if (!editNews || !editFormData.title || !editFormData.content) return;
 
     setSaving(true);
     try {
+      // English fields are auto-translated by the API
       const success = await onUpdate(editNews.id, {
-        title: formData.get("title") as string,
-        titleEn: (formData.get("titleEn") as string) || null,
-        content: formData.get("content") as string,
-        contentEn: (formData.get("contentEn") as string) || null,
-        link: (formData.get("link") as string) || null,
-        linkText: (formData.get("linkText") as string) || null,
-        linkTextEn: (formData.get("linkTextEn") as string) || null,
+        title: editFormData.title,
+        titleEn: null,
+        content: editFormData.content,
+        contentEn: null,
+        link: editFormData.link || null,
+        linkText: editFormData.linkText || null,
+        linkTextEn: null,
       });
 
       if (success) {
@@ -123,6 +132,10 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const stripHtml = (html: string) => {
+    return html.replace(/<[^>]*>/g, "").trim();
   };
 
   return (
@@ -154,31 +167,12 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
             />
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-text-secondary">Text *</label>
-                <button
-                  type="button"
-                  onClick={() => setUseRichText(!useRichText)}
-                  className="flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  <Type className="w-3 h-3" />
-                  {useRichText ? "Einfacher Text" : "Rich Text"}
-                </button>
-              </div>
-              {useRichText ? (
-                <RichTextEditor
-                  value={formData.content}
-                  onChange={(html) => setFormData({ ...formData, content: html })}
-                  placeholder="News-Text eingeben..."
-                />
-              ) : (
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="w-full h-24 px-3 py-2 rounded-lg bg-surface-3 border border-glass-border text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                />
-              )}
+              <label className="block text-sm text-text-secondary mb-1">Text *</label>
+              <RichTextEditor
+                value={formData.content}
+                onChange={(html) => setFormData({ ...formData, content: html })}
+                placeholder="News-Text eingeben..."
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -230,7 +224,7 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
                   <tr key={item.id} className="hover:bg-surface-3/50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="font-medium text-text-primary">{item.title}</div>
-                      <div className="text-sm text-text-secondary line-clamp-1">{item.content}</div>
+                      <div className="text-sm text-text-secondary line-clamp-1">{stripHtml(item.content)}</div>
                     </td>
                     <td className="px-4 py-3 text-sm text-text-secondary">
                       {formatDate(item.createdAt)}
@@ -290,64 +284,44 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
               </button>
             </div>
             <form onSubmit={handleEditSubmit} className="p-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FloatingInput
-                  label="Titel (DE) *"
-                  name="title"
-                  defaultValue={editNews.title}
-                  required
-                />
-                <FloatingInput
-                  label="Titel (EN)"
-                  name="titleEn"
-                  defaultValue={editNews.titleEn || ""}
-                />
-              </div>
+              <p className="text-sm text-text-secondary -mt-2 mb-4">
+                Die englische Übersetzung wird automatisch erstellt.
+              </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-text-secondary mb-1">Text (DE) *</label>
-                  <textarea
-                    name="content"
-                    defaultValue={editNews.content}
-                    className="w-full h-24 px-3 py-2 rounded-lg bg-surface-3 border border-glass-border text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-text-secondary mb-1">Text (EN)</label>
-                  <textarea
-                    name="contentEn"
-                    defaultValue={editNews.contentEn || ""}
-                    className="w-full h-24 px-3 py-2 rounded-lg bg-surface-3 border border-glass-border text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
+              <FloatingInput
+                label="Titel *"
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                required
+              />
+
+              <div>
+                <label className="block text-sm text-text-secondary mb-1">Text *</label>
+                <RichTextEditor
+                  key={editNews.id}
+                  value={editFormData.content}
+                  onChange={(html) => setEditFormData({ ...editFormData, content: html })}
+                  placeholder="News-Text eingeben..."
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FloatingInput
                   label="Link (URL)"
-                  name="link"
-                  defaultValue={editNews.link || ""}
+                  value={editFormData.link}
+                  onChange={(e) => setEditFormData({ ...editFormData, link: e.target.value })}
                   placeholder="https://..."
                 />
                 <FloatingInput
-                  label="Link-Text (DE)"
-                  name="linkText"
-                  defaultValue={editNews.linkText || ""}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                <FloatingInput
-                  label="Link-Text (EN)"
-                  name="linkTextEn"
-                  defaultValue={editNews.linkTextEn || ""}
+                  label="Link-Text"
+                  value={editFormData.linkText}
+                  onChange={(e) => setEditFormData({ ...editFormData, linkText: e.target.value })}
+                  placeholder="z.B. Mehr erfahren"
                 />
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button type="submit" variant="primary" isLoading={saving}>
+                <Button type="submit" variant="primary" isLoading={saving} disabled={!editFormData.title || !editFormData.content}>
                   Speichern
                 </Button>
                 <Button type="button" variant="ghost" onClick={() => setEditNews(null)} disabled={saving}>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { NewsCard } from "@/components/news/NewsCard";
+import { NewsDetailModal } from "@/components/news/NewsDetailModal";
 import { Newspaper } from "lucide-react";
 import MissionControlBackground from "@/components/MissionControlBackground";
 
@@ -23,6 +24,7 @@ export default function NewsPage() {
   const locale = params.locale as string;
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -54,7 +56,7 @@ export default function NewsPage() {
     createdAt: item.createdAt,
   });
 
-  const pageTitle = locale === "de" ? "News & Ankündigungen" : "News & Announcements";
+  const pageTitle = locale === "de" ? "News & Ankuendigungen" : "News & Announcements";
   const pageSubtitle = locale === "de"
     ? "Bleib auf dem Laufenden mit den neuesten Updates von GeoMaster"
     : "Stay up to date with the latest updates from GeoMaster";
@@ -109,11 +111,20 @@ export default function NewsPage() {
                 key={item.id}
                 news={getLocalizedNews(item)}
                 locale={locale}
+                onReadMore={() => setSelectedNews(item)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {selectedNews && (
+        <NewsDetailModal
+          news={getLocalizedNews(selectedNews)}
+          locale={locale}
+          onClose={() => setSelectedNews(null)}
+        />
+      )}
     </div>
   );
 }

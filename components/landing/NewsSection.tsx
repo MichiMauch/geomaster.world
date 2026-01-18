@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NewsCard } from "@/components/news/NewsCard";
+import { NewsDetailModal } from "@/components/news/NewsDetailModal";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, Newspaper } from "lucide-react";
 
@@ -26,6 +27,7 @@ export default function NewsSection({ locale }: NewsSectionProps) {
   const router = useRouter();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -68,7 +70,7 @@ export default function NewsSection({ locale }: NewsSectionProps) {
     : locale === "sl"
     ? "Kaj je novega pri GeoMaster?"
     : "What's new at GeoMaster?";
-  const viewAllText = locale === "de" ? "Alle News anzeigen" : locale === "sl" ? "Prikaži vse novice" : "View all news";
+  const viewAllText = locale === "de" ? "Alle News anzeigen" : locale === "sl" ? "Prikazi vse novice" : "View all news";
 
   return (
     <section className="py-16 md:py-20 bg-surface-1">
@@ -97,6 +99,7 @@ export default function NewsSection({ locale }: NewsSectionProps) {
                   key={item.id}
                   news={getLocalizedNews(item)}
                   locale={locale}
+                  onReadMore={() => setSelectedNews(item)}
                 />
               ))}
             </div>
@@ -115,6 +118,14 @@ export default function NewsSection({ locale }: NewsSectionProps) {
           </>
         )}
       </div>
+
+      {selectedNews && (
+        <NewsDetailModal
+          news={getLocalizedNews(selectedNews)}
+          locale={locale}
+          onClose={() => setSelectedNews(null)}
+        />
+      )}
     </section>
   );
 }
