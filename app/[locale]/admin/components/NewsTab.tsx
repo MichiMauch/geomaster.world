@@ -4,11 +4,9 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import { FloatingInput } from "@/components/ui/FloatingInput";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
-import { CollaborativeEditor } from "@/components/ui/CollaborativeEditor";
 import ConfirmModal from "@/components/ConfirmModal";
 import type { NewsItem } from "../types";
-import { useCollaboration } from "../hooks/useCollaboration";
-import { Pencil, Trash2, ExternalLink, X, Type, Users, Loader2 } from "lucide-react";
+import { Pencil, Trash2, ExternalLink, X, Type } from "lucide-react";
 
 interface NewsTabProps {
   news: NewsItem[];
@@ -20,7 +18,6 @@ interface NewsTabProps {
 export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [editNews, setEditNews] = useState<NewsItem | null>(null);
-  const [collabNews, setCollabNews] = useState<NewsItem | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     newsId: string | null;
@@ -40,9 +37,6 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
   });
   const [saving, setSaving] = useState(false);
   const [useRichText, setUseRichText] = useState(false);
-
-  // Collaboration
-  const { config: collabConfig, loading: collabLoading } = useCollaboration();
 
   const resetForm = () => {
     setFormData({
@@ -258,17 +252,6 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {collabConfig && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setCollabNews(item)}
-                            className="p-2 text-primary hover:text-primary/80"
-                            title="Kollaborativ bearbeiten"
-                          >
-                            <Users className="w-4 h-4" />
-                          </Button>
-                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -384,46 +367,6 @@ export function NewsTab({ news, onAdd, onDelete, onUpdate }: NewsTabProps) {
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteModal({ isOpen: false, newsId: null, newsTitle: "" })}
       />
-
-      {/* Collaboration Modal */}
-      {collabNews && collabConfig && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCollabNews(null)} />
-          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl bg-surface-1 border border-glass-border shadow-xl">
-            <div className="sticky top-0 flex items-center justify-between p-4 border-b border-glass-border bg-surface-1 z-10">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-primary" />
-                <div>
-                  <h3 className="text-lg font-semibold text-text-primary">Kollaborative Bearbeitung</h3>
-                  <p className="text-sm text-text-secondary">{collabNews.title}</p>
-                </div>
-              </div>
-              <button onClick={() => setCollabNews(null)} className="p-2 rounded-lg hover:bg-surface-3 text-text-secondary">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4">
-              <p className="text-sm text-text-secondary mb-4">
-                Andere Admins können dieses Dokument gleichzeitig bearbeiten. Änderungen werden in Echtzeit synchronisiert.
-              </p>
-              <CollaborativeEditor
-                documentId={`news-${collabNews.id}`}
-                token={collabConfig.token}
-                serverUrl={collabConfig.serverUrl}
-                placeholder="News-Text eingeben..."
-                onSave={async (html) => {
-                  await onUpdate(collabNews.id, { content: html });
-                }}
-              />
-              <div className="flex justify-end gap-3 mt-4">
-                <Button variant="ghost" onClick={() => setCollabNews(null)}>
-                  Schliessen
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
