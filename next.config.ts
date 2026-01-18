@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
   },
   // Exclude @libsql/client from bundling - it has native bindings
   // that don't work when bundled by webpack/turbopack
-  serverExternalPackages: ['@libsql/client'],
+  serverExternalPackages: ['@libsql/client', 'drizzle-orm'],
 };
 
 export default withPWA(withNextIntl(nextConfig));
