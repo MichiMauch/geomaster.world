@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import type { Group } from "../types";
 
@@ -29,6 +29,11 @@ export function useGroupAdmin(): UseGroupAdminReturn {
       setLoading(false);
     }
   }, []);
+
+  // Fetch groups on mount
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
 
   const deleteGroup = useCallback(async (groupId: string, groupName: string) => {
     if (!confirm(`Gruppe "${groupName}" wirklich löschen? Alle Spiele, Runden und Guesses werden ebenfalls gelöscht!`)) {

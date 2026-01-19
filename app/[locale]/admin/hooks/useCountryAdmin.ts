@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import type { Country } from "../types";
 
@@ -32,6 +32,11 @@ export function useCountryAdmin(): UseCountryAdminReturn {
       setLoading(false);
     }
   }, []);
+
+  // Fetch countries on mount
+  useEffect(() => {
+    fetchCountries();
+  }, [fetchCountries]);
 
   const refreshCountries = useCallback(async () => {
     try {

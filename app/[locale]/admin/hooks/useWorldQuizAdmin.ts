@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import type { WorldQuizType, WorldLocation, TranslationStatus, TranslationResult } from "../types";
 
@@ -45,6 +45,11 @@ export function useWorldQuizAdmin(): UseWorldQuizAdminReturn {
       setLoading(false);
     }
   }, []);
+
+  // Fetch world quiz types on mount
+  useEffect(() => {
+    fetchWorldQuizTypes();
+  }, [fetchWorldQuizTypes]);
 
   const refreshWorldQuizTypes = useCallback(async () => {
     try {

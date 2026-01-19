@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import type { User } from "../types";
 
@@ -31,6 +31,11 @@ export function useUserAdmin(): UseUserAdminReturn {
       setLoading(false);
     }
   }, []);
+
+  // Fetch users on mount
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const deleteUser = useCallback(async (userId: string, userName: string | null) => {
     if (!confirm(`User "${userName || 'Unbenannt'}" wirklich löschen? Alle Guesses und Gruppenmitgliedschaften werden ebenfalls gelöscht!`)) {
