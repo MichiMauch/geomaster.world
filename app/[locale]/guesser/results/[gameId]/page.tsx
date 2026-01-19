@@ -6,11 +6,12 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { signIn } from "next-auth/react";
-import { ArrowLeft, BarChart3, Eye, Share2, Swords } from "lucide-react";
+import { ArrowLeft, BarChart3, Eye, Share2, Swords, Check } from "lucide-react";
 import Link from "next/link";
 import { StarRating, ScoreDisplay, RoundReview } from "@/components/guesser/results";
 import { LevelUpCelebration } from "@/components/LevelUpCelebration";
 import { ShareDuelChallengeModal } from "@/components/duel/ShareDuelChallengeModal";
+import { buildChallengeUrl } from "@/lib/duel-utils";
 
 interface PredictedRank {
   predictedRank: number;
@@ -61,6 +62,8 @@ export default function GuesserResultsPage() {
   const [showDuelShareModal, setShowDuelShareModal] = useState(false);
   const [isDuelRedirecting, setIsDuelRedirecting] = useState(false);
   const [isDuelChallenger, setIsDuelChallenger] = useState(false);
+  const [revancheInviteSent, setRevancheInviteSent] = useState(false);
+  const [revancheOpponentName, setRevancheOpponentName] = useState<string | null>(null);
 
   // Smooth fade-in transition from LevelUp celebration
   const fromLevelUp = searchParams.get("fromLevelUp") === "true";
@@ -149,6 +152,59 @@ export default function GuesserResultsPage() {
 
     fetchResults();
   }, [gameId, isGuestResult, guestScore, guestGameType, locale, router]);
+
+  // Auto-send revanche invitation when duel challenger completes
+  useEffect(() => {
+    const sendRevancheInvite = async () => {
+      // Only for duel challengers with encoded challenge
+      if (!results?.duelData?.role || results.duelData.role !== "challenger" || !results.duelData.encodedChallenge) {
+        return;
+      }
+
+      // Check for revanche opponent in sessionStorage
+      const revancheOpponentId = sessionStorage.getItem("revancheOpponentId");
+      const storedOpponentName = sessionStorage.getItem("revancheOpponentName");
+
+      if (!revancheOpponentId || !storedOpponentName) {
+        return; // Not a revanche
+      }
+
+      // Clear sessionStorage immediately to prevent duplicate sends
+      sessionStorage.removeItem("revancheOpponentId");
+      sessionStorage.removeItem("revancheOpponentName");
+
+      // Build challenge URL
+      const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+      const challengeUrl = buildChallengeUrl(baseUrl, locale, results.gameType, results.duelData.encodedChallenge);
+
+      try {
+        const response = await fetch("/api/ranked/games/duel/invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            targetUserId: revancheOpponentId,
+            challengeUrl,
+            gameType: results.gameType,
+            gameName: getLocalizedGameTypeName(),
+            locale,
+          }),
+        });
+
+        if (response.ok) {
+          setRevancheInviteSent(true);
+          setRevancheOpponentName(storedOpponentName);
+          // Auto-dismiss after 3 seconds
+          setTimeout(() => setRevancheInviteSent(false), 3000);
+        }
+      } catch (error) {
+        console.error("Error sending revanche invite:", error);
+      }
+    };
+
+    sendRevancheInvite();
+  // getLocalizedGameTypeName depends on results, so we include results in deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results, locale]);
 
   // Start a new game directly
   const handlePlayAgain = async () => {
@@ -445,6 +501,22 @@ export default function GuesserResultsPage() {
           challengerTime={results.duelData.challengerTime}
           gameTypeName={getLocalizedGameTypeName()}
         />
+      )}
+
+      {/* Revanche Invite Success Toast */}
+      {revancheInviteSent && revancheOpponentName && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-success/90 backdrop-blur-sm text-background font-medium shadow-lg">
+            <Check className="w-5 h-5" />
+            <span>
+              {locale === "de"
+                ? `Einladung an ${revancheOpponentName} gesendet!`
+                : locale === "sl"
+                ? `Povabilo poslano ${revancheOpponentName}!`
+                : `Invite sent to ${revancheOpponentName}!`}
+            </span>
+          </div>
+        </div>
       )}
     </div>
   );

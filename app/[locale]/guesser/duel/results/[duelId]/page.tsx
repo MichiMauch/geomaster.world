@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Trophy, Crown, Swords, BarChart3, ArrowLeft, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import { RevancheChallengeModal } from "@/components/duel/RevancheChallengeModal";
 
 interface DuelResult {
   id: string;
@@ -99,6 +100,7 @@ export default function DuelResultsPage() {
   const [duelResult, setDuelResult] = useState<DuelResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLossAnimation, setShowLossAnimation] = useState(false);
+  const [showRevancheModal, setShowRevancheModal] = useState(false);
 
   useEffect(() => {
     const fetchDuelResult = async () => {
@@ -138,12 +140,23 @@ export default function DuelResultsPage() {
   }, [duelId, session?.user?.id]);
 
   const handlePlayAgain = () => {
-    if (duelResult?.gameType) {
-      router.push(`/${locale}/guesser/${duelResult.gameType}/select-mode`);
+    // Open revanche modal instead of navigating
+    setShowRevancheModal(true);
+  };
+
+  // Determine opponent info (the other player in the duel)
+  const getOpponentInfo = () => {
+    if (!duelResult || !session?.user?.id) return { id: "", name: "" };
+
+    const isCurrentUserChallenger = session.user.id === duelResult.challengerId;
+    if (isCurrentUserChallenger) {
+      return { id: duelResult.accepterId, name: duelResult.accepterName };
     } else {
-      router.push(`/${locale}/guesser`);
+      return { id: duelResult.challengerId, name: duelResult.challengerName };
     }
   };
+
+  const opponentInfo = getOpponentInfo();
 
   // Background component
   const BackgroundMap = () => (
@@ -374,6 +387,18 @@ export default function DuelResultsPage() {
           </div>
         </div>
       </div>
+
+      {/* Revanche Modal */}
+      {duelResult && opponentInfo.id && (
+        <RevancheChallengeModal
+          isOpen={showRevancheModal}
+          onClose={() => setShowRevancheModal(false)}
+          opponentId={opponentInfo.id}
+          opponentName={opponentInfo.name}
+          locale={locale}
+          defaultGameType={duelResult.gameType}
+        />
+      )}
     </div>
   );
 }
