@@ -365,7 +365,7 @@ export function NotificationBell({ locale }: NotificationBellProps) {
 
         {/* Dropdown */}
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-80 bg-surface-2 border border-glass-border rounded-xl shadow-lg animate-fade-in overflow-hidden z-50">
+          <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] bg-surface-2 border border-glass-border rounded-xl shadow-lg animate-fade-in overflow-hidden z-50">
             {/* Header */}
             <div className="px-4 py-3 border-b border-glass-border flex items-center justify-between">
               <h3 className="font-semibold text-text-primary">{t.title}</h3>

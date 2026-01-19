@@ -88,8 +88,18 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     signIn: async ({ user, account }) => {
+      // Get actual user ID from database (user.id might be email for email provider)
+      let actualUserId: string | null = null;
+      if (user.email) {
+        const dbUser = await db.query.users.findFirst({
+          where: eq(users.email, user.email),
+          columns: { id: true },
+        });
+        actualUserId = dbUser?.id ?? null;
+      }
+
       // Log successful sign-in (fire and forget - don't block sign-in)
-      activityLogger.logAuth("login", user.id, {
+      activityLogger.logAuth("login", actualUserId, {
         provider: account?.provider || "credentials",
         email: user.email,
       }).catch(() => {}); // Ignore logging errors
