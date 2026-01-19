@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Swords, Check, Sparkles } from "lucide-react";
+import { Bell, Swords, Check, Sparkles, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { NewsDetailModal } from "@/components/news/NewsDetailModal";
@@ -253,6 +253,9 @@ export function NotificationBell({ locale }: NotificationBellProps) {
   const getNotificationIcon = (type: string) => {
     if (type === "duel_completed") {
       return <Swords className="w-4 h-4 text-accent" />;
+    }
+    if (type === "duel_challenge_received") {
+      return <UserPlus className="w-4 h-4 text-primary" />;
     }
     return <Bell className="w-4 h-4 text-primary" />;
   };

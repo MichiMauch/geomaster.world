@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const userId = session.user.id;
 
     // Build query for duels where user is either challenger or accepter
-    let query = db
+    const query = db
       .select()
       .from(duelResults)
       .where(

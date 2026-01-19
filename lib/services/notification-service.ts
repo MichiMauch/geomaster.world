@@ -43,21 +43,39 @@ export interface DuelCompletedNotificationParams {
   locale?: string;
 }
 
+export interface DuelChallengeReceivedParams {
+  targetUserId: string;
+  challengerName: string;
+  challengeUrl: string;
+  gameType: string;
+  gameName: string;
+  locale?: string;
+}
+
 const translations = {
   de: {
     duelCompletedTitle: "Duell abgeschlossen!",
     duelCompletedWon: (accepterName: string) => `${accepterName} hat dein Duell angenommen - du hast gewonnen!`,
     duelCompletedLost: (accepterName: string) => `${accepterName} hat dein Duell angenommen und gewonnen.`,
+    duelChallengeTitle: "Duell-Herausforderung!",
+    duelChallengeMessage: (challengerName: string, gameName: string) =>
+      `${challengerName} fordert dich zum Duell heraus (${gameName})!`,
   },
   en: {
     duelCompletedTitle: "Duel completed!",
     duelCompletedWon: (accepterName: string) => `${accepterName} accepted your duel - you won!`,
     duelCompletedLost: (accepterName: string) => `${accepterName} accepted your duel and won.`,
+    duelChallengeTitle: "Duel Challenge!",
+    duelChallengeMessage: (challengerName: string, gameName: string) =>
+      `${challengerName} challenges you to a duel (${gameName})!`,
   },
   sl: {
     duelCompletedTitle: "Dvoboj zaključen!",
     duelCompletedWon: (accepterName: string) => `${accepterName} je sprejel tvoj dvoboj - zmagal si!`,
     duelCompletedLost: (accepterName: string) => `${accepterName} je sprejel tvoj dvoboj in zmagal.`,
+    duelChallengeTitle: "Izziv za dvoboj!",
+    duelChallengeMessage: (challengerName: string, gameName: string) =>
+      `${challengerName} te izziva na dvoboj (${gameName})!`,
   },
 };
 
@@ -194,6 +212,31 @@ export class NotificationService {
         winnerId,
         gameType,
         challengerWon,
+      },
+    });
+  }
+
+  /**
+   * Create duel challenge notification for target user
+   */
+  static async notifyDuelChallengeReceived(params: DuelChallengeReceivedParams): Promise<string> {
+    const { targetUserId, challengerName, challengeUrl, gameType, gameName, locale = "de" } = params;
+
+    const t = translations[locale as keyof typeof translations] || translations.de;
+
+    const title = t.duelChallengeTitle;
+    const message = t.duelChallengeMessage(challengerName, gameName);
+
+    return this.create({
+      userId: targetUserId,
+      type: "duel_challenge_received",
+      title,
+      message,
+      link: challengeUrl,
+      metadata: {
+        challengerName,
+        gameType,
+        gameName,
       },
     });
   }
