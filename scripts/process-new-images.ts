@@ -58,7 +58,9 @@ async function removeBackground(buffer: Buffer, filename: string): Promise<Buffe
 
   try {
     const removeBgForm = new FormData();
-    removeBgForm.append("image_file", new Blob([buffer]), filename);
+    // Convert Buffer to ArrayBuffer for Blob compatibility
+    const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+    removeBgForm.append("image_file", new Blob([arrayBuffer]), filename);
     removeBgForm.append("size", "auto");
 
     const bgResponse = await fetch("https://api.remove.bg/v1.0/removebg", {
@@ -139,9 +141,9 @@ async function processImages() {
       } else if (info.type === "landmark") {
         // Landmarks: Remove background, then convert to WebP
         console.log(`      ⏳ Removing background...`);
-        buffer = await removeBackground(buffer, sourceFile);
+        const processedBuffer = await removeBackground(buffer, sourceFile);
 
-        finalBuffer = await sharp(buffer)
+        finalBuffer = await sharp(processedBuffer)
           .resize(MAX_WIDTH, null, { withoutEnlargement: true, fit: "inside" })
           .webp({ quality: 90, alphaQuality: 100 })
           .toBuffer();
