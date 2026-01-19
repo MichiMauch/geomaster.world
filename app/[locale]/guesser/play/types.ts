@@ -39,6 +39,7 @@ export interface Game {
   country: string;
   gameType?: string | null;
   timeLimitSeconds?: number | null;
+  mode?: "group" | "training" | "ranked" | "duel";
 }
 
 export interface DynamicCountry {

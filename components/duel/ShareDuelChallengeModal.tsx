@@ -353,7 +353,7 @@ export function ShareDuelChallengeModal({
           </div>
 
           {/* Native Share (if available) */}
-          {typeof navigator !== "undefined" && navigator.share && (
+          {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
             <Button
               onClick={handleShare}
               variant="primary"
