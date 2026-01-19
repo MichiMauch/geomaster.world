@@ -7,7 +7,7 @@ import path from "path";
 
 const MAX_WIDTH = 1000;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const UPLOAD_DIR = path.join(process.cwd(), "public", "images", "countries");
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "countries");
 
 // Flag type - keep as GIF without processing
 const FLAG_ALLOWED_TYPES = ["image/gif", "image/png", "image/webp"];
@@ -111,8 +111,8 @@ export async function POST(request: NextRequest) {
     // Write file
     await writeFile(filepath, finalBuffer);
 
-    // Return the API path (dynamic serving for post-build uploads)
-    const publicPath = `/api/images/countries/${filename}`;
+    // Return the API path (dynamic serving for runtime uploads)
+    const publicPath = `/api/uploads/countries/${filename}`;
 
     return NextResponse.json({
       success: true,

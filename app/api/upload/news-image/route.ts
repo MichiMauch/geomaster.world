@@ -8,7 +8,7 @@ import { nanoid } from "nanoid";
 
 const MAX_WIDTH = 1000;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const UPLOAD_DIR = path.join(process.cwd(), "public", "images", "news");
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "news");
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     // Write file
     await writeFile(filepath, finalBuffer);
 
-    // Return the API path (dynamic serving for post-build uploads)
-    const publicPath = `/api/images/news/${filename}`;
+    // Return the API path (dynamic serving for runtime uploads)
+    const publicPath = `/api/uploads/news/${filename}`;
 
     return NextResponse.json({
       success: true,
