@@ -128,7 +128,7 @@ async function processImages() {
       const sourceStats = fs.statSync(sourcePath);
       console.log(`   📄 ${sourceFile} (${(sourceStats.size / 1024 / 1024).toFixed(2)} MB)`);
 
-      let buffer = fs.readFileSync(sourcePath);
+      const buffer = fs.readFileSync(sourcePath);
       let outputFilename: string;
       let finalBuffer: Buffer;
 
