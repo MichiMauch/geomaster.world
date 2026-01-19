@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
-import { games, gameRounds, guesses, worldQuizTypes, countries, panoramaTypes, rankings as rankingsTable, userStreaks, worldLocations } from "@/lib/db/schema";
+import { games, gameRounds, guesses, worldQuizTypes, countries, panoramaTypes, rankings as rankingsTable, userStreaks, worldLocations, users } from "@/lib/db/schema";
 import { isPointInCountry } from "@/lib/utils/geo-check";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -11,6 +11,9 @@ import { calculateScore } from "@/lib/scoring";
 import { isSpecialQuizGameType } from "@/lib/game-types";
 import { RankingService } from "@/lib/services/ranking-service";
 import { checkLevelUp, getLevelName } from "@/lib/levels";
+import { encodeDuelChallenge, type DuelChallenge } from "@/lib/duel-utils";
+import { getDisplayName } from "@/lib/utils";
+import { DuelService } from "@/lib/services/duel-service";
 
 /**
  * Update user's streak after completing a game
@@ -258,37 +261,42 @@ export async function POST(request: Request) {
       .where(eq(games.id, gameId));
 
     // Record in ranked game results and update rankings
-    await RankingService.recordRankedGame({
-      gameId,
-      userId: userId || null,
-      guestId: userId ? null : (guestId || null),
-      gameType: game.gameType || "country:switzerland",
-      totalScore,
-      averageScore,
-      totalDistance,
-    });
-
-    // Check for level-up and update streak
+    // IMPORTANT: Duel games have their own scoring system (duelResults/duelStats)
+    // and should NOT contribute to: rankings, streaks, or level-ups
     let levelUp = null;
     let streak = null;
-    if (userId) {
-      // Update streak
-      streak = await updateStreak(userId);
 
-      const newTotalScore = previousTotalScore + totalScore;
-      const levelCheck = checkLevelUp(previousTotalScore, newTotalScore);
+    if (game.mode !== "duel") {
+      await RankingService.recordRankedGame({
+        gameId,
+        userId: userId || null,
+        guestId: userId ? null : (guestId || null),
+        gameType: game.gameType || "country:switzerland",
+        totalScore,
+        averageScore,
+        totalDistance,
+      });
 
-      if (levelCheck.leveledUp) {
-        // Get locale from request
-        const acceptLanguage = request.headers.get("accept-language") || "en";
-        const locale = acceptLanguage.split(",")[0].split("-")[0];
+      // Check for level-up and update streak (only for non-duel games)
+      if (userId) {
+        // Update streak
+        streak = await updateStreak(userId);
 
-        levelUp = {
-          leveledUp: true,
-          previousLevel: levelCheck.previousLevel.level,
-          newLevel: levelCheck.newLevel.level,
-          newLevelName: getLevelName(levelCheck.newLevel, locale),
-        };
+        const newTotalScore = previousTotalScore + totalScore;
+        const levelCheck = checkLevelUp(previousTotalScore, newTotalScore);
+
+        if (levelCheck.leveledUp) {
+          // Get locale from request
+          const acceptLanguage = request.headers.get("accept-language") || "en";
+          const locale = acceptLanguage.split(",")[0].split("-")[0];
+
+          levelUp = {
+            leveledUp: true,
+            previousLevel: levelCheck.previousLevel.level,
+            newLevel: levelCheck.newLevel.level,
+            newLevelName: getLevelName(levelCheck.newLevel, locale),
+          };
+        }
       }
     }
 
@@ -326,6 +334,76 @@ export async function POST(request: Request) {
       gameType: game.gameType,
     }).catch(() => {});
 
+    // Handle duel mode: return challenge data for sharing (challenger) or create duel result (accepter)
+    let duelData = null;
+    if (game.mode === "duel" && userId && game.duelSeed) {
+      // Calculate total time for this game
+      let totalTime = 0;
+      for (const guess of gameGuesses) {
+        totalTime += guess.timeSeconds || 0;
+      }
+
+      // Get user details
+      const user = await db.select().from(users).where(eq(users.id, userId)).get();
+      const displayName = user ? getDisplayName(user.name, user.nickname) : "Anonym";
+
+      // Check if there's challenge data in the request (accepter flow)
+      const { challengeData } = body;
+
+      if (challengeData) {
+        // Accepter flow: create duel result
+        const typedChallengeData = challengeData as DuelChallenge;
+
+        // Verify seed matches
+        if (typedChallengeData.seed !== game.duelSeed) {
+          return NextResponse.json({ error: "Duel seed mismatch" }, { status: 400 });
+        }
+
+        // Create the completed duel
+        const duelId = await DuelService.completeDuel({
+          duelSeed: typedChallengeData.seed,
+          gameType: typedChallengeData.gameType,
+          challengerId: typedChallengeData.challengerId,
+          challengerGameId: typedChallengeData.challengerGameId,
+          challengerScore: typedChallengeData.challengerScore,
+          challengerTime: typedChallengeData.challengerTime,
+          accepterId: userId,
+          accepterGameId: gameId,
+          accepterScore: totalScore,
+          accepterTime: totalTime,
+        });
+
+        duelData = {
+          role: "accepter" as const,
+          duelId,
+          accepterScore: totalScore,
+          accepterTime: totalTime,
+          challengerScore: typedChallengeData.challengerScore,
+          challengerTime: typedChallengeData.challengerTime,
+        };
+      } else {
+        // Challenger flow: generate share link
+        const challenge: DuelChallenge = {
+          seed: game.duelSeed,
+          gameType: game.gameType!,
+          challengerId: userId,
+          challengerName: displayName,
+          challengerScore: totalScore,
+          challengerTime: totalTime,
+          challengerGameId: gameId,
+        };
+
+        const encodedChallenge = encodeDuelChallenge(challenge);
+
+        duelData = {
+          role: "challenger" as const,
+          encodedChallenge,
+          challengerScore: totalScore,
+          challengerTime: totalTime,
+        };
+      }
+    }
+
     return NextResponse.json({
       success: true,
       totalScore,
@@ -334,6 +412,8 @@ export async function POST(request: Request) {
       rankings,
       levelUp,
       streak,
+      duelData,
+      gameMode: game.mode,
       message: userId ? "Game completed and ranked!" : "Game completed! Login to appear in rankings.",
     });
   } catch (error) {

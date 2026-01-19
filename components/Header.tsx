@@ -10,6 +10,7 @@ import { usePageTitle } from "@/contexts/PageTitleContext";
 import { useScrollHide } from "@/hooks/useScrollHide";
 import { UserDropdown } from "@/components/header/UserDropdown";
 import { GuestDropdown } from "@/components/header/GuestDropdown";
+import { NotificationBell } from "@/components/header/NotificationBell";
 import toast from "react-hot-toast";
 
 export function Header() {
@@ -137,15 +138,18 @@ export function Header() {
           {status === "loading" ? (
             <div className="w-8 h-8 rounded-full bg-surface-2 animate-pulse" />
           ) : user ? (
-            <UserDropdown
-              user={{
-                name: user.name,
-                email: user.email,
-                image: user.image,
-                isSuperAdmin: user.isSuperAdmin,
-              }}
-              locale={locale}
-            />
+            <>
+              <NotificationBell locale={locale} />
+              <UserDropdown
+                user={{
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+                  isSuperAdmin: user.isSuperAdmin,
+                }}
+                locale={locale}
+              />
+            </>
           ) : (
             <GuestDropdown locale={locale} />
           )}

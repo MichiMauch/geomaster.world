@@ -431,13 +431,25 @@ export default function GuesserPlayPage({
 
     // For logged-in users: use API
     try {
+      // Check if this is a duel game with challenge data (accepter flow)
+      let challengeData = null;
+      const storedChallenge = sessionStorage.getItem("duelChallenge");
+      if (storedChallenge && game?.mode === "duel") {
+        try {
+          challengeData = JSON.parse(storedChallenge);
+          sessionStorage.removeItem("duelChallenge"); // Clear after use
+        } catch {
+          // Ignore parse errors
+        }
+      }
+
       const response = await fetch("/api/ranked/games/complete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept-Language": locale,
         },
-        body: JSON.stringify({ gameId, guestId }),
+        body: JSON.stringify({ gameId, guestId, challengeData }),
       });
 
       if (response.ok) {

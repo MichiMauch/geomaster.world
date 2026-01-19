@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Play, Trophy } from "lucide-react";
+import { Play, Trophy, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GameTypeConfig } from "@/lib/game-types";
 
@@ -25,6 +25,12 @@ interface GameTypeCardProps {
   backgroundImage?: string;
   /** Flag/icon image URL (replaces emoji icon if provided) */
   flagImage?: string;
+  /** Handler for starting a duel */
+  onStartDuel?: (gameTypeId: string) => void;
+  /** Whether a duel is currently being started */
+  isStartingDuel?: boolean;
+  /** Whether user is logged in (required for duel) */
+  isLoggedIn?: boolean;
 }
 
 /**
@@ -44,6 +50,9 @@ export function GameTypeCard({
   variant = "flat",
   backgroundImage,
   flagImage,
+  onStartDuel,
+  isStartingDuel,
+  isLoggedIn,
 }: GameTypeCardProps) {
   const localeKey = locale as "de" | "en" | "sl";
   const name = config.name[localeKey] || config.name.en;
@@ -52,6 +61,8 @@ export function GameTypeCard({
   const leaderboardTitle = locale === "de" ? "Rangliste" : locale === "en" ? "Leaderboard" : "Lestvica";
   const noPlayersText = locale === "de" ? "Noch keine Spieler" : locale === "en" ? "No players yet" : "Se brez igralcev";
   const locationsText = locale === "de" ? "Orte" : locale === "en" ? "locations" : "lokacij";
+  const duelTitle = locale === "de" ? "Duell starten" : locale === "en" ? "Start duel" : "Zacni dvoboj";
+  const loginForDuelTitle = locale === "de" ? "Anmelden für Duell" : locale === "en" ? "Login for duel" : "Prijava za dvoboj";
 
   if (variant === "overlay") {
     return (
@@ -103,6 +114,24 @@ export function GameTypeCard({
                   <Play className="w-5 h-5" />
                 )}
               </button>
+              {onStartDuel && (
+                <button
+                  onClick={() => isLoggedIn && onStartDuel(config.id)}
+                  disabled={isStartingDuel || !isLoggedIn}
+                  title={isLoggedIn ? duelTitle : loginForDuelTitle}
+                  className={cn(
+                    "p-2 rounded-sm transition-all cursor-pointer",
+                    "bg-accent/30 hover:bg-accent/50 text-white",
+                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                >
+                  {isStartingDuel ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Swords className="w-5 h-5" />
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => onViewDetails(config.id)}
                 title={leaderboardTitle}
@@ -182,6 +211,24 @@ export function GameTypeCard({
               <Play className="w-5 h-5" />
             )}
           </button>
+          {onStartDuel && (
+            <button
+              onClick={() => isLoggedIn && onStartDuel(config.id)}
+              disabled={isStartingDuel || !isLoggedIn}
+              title={isLoggedIn ? duelTitle : loginForDuelTitle}
+              className={cn(
+                "p-2 rounded-sm transition-all cursor-pointer",
+                "bg-accent/20 hover:bg-accent/30 text-accent",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              {isStartingDuel ? (
+                <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Swords className="w-5 h-5" />
+              )}
+            </button>
+          )}
           <button
             onClick={() => onViewDetails(config.id)}
             title={leaderboardTitle}

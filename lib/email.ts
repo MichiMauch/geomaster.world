@@ -201,3 +201,74 @@ export async function sendPasswordResetEmail(email: string, token: string, local
     html,
   });
 }
+
+/**
+ * Send email notification when a duel is completed (to challenger)
+ */
+export async function sendDuelCompletedEmail(
+  email: string,
+  challengerName: string,
+  accepterName: string,
+  duelId: string,
+  challengerWon: boolean,
+  locale: string = "de"
+) {
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const resultsUrl = `${baseUrl}/${locale}/guesser/duel/results/${duelId}`;
+
+  const translations = {
+    de: {
+      subject: challengerWon ? "Du hast das Duell gewonnen!" : "Dein Duell-Ergebnis ist da!",
+      greeting: challengerWon ? "Gratulation!" : "Duell abgeschlossen",
+      message: challengerWon
+        ? `${accepterName} hat deine Herausforderung angenommen und du hast gewonnen!`
+        : `${accepterName} hat deine Herausforderung angenommen und gewonnen.`,
+      button: "Ergebnis ansehen",
+      footer: "Bereit für eine Revanche?",
+    },
+    en: {
+      subject: challengerWon ? "You won the duel!" : "Your duel result is ready!",
+      greeting: challengerWon ? "Congratulations!" : "Duel Completed",
+      message: challengerWon
+        ? `${accepterName} accepted your challenge and you won!`
+        : `${accepterName} accepted your challenge and won.`,
+      button: "View Result",
+      footer: "Ready for a rematch?",
+    },
+    sl: {
+      subject: challengerWon ? "Zmagal si dvoboj!" : "Rezultat dvoboja je tukaj!",
+      greeting: challengerWon ? "Čestitamo!" : "Dvoboj zaključen",
+      message: challengerWon
+        ? `${accepterName} je sprejel tvoj izziv in zmagal si!`
+        : `${accepterName} je sprejel tvoj izziv in zmagal.`,
+      button: "Poglej rezultat",
+      footer: "Pripravljen na revanšo?",
+    },
+  };
+
+  const t = translations[locale as keyof typeof translations] || translations.de;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0a0a0f; color: #e5e5e5; padding: 40px 20px; margin: 0;">
+      <div style="max-width: 480px; margin: 0 auto; background-color: #1a1a24; border-radius: 12px; padding: 40px; border: 1px solid rgba(255,255,255,0.1);">
+        <h1 style="color: ${challengerWon ? "#00FF88" : "#00d9ff"}; margin: 0 0 24px 0; font-size: 24px;">${t.greeting}</h1>
+        <p style="color: #a3a3a3; line-height: 1.6; margin: 0 0 24px 0;">${t.message}</p>
+        <a href="${resultsUrl}" style="display: inline-block; background: linear-gradient(135deg, #00d9ff, #00b8d9); color: #000; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none; margin: 0 0 24px 0;">${t.button}</a>
+        <p style="color: #666; font-size: 14px; margin: 24px 0 0 0;">${t.footer}</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: t.subject,
+    html,
+  });
+}

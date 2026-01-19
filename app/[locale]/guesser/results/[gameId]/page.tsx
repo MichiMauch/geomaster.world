@@ -6,14 +6,25 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { signIn } from "next-auth/react";
-import { ArrowLeft, BarChart3, Eye, Share2 } from "lucide-react";
+import { ArrowLeft, BarChart3, Eye, Share2, Swords } from "lucide-react";
 import Link from "next/link";
 import { StarRating, ScoreDisplay, RoundReview } from "@/components/guesser/results";
 import { LevelUpCelebration } from "@/components/LevelUpCelebration";
+import { ShareDuelChallengeModal } from "@/components/duel/ShareDuelChallengeModal";
 
 interface PredictedRank {
   predictedRank: number;
   totalGames: number;
+}
+
+interface DuelData {
+  role: "challenger" | "accepter";
+  encodedChallenge?: string;
+  duelId?: string;
+  challengerScore: number;
+  challengerTime: number;
+  accepterScore?: number;
+  accepterTime?: number;
 }
 
 interface GameResults {
@@ -23,6 +34,8 @@ interface GameResults {
   isNewHighscore?: boolean;
   previousBestScore?: number | null;
   pointsToHighscore?: number;
+  gameMode?: string;
+  duelData?: DuelData;
 }
 
 export default function GuesserResultsPage() {
@@ -45,6 +58,9 @@ export default function GuesserResultsPage() {
   const [startingGame, setStartingGame] = useState(false);
   const [predictedRank, setPredictedRank] = useState<PredictedRank | null>(null);
   const [showRoundReview, setShowRoundReview] = useState(false);
+  const [showDuelShareModal, setShowDuelShareModal] = useState(false);
+  const [isDuelRedirecting, setIsDuelRedirecting] = useState(false);
+  const [isDuelChallenger, setIsDuelChallenger] = useState(false);
 
   // Smooth fade-in transition from LevelUp celebration
   const fromLevelUp = searchParams.get("fromLevelUp") === "true";
@@ -108,6 +124,20 @@ export default function GuesserResultsPage() {
           if (response.ok) {
             const data = await response.json();
             setResults(data);
+
+            // Handle duel mode
+            if (data.gameMode === "duel" && data.duelData) {
+              if (data.duelData.role === "accepter" && data.duelData.duelId) {
+                // Accepter: redirect to duel results - keep loading state to prevent flash
+                setIsDuelRedirecting(true);
+                router.push(`/${locale}/guesser/duel/results/${data.duelData.duelId}`);
+                return;
+              } else if (data.duelData.role === "challenger" && data.duelData.encodedChallenge) {
+                // Challenger: show share modal immediately (no delay to prevent card flicker)
+                setIsDuelChallenger(true);
+                setShowDuelShareModal(true);
+              }
+            }
           }
         }
       } catch (error) {
@@ -118,7 +148,7 @@ export default function GuesserResultsPage() {
     };
 
     fetchResults();
-  }, [gameId, isGuestResult, guestScore, guestGameType]);
+  }, [gameId, isGuestResult, guestScore, guestGameType, locale, router]);
 
   // Start a new game directly
   const handlePlayAgain = async () => {
@@ -210,7 +240,8 @@ export default function GuesserResultsPage() {
     </div>
   );
 
-  if (loading) {
+  // Show loading state while fetching or redirecting for duel accepter
+  if (loading || isDuelRedirecting) {
     return (
       <div className="relative min-h-screen flex items-center justify-center">
         <BackgroundMap />
@@ -236,7 +267,8 @@ export default function GuesserResultsPage() {
     <div className="relative min-h-screen flex items-center justify-center p-4">
       <BackgroundMap />
 
-      {/* Main Card - Very transparent, with fade-in from LevelUp */}
+      {/* Main Card - Hidden for duel challengers (they see the share modal instead) */}
+      {!isDuelChallenger && (
       <div
         className={`w-full max-w-md rounded-2xl border border-white/10 p-6 sm:p-8 text-center transition-opacity duration-700 ease-out ${
           cardVisible ? "opacity-100" : "opacity-0"
@@ -322,6 +354,19 @@ export default function GuesserResultsPage() {
             : t("playAgain", { defaultValue: "Nochmal spielen" })}
         </Button>
 
+        {/* Duel Share Button (for challengers) */}
+        {results?.duelData?.role === "challenger" && results.duelData.encodedChallenge && (
+          <Button
+            onClick={() => setShowDuelShareModal(true)}
+            variant="accent"
+            size="lg"
+            className="w-full glow-accent mb-3"
+          >
+            <Swords className="w-4 h-4 mr-2" />
+            {locale === "de" ? "Duell teilen" : locale === "sl" ? "Deli dvoboj" : "Share Duel"}
+          </Button>
+        )}
+
         {/* Secondary Actions - 3 buttons like mockup */}
         <div className="flex gap-2 sm:gap-3 mt-2">
           <Button
@@ -364,6 +409,7 @@ export default function GuesserResultsPage() {
           </Button>
         </Link>
       </div>
+      )}
 
       {/* Round Review Modal */}
       <RoundReview
@@ -380,6 +426,26 @@ export default function GuesserResultsPage() {
         newLevelName="Entdecker"
         locale={locale}
       />
+
+      {/* Duel Share Modal (for challengers) */}
+      {results?.duelData?.role === "challenger" && results.duelData.encodedChallenge && (
+        <ShareDuelChallengeModal
+          isOpen={showDuelShareModal}
+          onClose={() => {
+            setShowDuelShareModal(false);
+            // Redirect to guesser overview when challenger closes the modal
+            if (isDuelChallenger) {
+              router.push(`/${locale}/guesser`);
+            }
+          }}
+          locale={locale}
+          gameType={results.gameType}
+          encodedChallenge={results.duelData.encodedChallenge}
+          challengerScore={results.duelData.challengerScore}
+          challengerTime={results.duelData.challengerTime}
+          gameTypeName={getLocalizedGameTypeName()}
+        />
+      )}
     </div>
   );
 }

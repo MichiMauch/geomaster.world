@@ -37,6 +37,7 @@ export default function SpecialQuizPage() {
   const [topPlayers, setTopPlayers] = useState<TopPlayersMap>({});
   const [loading, setLoading] = useState(true);
   const [startingGame, setStartingGame] = useState<string | null>(null);
+  const [startingDuel, setStartingDuel] = useState<string | null>(null);
   const [quizTypesLoading, setQuizTypesLoading] = useState(true);
   const [specialTypes, setSpecialTypes] = useState<GameTypeConfig[]>([]);
 
@@ -124,6 +125,30 @@ export default function SpecialQuizPage() {
     }
   };
 
+  // Start duel game
+  const handleStartDuel = async (gameTypeId: string) => {
+    setStartingDuel(gameTypeId);
+    try {
+      const response = await fetch("/api/ranked/games/duel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameType: gameTypeId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        router.push(`/${locale}/guesser/play/${data.gameId}`);
+      } else {
+        const error = await response.json();
+        console.error("Failed to create duel:", error);
+      }
+    } catch (error) {
+      console.error("Error starting duel:", error);
+    } finally {
+      setStartingDuel(null);
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       {/* Background with world map */}
@@ -186,6 +211,9 @@ export default function SpecialQuizPage() {
                     onViewDetails={handleViewDetails}
                     variant="overlay"
                     backgroundImage={SPECIAL_IMAGES[config.id]}
+                    onStartDuel={handleStartDuel}
+                    isStartingDuel={startingDuel === config.id}
+                    isLoggedIn={!!session?.user}
                   />
                 ))}
               </div>

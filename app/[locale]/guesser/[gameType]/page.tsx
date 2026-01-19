@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -27,12 +27,9 @@ export default function GuesserGameTypePage() {
 
   // Custom hooks
   const { gameConfig, loading: configLoading } = useGameConfig(gameType);
-  const guestId = useGuestId();
+  useGuestId(); // Keep generating guestId for non-logged-in users
   const { rankings, loading: loadingRankings } = useRankings(gameType);
   const { rankData, loading: loadingRank } = usePlayerRank(gameType);
-
-  // Game creation state
-  const [creatingGame, setCreatingGame] = useState(false);
 
   // Redirect if invalid game type (only after loading is complete)
   useEffect(() => {
@@ -41,28 +38,9 @@ export default function GuesserGameTypePage() {
     }
   }, [configLoading, gameConfig, router, locale]);
 
-  const handleStartGame = async () => {
-    setCreatingGame(true);
-    try {
-      const response = await fetch("/api/ranked/games", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameType, guestId }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/${locale}/guesser/play/${data.gameId}`);
-      } else {
-        const error = await response.json();
-        alert(error.error || "Failed to create game");
-      }
-    } catch (error) {
-      console.error("Error creating game:", error);
-      alert("Failed to create game");
-    } finally {
-      setCreatingGame(false);
-    }
+  const handleStartGame = () => {
+    // Redirect to mode selection page (Normal vs Duel)
+    router.push(`/${locale}/guesser/${encodeURIComponent(gameType)}/select-mode`);
   };
 
   // Show loading or nothing while validating/redirecting
@@ -192,12 +170,11 @@ export default function GuesserGameTypePage() {
             <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
               <Button
                 onClick={handleStartGame}
-                disabled={creatingGame}
                 size="xl"
                 variant="primary"
                 className="w-full text-xl font-bold tracking-wider py-5 shadow-[0_0_40px_rgba(0,217,255,0.6)] hover:shadow-[0_0_60px_rgba(0,217,255,0.8)] transition-all"
               >
-                {creatingGame ? startLabel.creating : startLabel.start}
+                {startLabel.start}
               </Button>
             </div>
           </div>

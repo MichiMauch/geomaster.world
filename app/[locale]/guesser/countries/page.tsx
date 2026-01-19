@@ -27,6 +27,7 @@ export default function CountriesPage() {
   const [topPlayers, setTopPlayers] = useState<TopPlayersMap>({});
   const [loading, setLoading] = useState(true);
   const [startingGame, setStartingGame] = useState<string | null>(null);
+  const [startingDuel, setStartingDuel] = useState<string | null>(null);
   const [dbCountries, setDbCountries] = useState<DatabaseCountry[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
   const [countryTypes, setCountryTypes] = useState<GameTypeConfig[]>([]);
@@ -115,6 +116,30 @@ export default function CountriesPage() {
     }
   };
 
+  // Start duel game
+  const handleStartDuel = async (gameTypeId: string) => {
+    setStartingDuel(gameTypeId);
+    try {
+      const response = await fetch("/api/ranked/games/duel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameType: gameTypeId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        router.push(`/${locale}/guesser/play/${data.gameId}`);
+      } else {
+        const error = await response.json();
+        console.error("Failed to create duel:", error);
+      }
+    } catch (error) {
+      console.error("Error starting duel:", error);
+    } finally {
+      setStartingDuel(null);
+    }
+  };
+
   // Helper to get image/flag for a country config from DB data
   const getCountryAssets = (configId: string) => {
     const countryId = configId.replace("country:", "");
@@ -190,6 +215,9 @@ export default function CountriesPage() {
                       variant="overlay"
                       backgroundImage={backgroundImage}
                       flagImage={flagImage}
+                      onStartDuel={handleStartDuel}
+                      isStartingDuel={startingDuel === config.id}
+                      isLoggedIn={!!session?.user}
                     />
                   );
                 })}

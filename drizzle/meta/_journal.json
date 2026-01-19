@@ -85,6 +85,20 @@
       "when": 1768581211977,
       "tag": "0011_reflective_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1768760202594,
+      "tag": "0012_red_mantis",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1768850000000,
+      "tag": "0013_notifications",
+      "breakpoints": true
     }
   ]
 }

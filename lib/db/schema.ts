@@ -120,7 +120,7 @@ export const games = sqliteTable("games", {
     .references(() => groups.id, { onDelete: "cascade" }), // NULLABLE for training games
   userId: text("userId")
     .references(() => users.id, { onDelete: "cascade" }), // Owner for training games
-  mode: text("mode", { enum: ["group", "training", "ranked"] }).notNull().default("group"), // Game mode
+  mode: text("mode", { enum: ["group", "training", "ranked", "duel"] }).notNull().default("group"), // Game mode
   name: text("name"), // Game name (optional, set by admin)
   country: text("country").notNull().default("switzerland"), // Country key (switzerland, slovenia) - legacy
   gameType: text("gameType"), // New: "country:switzerland", "world:capitals" etc. null = use country field
@@ -135,6 +135,8 @@ export const games = sqliteTable("games", {
   // Anti-cheat: Server-side round tracking
   activeLocationIndex: integer("activeLocationIndex").default(1), // Which location is currently being played (1-5)
   locationStartedAt: integer("locationStartedAt"), // Unix timestamp (ms) when current location started
+  // Duel-specific fields
+  duelSeed: text("duelSeed"), // Seed for seededShuffle in duel mode (null for non-duel games)
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 
@@ -380,6 +382,52 @@ export const userStreaks = sqliteTable("userStreaks", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });
 
+// Duel Results (completed 1v1 duels)
+export const duelResults = sqliteTable("duelResults", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  duelSeed: text("duelSeed").notNull(), // Seed used for location order
+  gameType: text("gameType").notNull(), // "country:switzerland", etc.
+  // Challenger (Spieler A)
+  challengerId: text("challengerId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  challengerGameId: text("challengerGameId").notNull().references(() => games.id, { onDelete: "cascade" }),
+  challengerScore: integer("challengerScore").notNull(),
+  challengerTime: integer("challengerTime").notNull(), // Total time in seconds
+  // Accepter (Spieler B)
+  accepterId: text("accepterId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accepterGameId: text("accepterGameId").notNull().references(() => games.id, { onDelete: "cascade" }),
+  accepterScore: integer("accepterScore").notNull(),
+  accepterTime: integer("accepterTime").notNull(), // Total time in seconds
+  // Winner
+  winnerId: text("winnerId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+// Duel Stats (aggregated per user per game type)
+export const duelStats = sqliteTable("duelStats", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  gameType: text("gameType").notNull(), // "country:switzerland", etc.
+  totalDuels: integer("totalDuels").notNull().default(0),
+  wins: integer("wins").notNull().default(0),
+  losses: integer("losses").notNull().default(0),
+  winRate: real("winRate").notNull().default(0), // Calculated: wins / totalDuels
+  rank: integer("rank"), // Leaderboard position (null until calculated)
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+});
+
+// Notifications (in-app notifications for users)
+export const notifications = sqliteTable("notifications", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // "duel_completed", "duel_challenge_received", etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  link: text("link"), // URL to navigate to when clicked
+  metadata: text("metadata"), // JSON string for extra data (duelId, etc.)
+  isRead: integer("isRead", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
 // Types
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type RegistrationAttempt = typeof registrationAttempts.$inferSelect;
@@ -401,3 +449,6 @@ export type WorldQuizType = typeof worldQuizTypes.$inferSelect;
 export type PanoramaType = typeof panoramaTypes.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewsItem = typeof newsItems.$inferSelect;
+export type DuelResult = typeof duelResults.$inferSelect;
+export type DuelStat = typeof duelStats.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
