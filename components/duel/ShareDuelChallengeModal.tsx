@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { X, Copy, Check, Share2, Swords, MessageCircle, UserPlus, Search, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { buildChallengeUrl } from "@/lib/duel-utils";
@@ -44,6 +46,7 @@ const labels = {
     inviteError: "Fehler beim Senden",
     noResults: "Keine Spieler gefunden",
     sending: "Sende...",
+    challengeSent: (name: string) => `Herausforderung an ${name} gesendet!`,
   },
   en: {
     title: "Share Duel",
@@ -65,6 +68,7 @@ const labels = {
     inviteError: "Error sending invite",
     noResults: "No players found",
     sending: "Sending...",
+    challengeSent: (name: string) => `Challenge sent to ${name}!`,
   },
   sl: {
     title: "Deli dvoboj",
@@ -86,6 +90,7 @@ const labels = {
     inviteError: "Napaka pri pošiljanju",
     noResults: "Noben igralec ni najden",
     sending: "Pošiljanje...",
+    challengeSent: (name: string) => `Izziv poslan ${name}!`,
   },
 };
 
@@ -109,6 +114,7 @@ export function ShareDuelChallengeModal({
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const router = useRouter();
 
   const t = labels[locale as keyof typeof labels] || labels.de;
 
@@ -183,13 +189,14 @@ export function ShareDuelChallengeModal({
       });
 
       if (res.ok) {
-        setInviteStatus("success");
-        // Reset after success
-        setTimeout(() => {
-          setSelectedUser(null);
-          setSearchQuery("");
-          setInviteStatus("idle");
-        }, 2000);
+        // Toast anzeigen
+        toast.success(t.challengeSent(selectedUser.displayName), {
+          duration: 3000,
+        });
+        // Modal schliessen
+        onClose();
+        // Zur Spieleübersicht navigieren
+        router.push(`/${locale}/guesser/${gameType}`);
       } else {
         setInviteStatus("error");
       }
