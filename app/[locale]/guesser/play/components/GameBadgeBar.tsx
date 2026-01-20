@@ -20,11 +20,12 @@ interface GameBadgeBarProps {
   getTimerColor: () => string;
   buttonConfig: {
     text: string;
-    variant: "success" | "primary";
+    variant: "success" | "primary" | "accent";
     onClick: () => void;
     disabled: boolean;
   };
   submitting: boolean;
+  isDuel?: boolean;
 }
 
 function getCountryQuizResultText(lastResult: GuessResult | null, locale: string): string {
@@ -52,6 +53,7 @@ export const GameBadgeBar = memo(function GameBadgeBar({
   getTimerColor,
   buttonConfig,
   submitting,
+  isDuel = false,
 }: GameBadgeBarProps) {
   const countryQuizCategory = getCountryQuizCategory(currentRound.gameType);
   const isCountryQuiz = !!countryQuizCategory;
@@ -68,7 +70,8 @@ export const GameBadgeBar = memo(function GameBadgeBar({
       "bg-surface-1 rounded-lg",
       "flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2",
       "border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.15)]",
-      !showResult && timeRemaining > 10 && "border-primary",
+      // Timer border colors - duel mode uses accent (orange) as base
+      !showResult && timeRemaining > 10 && (isDuel ? "border-accent" : "border-primary"),
       !showResult && timeRemaining <= 10 && timeRemaining > 5 && "border-accent",
       !showResult && timeRemaining <= 5 && "border-error",
       showResult && isSuccess && "border-success",

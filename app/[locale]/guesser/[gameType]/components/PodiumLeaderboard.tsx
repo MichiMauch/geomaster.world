@@ -5,16 +5,27 @@ import Link from "next/link";
 import type { RankingEntry } from "../types";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
+import type { DuelRankingEntry } from "../hooks/useDuelRankings";
+
+export type LeaderboardVariant = "solo" | "duel";
 
 interface PodiumLeaderboardProps {
-  rankings: RankingEntry[];
+  rankings: RankingEntry[] | DuelRankingEntry[];
   loading: boolean;
   locale: string;
   gameType?: string;
   showPodium?: boolean;
   showList?: boolean;
   showLeaderboardLink?: boolean;
+  variant?: LeaderboardVariant;
 }
+
+// Labels for duel leaderboard
+const duelLabels: Record<string, { title: string; wins: string }> = {
+  de: { title: "Duell-Champions", wins: "Siege" },
+  en: { title: "Duel Champions", wins: "Wins" },
+  sl: { title: "Dvobojevalni prvaki", wins: "Zmage" },
+};
 
 export const PodiumLeaderboard = memo(function PodiumLeaderboard({
   rankings,
@@ -24,11 +35,27 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
   showPodium = true,
   showList = true,
   showLeaderboardLink = false,
+  variant = "solo",
 }: PodiumLeaderboardProps) {
+  const isDuel = variant === "duel";
+  const duelLabel = duelLabels[locale] || duelLabels.de;
+
+  // Helper to get display value (bestScore for solo, wins for duel)
+  const getDisplayValue = (entry: RankingEntry | DuelRankingEntry): number => {
+    if (isDuel && "wins" in entry) {
+      return entry.wins;
+    }
+    return (entry as RankingEntry).bestScore || 0;
+  };
+
   // Fill with empty entries if less than 3
   const top3 = [...rankings.slice(0, 3)];
   while (top3.length < 3) {
-    top3.push({ rank: top3.length + 1, userName: null, bestScore: 0 });
+    if (isDuel) {
+      top3.push({ rank: top3.length + 1, userName: null, userImage: null, wins: 0, losses: 0, totalDuels: 0, winRate: 0, userId: "" } as DuelRankingEntry);
+    } else {
+      top3.push({ rank: top3.length + 1, userName: null, bestScore: 0 } as RankingEntry);
+    }
   }
 
   // Podium order: 2nd, 1st, 3rd (for visual display)
@@ -36,37 +63,67 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
   const heights = ["h-32", "h-40", "h-28"];
   const positions = [2, 1, 3];
 
-  // Very transparent podium backgrounds (15-20%) with glow borders
-  const podiumStyles = [
-    // Silver (2nd place)
-    {
-      bg: "bg-gray-400/15",
-      border: "border-gray-300/60",
-      glow: "shadow-[0_0_15px_rgba(192,192,192,0.4),inset_0_0_10px_rgba(192,192,192,0.1)]",
-      numberColor: "text-gray-300",
-    },
-    // Gold (1st place)
-    {
-      bg: "bg-yellow-500/20",
-      border: "border-yellow-400/70",
-      glow: "shadow-[0_0_20px_rgba(255,215,0,0.5),inset_0_0_15px_rgba(255,215,0,0.15)]",
-      numberColor: "text-yellow-400",
-    },
-    // Bronze (3rd place)
-    {
-      bg: "bg-amber-600/15",
-      border: "border-amber-500/60",
-      glow: "shadow-[0_0_15px_rgba(205,127,50,0.4),inset_0_0_10px_rgba(205,127,50,0.1)]",
-      numberColor: "text-amber-400",
-    },
-  ];
+  // Podium styles - duel variant uses orange theme
+  const podiumStyles = isDuel
+    ? [
+        // Silver (2nd place) - orange tinted
+        {
+          bg: "bg-orange-400/15",
+          border: "border-orange-300/60",
+          glow: "shadow-[0_0_15px_rgba(255,150,100,0.4),inset_0_0_10px_rgba(255,150,100,0.1)]",
+          numberColor: "text-orange-300",
+        },
+        // Gold (1st place) - orange
+        {
+          bg: "bg-accent/20",
+          border: "border-accent/70",
+          glow: "shadow-[0_0_20px_rgba(255,107,53,0.5),inset_0_0_15px_rgba(255,107,53,0.15)]",
+          numberColor: "text-accent",
+        },
+        // Bronze (3rd place) - orange tinted
+        {
+          bg: "bg-orange-600/15",
+          border: "border-orange-500/60",
+          glow: "shadow-[0_0_15px_rgba(255,130,50,0.4),inset_0_0_10px_rgba(255,130,50,0.1)]",
+          numberColor: "text-orange-400",
+        },
+      ]
+    : [
+        // Silver (2nd place)
+        {
+          bg: "bg-gray-400/15",
+          border: "border-gray-300/60",
+          glow: "shadow-[0_0_15px_rgba(192,192,192,0.4),inset_0_0_10px_rgba(192,192,192,0.1)]",
+          numberColor: "text-gray-300",
+        },
+        // Gold (1st place)
+        {
+          bg: "bg-yellow-500/20",
+          border: "border-yellow-400/70",
+          glow: "shadow-[0_0_20px_rgba(255,215,0,0.5),inset_0_0_15px_rgba(255,215,0,0.15)]",
+          numberColor: "text-yellow-400",
+        },
+        // Bronze (3rd place)
+        {
+          bg: "bg-amber-600/15",
+          border: "border-amber-500/60",
+          glow: "shadow-[0_0_15px_rgba(205,127,50,0.4),inset_0_0_10px_rgba(205,127,50,0.1)]",
+          numberColor: "text-amber-400",
+        },
+      ];
 
-  // Avatar ring colors
-  const avatarRingColors = [
-    "ring-2 ring-gray-300 ring-offset-2 ring-offset-background",
-    "ring-4 ring-yellow-400 ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(255,215,0,0.6)]",
-    "ring-2 ring-amber-500 ring-offset-2 ring-offset-background",
-  ];
+  // Avatar ring colors - duel variant uses orange
+  const avatarRingColors = isDuel
+    ? [
+        "ring-2 ring-orange-300 ring-offset-2 ring-offset-background",
+        "ring-4 ring-accent ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(255,107,53,0.6)]",
+        "ring-2 ring-orange-500 ring-offset-2 ring-offset-background",
+      ]
+    : [
+        "ring-2 ring-gray-300 ring-offset-2 ring-offset-background",
+        "ring-4 ring-yellow-400 ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(255,215,0,0.6)]",
+        "ring-2 ring-amber-500 ring-offset-2 ring-offset-background",
+      ];
 
   if (loading) {
     return (
@@ -101,7 +158,8 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
       {showPodium && (
         <div className="flex items-end justify-center gap-3 pt-12">
           {podiumOrder.map((entry, index) => {
-            const isEmpty = !entry?.userName && entry?.bestScore === 0;
+            const displayValue = getDisplayValue(entry);
+            const isEmpty = !entry?.userName && displayValue === 0;
             const position = positions[index];
             const style = podiumStyles[index];
 
@@ -153,9 +211,12 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
                     </span>
                     <span className={cn(
                       "text-lg font-bold block",
-                      position === 1 ? "text-yellow-300" : "text-white"
+                      position === 1
+                        ? isDuel ? "text-accent-light" : "text-yellow-300"
+                        : "text-white"
                     )}>
-                      {isEmpty ? "—" : entry?.bestScore?.toLocaleString()}
+                      {isEmpty ? "—" : displayValue.toLocaleString()}
+                      {isDuel && !isEmpty && <span className="text-xs ml-1 text-white/70">W</span>}
                     </span>
                   </div>
                 </div>
@@ -167,8 +228,18 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
 
       {/* Remaining Rankings (4-10) */}
       {showList && rankings.length > 3 && (
-        <div className="glass-card rounded-lg p-3">
+        <div className={cn(
+          "glass-card rounded-lg p-3",
+          isDuel && "border border-accent/20"
+        )}>
+          {/* Duel variant title */}
+          {isDuel && (
+            <div className="text-center pb-2 mb-2 border-b border-surface-3">
+              <span className="text-sm font-bold text-accent tracking-wider">{duelLabel.title}</span>
+            </div>
+          )}
           {rankings.slice(3, 10).map((entry, index) => {
+            const displayValue = getDisplayValue(entry);
             const isHighlighted = index === 3;
             return (
               <div
@@ -178,7 +249,10 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
                   isHighlighted ? "bg-surface-2/60" : "hover:bg-surface-1/30"
                 )}
               >
-                <span className="w-6 text-right text-sm font-medium text-muted-foreground">
+                <span className={cn(
+                  "w-6 text-right text-sm font-medium",
+                  isDuel ? "text-accent/70" : "text-muted-foreground"
+                )}>
                   {index + 4}.
                 </span>
                 {entry.userImage && (
@@ -191,8 +265,12 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
                 <span className="text-foreground truncate flex-1">
                   {entry.userName || "Anonym"}
                 </span>
-                <span className="text-foreground font-bold tabular-nums">
-                  {entry.bestScore.toLocaleString()}
+                <span className={cn(
+                  "font-bold tabular-nums",
+                  isDuel ? "text-accent" : "text-foreground"
+                )}>
+                  {displayValue.toLocaleString()}
+                  {isDuel && <span className="text-xs ml-1 text-muted-foreground">{duelLabel.wins}</span>}
                 </span>
               </div>
             );
@@ -204,8 +282,13 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
       {showLeaderboardLink && gameType && (
         <div className="text-center">
           <Link
-            href={`/${locale}/guesser/leaderboard/${encodeURIComponent(gameType)}`}
-            className="text-primary hover:text-primary-light transition-colors text-sm font-medium"
+            href={`/${locale}/guesser/leaderboard/${encodeURIComponent(gameType)}${isDuel ? "?mode=duel" : ""}`}
+            className={cn(
+              "transition-colors text-sm font-medium",
+              isDuel
+                ? "text-accent hover:text-accent-light"
+                : "text-primary hover:text-primary-light"
+            )}
           >
             {locale === "en" ? "View full leaderboard →" : locale === "sl" ? "Poglej celotno lestvico →" : "Komplette Rangliste anzeigen →"}
           </Link>

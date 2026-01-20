@@ -45,4 +45,5 @@ export interface CountryMapProps {
   hintCircle?: HintCircle | null;
   onReady?: () => void; // Called when map is fully loaded and visible
   roundId?: string; // Unique ID per round to trigger onReady reset
+  isDuel?: boolean; // Duel mode uses orange color scheme
 }

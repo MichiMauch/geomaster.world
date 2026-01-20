@@ -8,7 +8,7 @@ import { getGameTypeConfig, DEFAULT_GAME_TYPE, isImageGameType } from "@/lib/gam
 import ImageMap from "../ImageMap";
 import { useIsMobile, useGeoData } from "./hooks";
 import { MapClickHandler, HintCirclePane } from "./MapHelpers";
-import { defaultIcon, targetIcon, getGeoStyle, hintCircleStyle, connectionLineStyle } from "./constants";
+import { defaultIcon, targetIcon, getGeoStyle, getHintCircleStyle, connectionLineStyle } from "./constants";
 import type { CountryMapProps } from "./types";
 
 // Set default marker icon
@@ -28,6 +28,7 @@ export default function CountryMap({
   hintCircle = null,
   onReady,
   roundId,
+  isDuel = false,
 }: CountryMapProps) {
   const isMobile = useIsMobile();
   const onReadyCalledRef = useRef(false);
@@ -151,7 +152,7 @@ export default function CountryMap({
       <HintCirclePane key="hint-pane" />
 
       {geoData && (
-        <GeoJSON key="geo-json" data={geoData} style={getGeoStyle(isWorldMap)} />
+        <GeoJSON key="geo-json" data={geoData} style={getGeoStyle(isWorldMap, isDuel)} />
       )}
 
       {hintCircle && (
@@ -160,7 +161,7 @@ export default function CountryMap({
           center={[hintCircle.lat, hintCircle.lng]}
           radius={hintCircle.radiusKm * 1000}
           pane="hintCirclePane"
-          pathOptions={hintCircleStyle}
+          pathOptions={getHintCircleStyle(isDuel)}
         />
       )}
 

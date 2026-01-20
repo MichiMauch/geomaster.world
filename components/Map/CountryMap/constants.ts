@@ -20,23 +20,32 @@ export const targetIcon = L.icon({
   shadowSize: [41, 41],
 });
 
+// Colors for different modes
+const COLORS = {
+  solo: "#00D9FF", // Cyan
+  duel: "#FF6B35", // Orange/Accent
+};
+
 // Style for country GeoJSON - Dark Gaming Theme
-export const getGeoStyle = (isWorldMap: boolean) => ({
-  color: "#00D9FF", // Cyan border with glow effect
+export const getGeoStyle = (isWorldMap: boolean, isDuel: boolean = false) => ({
+  color: isDuel ? COLORS.duel : COLORS.solo,
   weight: isWorldMap ? 1 : 2,
   fillColor: "#2E3744", // Dark surface fill
   fillOpacity: isWorldMap ? 0.8 : 1,
 });
 
 // Hint circle style
-export const hintCircleStyle = {
-  color: "#00D9FF",
-  fillColor: "#00D9FF",
+export const getHintCircleStyle = (isDuel: boolean = false) => ({
+  color: isDuel ? COLORS.duel : COLORS.solo,
+  fillColor: isDuel ? COLORS.duel : COLORS.solo,
   fillOpacity: 0.1,
   weight: 2,
   dashArray: "8, 12",
   interactive: false,
-};
+});
+
+// Legacy export for backwards compatibility
+export const hintCircleStyle = getHintCircleStyle(false);
 
 // Connection line style
 export const connectionLineStyle = {

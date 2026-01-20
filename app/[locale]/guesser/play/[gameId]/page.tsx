@@ -517,6 +517,9 @@ export default function GuesserPlayPage({
     );
   }
 
+  // Duel mode detection
+  const isDuel = game?.mode === "duel";
+
   // Button config helper
   const getButtonConfig = () => {
     if (showResult) {
@@ -526,17 +529,18 @@ export default function GuesserPlayPage({
       const isSuccess = isCountryQuiz
         ? lastResult?.insideCountry === true
         : lastResult && lastResult.distanceKm < 20;
-      const resultVariant = isSuccess ? "success" : "primary";
+      // Use accent (orange) in duel mode when not success
+      const resultVariant = isSuccess ? "success" : (isDuel ? "accent" : "primary");
       return {
         text: isLastRound ? t("finish", { defaultValue: "Beenden" }) : t("next", { defaultValue: "Weiter" }),
-        variant: resultVariant as "success" | "primary",
+        variant: resultVariant as "success" | "primary" | "accent",
         onClick: handleNextRound,
         disabled: false,
       };
     }
     return {
       text: markerPosition ? t("submit", { defaultValue: "Senden" }) : t("setMarker", { defaultValue: "Marker setzen" }),
-      variant: "primary" as const,
+      variant: isDuel ? "accent" as const : "primary" as const,
       onClick: handleGuess,
       disabled: !markerPosition,
     };
@@ -609,6 +613,7 @@ export default function GuesserPlayPage({
             interactive={!showResult}
             height="100%"
             onReady={handleMapReady}
+            isDuel={isDuel}
           />
         )}
       </div>
@@ -625,6 +630,7 @@ export default function GuesserPlayPage({
           getTimerColor={getTimerColor}
           buttonConfig={getButtonConfig()}
           submitting={submitting}
+          isDuel={isDuel}
         />
       )}
 
