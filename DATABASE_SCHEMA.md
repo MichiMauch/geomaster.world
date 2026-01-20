@@ -217,7 +217,7 @@ erDiagram
         text userId FK_UK
         integer currentStreak
         integer longestStreak
-        text lastPlayedDate "YYYY-MM-DD"
+        text lastPlayedDate "date string"
         integer updatedAt "timestamp"
     }
 
