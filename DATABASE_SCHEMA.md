@@ -4,22 +4,17 @@
 
 ```mermaid
 erDiagram
-    %% ===============================================
-    %% GEOMASTER.WORLD - DATABASE SCHEMA
-    %% Drizzle ORM + Turso (SQLite)
-    %% ===============================================
-
     %% ================== AUTH ==================
     users {
-        text id PK "nanoid()"
+        text id PK
         text name
-        text nickname "Display name"
+        text nickname
         text email UK
-        integer emailVerified "timestamp"
+        integer emailVerified
         text image
-        text password "hashed"
-        boolean hintEnabled "default: false"
-        boolean isSuperAdmin "default: false"
+        text password
+        boolean hintEnabled
+        boolean isSuperAdmin
     }
 
     accounts {
@@ -39,13 +34,13 @@ erDiagram
     sessions {
         text sessionToken PK
         text userId FK
-        integer expires "timestamp"
+        integer expires
     }
 
     verificationTokens {
         text identifier PK
         text token PK
-        integer expires "timestamp"
+        integer expires
     }
 
     %% ================== GROUPS ==================
@@ -54,16 +49,16 @@ erDiagram
         text name
         text inviteCode UK
         text ownerId FK
-        integer locationsPerRound "default: 5"
-        integer timeLimitSeconds "nullable"
-        integer createdAt "timestamp"
+        integer locationsPerRound
+        integer timeLimitSeconds
+        integer createdAt
     }
 
     groupMembers {
-        text groupId PK_FK
-        text userId PK_FK
-        text role "admin|member"
-        integer joinedAt "timestamp"
+        text groupId PK
+        text userId PK
+        text role
+        integer joinedAt
     }
 
     %% ================== LOCATIONS ==================
@@ -75,104 +70,104 @@ erDiagram
         text name_sl
         real latitude
         real longitude
-        text country "default: Switzerland"
-        text difficulty "easy|medium|hard"
-        integer createdAt "timestamp"
+        text country
+        text difficulty
+        integer createdAt
     }
 
     worldLocations {
-        text id PK "nanoid()"
-        text category "capitals|mountains|..."
+        text id PK
+        text category
         text name
         text name_de
         text name_en
         text name_sl
         real latitude
         real longitude
-        text countryCode "ISO"
-        text additionalInfo "JSON"
-        text difficulty "easy|medium|hard"
-        integer createdAt "timestamp"
+        text countryCode
+        text additionalInfo
+        text difficulty
+        integer createdAt
     }
 
     imageLocations {
-        text id PK "nanoid()"
-        text imageMapId "garten|buero|..."
+        text id PK
+        text imageMapId
         text name
         text name_de
         text name_en
         text name_sl
-        real x "pixel"
-        real y "pixel"
-        text difficulty "easy|medium|hard"
-        integer createdAt "timestamp"
+        real x
+        real y
+        text difficulty
+        integer createdAt
     }
 
     panoramaLocations {
-        text id PK "nanoid()"
+        text id PK
         text mapillaryImageKey
-        text name "admin only"
+        text name
         text name_de
         text name_en
         text name_sl
         real latitude
         real longitude
-        real heading "0-360"
-        real pitch "-90 to +90"
-        text countryCode "ISO"
-        text difficulty "easy|medium|hard"
-        integer createdAt "timestamp"
+        real heading
+        real pitch
+        text countryCode
+        text difficulty
+        integer createdAt
     }
 
     %% ================== GAMES ==================
     games {
         text id PK
-        text groupId FK "nullable for training"
-        text userId FK "owner for training"
-        text mode "group|training|ranked|duel"
-        text name "optional"
-        text country "legacy"
-        text gameType "country:x|world:x"
-        integer locationsPerRound "default: 5"
-        integer timeLimitSeconds "nullable"
-        integer scoringVersion "1|2"
-        integer weekNumber "legacy"
-        integer year "legacy"
-        text status "active|completed"
-        integer currentRound "default: 1"
+        text groupId FK
+        text userId FK
+        text mode
+        text name
+        text country
+        text gameType
+        integer locationsPerRound
+        integer timeLimitSeconds
+        integer scoringVersion
+        integer weekNumber
+        integer year
+        text status
+        integer currentRound
         boolean leaderboardRevealed
         integer activeLocationIndex
-        integer locationStartedAt "unix ms"
-        text duelSeed "nullable"
-        integer createdAt "timestamp"
+        integer locationStartedAt
+        text duelSeed
+        integer createdAt
     }
 
     gameRounds {
         text id PK
         text gameId FK
         integer roundNumber
-        integer locationIndex "default: 1"
-        text locationId "no FK"
-        text locationSource "locations|world|image|panorama"
-        text country "default: switzerland"
-        text gameType "nullable"
-        integer timeLimitSeconds "nullable"
+        integer locationIndex
+        text locationId
+        text locationSource
+        text country
+        text gameType
+        integer timeLimitSeconds
     }
 
     guesses {
         text id PK
         text gameRoundId FK
         text userId FK
-        real latitude "nullable for timeout"
-        real longitude "nullable for timeout"
+        real latitude
+        real longitude
         real distanceKm
-        integer timeSeconds "nullable"
-        integer createdAt "timestamp"
+        integer timeSeconds
+        integer createdAt
     }
 
-    %% ================== STATS & RANKINGS ==================
+    %% ================== STATS ==================
     userStats {
-        text id PK "nanoid()"
+        text id PK
         text userId FK
         text gameType
         integer totalGames
@@ -181,26 +176,26 @@ erDiagram
         integer totalScore
         integer bestScore
         real averageDistance
-        integer updatedAt "timestamp"
+        integer updatedAt
     }
 
     rankedGameResults {
-        text id PK "nanoid()"
+        text id PK
         text gameId FK
-        text userId FK "nullable"
-        text guestId "for anon"
+        text userId FK
+        text guestId
         text gameType
         integer totalScore
         real averageScore
         real totalDistance
-        integer completedAt "timestamp"
+        integer completedAt
     }
 
     rankings {
-        text id PK "nanoid()"
+        text id PK
         text userId FK
         text gameType
-        text period "daily|weekly|monthly|alltime"
+        text period
         text periodKey
         integer totalScore
         integer totalGames
@@ -208,22 +203,22 @@ erDiagram
         integer bestScore
         text userName
         text userImage
-        integer rank "nullable"
-        integer updatedAt "timestamp"
+        integer rank
+        integer updatedAt
     }
 
     userStreaks {
-        text id PK "nanoid()"
-        text userId FK_UK
+        text id PK
+        text userId FK
         integer currentStreak
         integer longestStreak
-        text lastPlayedDate "date string"
-        integer updatedAt "timestamp"
+        text lastPlayedDate
+        integer updatedAt
     }
 
     %% ================== DUELS ==================
     duelResults {
-        text id PK "nanoid()"
+        text id PK
         text duelSeed
         text gameType
         text challengerId FK
@@ -235,29 +230,29 @@ erDiagram
         integer accepterScore
         integer accepterTime
         text winnerId FK
-        integer createdAt "timestamp"
+        integer createdAt
     }
 
     duelStats {
-        text id PK "nanoid()"
+        text id PK
         text userId FK
         text gameType
         integer totalDuels
         integer wins
         integer losses
         real winRate
-        integer rank "nullable"
-        integer updatedAt "timestamp"
+        integer rank
+        integer updatedAt
     }
 
     %% ================== GAME TYPES ==================
     countries {
-        text id PK "switzerland|germany|..."
+        text id PK
         text name
         text name_en
         text name_sl
-        text icon "emoji"
-        text geojson_data "JSON"
+        text icon
+        text geojson_data
         text landmark_image
         text background_image
         text card_image
@@ -270,65 +265,65 @@ erDiagram
         real bounds_south
         real bounds_east
         real bounds_west
-        integer timeout_penalty "km"
-        integer score_scale_factor "km"
+        integer timeout_penalty
+        integer score_scale_factor
         boolean is_active
-        integer createdAt "timestamp"
+        integer createdAt
     }
 
     worldQuizTypes {
-        text id PK "capitals|mountains|..."
+        text id PK
         text name
         text name_en
         text name_sl
-        text icon "emoji"
+        text icon
         text landmark_image
         text background_image
         real center_lat
         real center_lng
         integer default_zoom
         integer min_zoom
-        integer timeout_penalty "km"
-        integer score_scale_factor "km"
+        integer timeout_penalty
+        integer score_scale_factor
         boolean is_active
-        integer createdAt "timestamp"
+        integer createdAt
     }
 
     panoramaTypes {
-        text id PK "world|..."
+        text id PK
         text name
         text name_en
         text name_sl
-        text icon "emoji"
+        text icon
         text landmark_image
         text background_image
         real center_lat
         real center_lng
         integer default_zoom
         integer min_zoom
-        integer timeout_penalty "km"
-        integer score_scale_factor "km"
+        integer timeout_penalty
+        integer score_scale_factor
         integer default_time_limit_seconds
         boolean is_active
-        integer createdAt "timestamp"
+        integer createdAt
     }
 
     %% ================== SYSTEM ==================
     activityLogs {
-        text id PK "nanoid()"
-        integer timestamp "timestamp"
-        text level "debug|info|warn|error"
-        text category "auth|game|admin|system"
+        text id PK
+        integer timestamp
+        text level
+        text category
         text action
-        text userId FK "nullable"
+        text userId FK
         text targetId
         text targetType
-        text details "JSON"
-        text metadata "JSON"
+        text details
+        text metadata
     }
 
     newsItems {
-        text id PK "nanoid()"
+        text id PK
         text title
         text title_en
         text content
@@ -336,62 +331,67 @@ erDiagram
         text link
         text link_text
         text link_text_en
-        integer createdAt "timestamp"
+        integer createdAt
     }
 
     registrationAttempts {
-        text id PK "nanoid()"
+        text id PK
         text ip
-        integer attemptedAt "timestamp"
+        integer attemptedAt
         boolean success
     }
 
     notifications {
-        text id PK "nanoid()"
+        text id PK
         text userId FK
         text type
         text title
         text message
         text link
-        text metadata "JSON"
+        text metadata
         boolean isRead
-        integer createdAt "timestamp"
+        integer createdAt
     }
 
     %% ================== RELATIONSHIPS ==================
-
-    %% Auth
-    users ||--o{ accounts : "has"
-    users ||--o{ sessions : "has"
-
-    %% Groups
-    users ||--o{ groups : "owns"
-    users ||--o{ groupMembers : "member of"
-    groups ||--o{ groupMembers : "has members"
-
-    %% Games
-    groups ||--o{ games : "has"
-    users ||--o{ games : "plays (training)"
-    games ||--o{ gameRounds : "consists of"
-    gameRounds ||--o{ guesses : "has"
-    users ||--o{ guesses : "makes"
-
-    %% Stats & Rankings
-    users ||--o{ userStats : "has"
-    users ||--o{ rankedGameResults : "achieves"
-    games ||--o{ rankedGameResults : "produces"
-    users ||--o{ rankings : "ranked in"
-    users ||--o| userStreaks : "has"
-
-    %% Duels
-    users ||--o{ duelResults : "challenges"
-    users ||--o{ duelResults : "accepts"
-    users ||--o{ duelResults : "wins"
-    games ||--o{ duelResults : "challenger game"
-    games ||--o{ duelResults : "accepter game"
-    users ||--o{ duelStats : "has"
-
-    %% System
-    users ||--o{ activityLogs : "triggers"
-    users ||--o{ notifications : "receives"
+    users ||--o{ accounts : has
+    users ||--o{ sessions : has
+    users ||--o{ groups : owns
+    users ||--o{ groupMembers : joins
+    groups ||--o{ groupMembers : contains
+    groups ||--o{ games : has
+    users ||--o{ games : plays
+    games ||--o{ gameRounds : contains
+    gameRounds ||--o{ guesses : has
+    users ||--o{ guesses : makes
+    users ||--o{ userStats : has
+    users ||--o{ rankedGameResults : achieves
+    games ||--o{ rankedGameResults : produces
+    users ||--o{ rankings : ranked
+    users ||--o| userStreaks : has
+    users ||--o{ duelResults : participates
+    games ||--o{ duelResults : linked
+    users ||--o{ duelStats : has
+    users ||--o{ activityLogs : triggers
+    users ||--o{ notifications : receives
 ```
+
+## Tables Overview
+
+| Category | Tables |
+|----------|--------|
+| **Auth** | `users`, `accounts`, `sessions`, `verificationTokens` |
+| **Groups** | `groups`, `groupMembers` |
+| **Locations** | `locations`, `worldLocations`, `imageLocations`, `panoramaLocations` |
+| **Games** | `games`, `gameRounds`, `guesses` |
+| **Stats** | `userStats`, `rankedGameResults`, `rankings`, `userStreaks` |
+| **Duels** | `duelResults`, `duelStats` |
+| **Game Types** | `countries`, `worldQuizTypes`, `panoramaTypes` |
+| **System** | `activityLogs`, `newsItems`, `registrationAttempts`, `notifications` |
+
+## Key Relationships
+
+- **Users** own groups, play games, make guesses
+- **Games** can be group-based, training, ranked, or duels
+- **GameRounds** link to locations from 4 different sources (locations, worldLocations, imageLocations, panoramaLocations)
+- **Rankings** are aggregated by period (daily/weekly/monthly/alltime) and gameType
