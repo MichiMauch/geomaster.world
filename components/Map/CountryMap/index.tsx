@@ -8,7 +8,7 @@ import { getGameTypeConfig, DEFAULT_GAME_TYPE, isImageGameType } from "@/lib/gam
 import ImageMap from "../ImageMap";
 import { useIsMobile, useGeoData } from "./hooks";
 import { MapClickHandler, HintCirclePane } from "./MapHelpers";
-import { defaultIcon, targetIcon, getGeoStyle, getHintCircleStyle, connectionLineStyle } from "./constants";
+import { defaultIcon, targetIcon, getGeoStyle, getHintCircleStyle, connectionLineStyle, soloMarkerIcon, duelMarkerIcon } from "./constants";
 import type { CountryMapProps } from "./types";
 
 // Set default marker icon
@@ -125,12 +125,17 @@ export default function CountryMap({
       ? dynamicCountry!.minZoom + mobileZoomOffset
       : gameTypeConfig!.minZoom + mobileZoomOffset;
 
+  // Custom cursor class for interactive maps (overrides Leaflet's grab cursor)
+  const cursorClass = interactive
+    ? isDuel ? "leaflet-cursor-duel" : "leaflet-cursor-solo"
+    : "";
+
   // Map container props
   const mapContainerProps: Record<string, unknown> = {
     center,
     zoom,
     style: { height, width: "100%", backgroundColor: "transparent" },
-    className: "rounded-lg",
+    className: `rounded-lg ${cursorClass}`,
     minZoom,
     zoomControl: false,
   };
@@ -168,7 +173,7 @@ export default function CountryMap({
       {interactive && <MapClickHandler key="click-handler" onMarkerPlace={onMarkerPlace} />}
 
       {markerPosition && (
-        <Marker key="user-marker" position={[markerPosition.lat, markerPosition.lng]} icon={defaultIcon} />
+        <Marker key="user-marker" position={[markerPosition.lat, markerPosition.lng]} icon={isDuel ? duelMarkerIcon : soloMarkerIcon} />
       )}
 
       {showTarget && targetPosition && (
