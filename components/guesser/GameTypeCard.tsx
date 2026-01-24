@@ -54,7 +54,8 @@ function CyberpunkPlayButton({ size = "lg" }: { size?: "lg" | "sm" }) {
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinejoin="round"
-            className="text-primary group-hover:text-white transition-colors duration-300"
+            fill="transparent"
+            className="text-primary group-hover:text-white group-hover:fill-white transition-all duration-300"
           />
         </svg>
       </div>
