@@ -1,8 +1,66 @@
 "use client";
 
 import Image from "next/image";
-import { Play } from "lucide-react";
 import type { GameTypeConfig } from "@/lib/game-types";
+
+/** Cyberpunk-style 3D Play Button with glass effect and neon glow */
+function CyberpunkPlayButton({ size = "lg" }: { size?: "lg" | "sm" }) {
+  const isLarge = size === "lg";
+
+  return (
+    <div className="relative">
+      {/* Glow/Reflection under button */}
+      <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 bg-primary/40 blur-md rounded-full
+        ${isLarge ? "w-10 h-2" : "w-8 h-1.5"}
+        group-hover:bg-primary/60 transition-all duration-300
+      `} />
+
+      {/* Button container with 3D effect */}
+      <div className={`relative transform-gpu
+        group-hover:scale-110 group-hover:-translate-y-1
+        transition-all duration-300
+        ${isLarge ? "w-14 h-14" : "w-11 h-11"}
+      `}>
+        {/* 3D depth layer (shadow beneath) */}
+        <div className={`absolute inset-0 rounded-xl translate-y-1.5 bg-slate-950/90
+          ${isLarge ? "rounded-xl" : "rounded-lg"}
+        `} />
+
+        {/* Glass base layer */}
+        <div className={`
+          absolute inset-0
+          bg-slate-900/80 backdrop-blur-sm
+          border border-primary/40
+          shadow-[0_0_20px_rgba(0,217,255,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)]
+          group-hover:shadow-[0_0_30px_rgba(0,217,255,0.5),inset_0_1px_2px_rgba(255,255,255,0.2)]
+          group-hover:border-primary/70
+          group-hover:bg-slate-800/80
+          transition-all duration-300
+          ${isLarge ? "rounded-xl" : "rounded-lg"}
+        `} />
+
+        {/* Wireframe triangle icon */}
+        <svg
+          className={`absolute inset-0 m-auto transition-all duration-300
+            drop-shadow-[0_0_8px_rgba(0,217,255,0.9)]
+            group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.9)]
+            ${isLarge ? "w-6 h-6" : "w-5 h-5"}
+          `}
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86a1 1 0 00-1.5.86z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+            className="text-primary group-hover:text-white transition-colors duration-300"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
 
 export interface TopPlayer {
   rank: number;
@@ -64,11 +122,9 @@ export function GameTypeCard({
         {/* Dark overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 transition-colors" />
 
-        {/* Play Button - bottom right */}
+        {/* Cyberpunk Play Button - bottom right */}
         <div className="absolute bottom-4 right-4 z-20">
-          <div className="w-12 h-12 rounded-full bg-primary/90 group-hover:bg-primary group-hover:scale-110 transition-all duration-300 flex items-center justify-center shadow-lg">
-            <Play className="w-6 h-6 text-white fill-white ml-0.5" />
-          </div>
+          <CyberpunkPlayButton size="lg" />
         </div>
 
         {/* Content */}
@@ -142,11 +198,9 @@ export function GameTypeCard({
         </div>
       </div>
 
-      {/* Play Button - bottom right */}
+      {/* Cyberpunk Play Button - bottom right */}
       <div className="absolute bottom-3 right-3">
-        <div className="w-10 h-10 rounded-full bg-primary/80 group-hover:bg-primary group-hover:scale-110 transition-all duration-300 flex items-center justify-center">
-          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-        </div>
+        <CyberpunkPlayButton size="sm" />
       </div>
 
       {/* Top 3 Players */}
