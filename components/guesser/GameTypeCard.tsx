@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Play, Trophy, Swords } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GameTypeConfig } from "@/lib/game-types";
 
@@ -16,8 +16,6 @@ interface GameTypeCardProps {
   locale: string;
   topPlayers: TopPlayer[];
   loading: boolean;
-  isStarting: boolean;
-  onStartGame: (gameTypeId: string) => void;
   onViewDetails: (gameTypeId: string) => void;
   /** Card variant: "overlay" has background image, "flat" is simple */
   variant?: "overlay" | "flat";
@@ -25,16 +23,11 @@ interface GameTypeCardProps {
   backgroundImage?: string;
   /** Flag/icon image URL (replaces emoji icon if provided) */
   flagImage?: string;
-  /** Handler for starting a duel */
-  onStartDuel?: (gameTypeId: string) => void;
-  /** Whether a duel is currently being started */
-  isStartingDuel?: boolean;
-  /** Whether user is logged in (required for duel) */
-  isLoggedIn?: boolean;
 }
 
 /**
  * Reusable game type card for guesser category pages.
+ * Clicking the card navigates to the detail page.
  * Supports two variants:
  * - "overlay": Card with background image, dark gradient, white text
  * - "flat": Simple card with surface background
@@ -44,29 +37,23 @@ export function GameTypeCard({
   locale,
   topPlayers,
   loading,
-  isStarting,
-  onStartGame,
   onViewDetails,
   variant = "flat",
   backgroundImage,
   flagImage,
-  onStartDuel,
-  isStartingDuel,
-  isLoggedIn,
 }: GameTypeCardProps) {
   const localeKey = locale as "de" | "en" | "sl";
   const name = config.name[localeKey] || config.name.en;
 
-  const startGameTitle = locale === "de" ? "Spiel starten" : locale === "en" ? "Start game" : "Zacni igro";
-  const leaderboardTitle = locale === "de" ? "Rangliste" : locale === "en" ? "Leaderboard" : "Lestvica";
   const noPlayersText = locale === "de" ? "Noch keine Spieler" : locale === "en" ? "No players yet" : "Se brez igralcev";
   const locationsText = locale === "de" ? "Orte" : locale === "en" ? "locations" : "lokacij";
-  const duelTitle = locale === "de" ? "Duell starten" : locale === "en" ? "Start duel" : "Zacni dvoboj";
-  const loginForDuelTitle = locale === "de" ? "Anmelden für Duell" : locale === "en" ? "Login for duel" : "Prijava za dvoboj";
 
   if (variant === "overlay") {
     return (
-      <div className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-primary transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.4)] min-h-[240px]">
+      <div
+        onClick={() => onViewDetails(config.id)}
+        className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-primary transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.4)] min-h-[240px] cursor-pointer"
+      >
         {/* Background image */}
         {backgroundImage && (
           <div
@@ -80,7 +67,7 @@ export function GameTypeCard({
 
         {/* Content */}
         <div className="relative z-10 p-5 flex flex-col h-full">
-          {/* Header: Icon/Flag + Name + Action Buttons */}
+          {/* Header: Icon/Flag + Name + Chevron */}
           <div className="flex items-center gap-3 mb-3">
             {flagImage ? (
               <Image src={flagImage} alt={name} width={40} height={30} className="w-10 h-auto" unoptimized />
@@ -96,53 +83,8 @@ export function GameTypeCard({
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => onStartGame(config.id)}
-                disabled={isStarting}
-                title={startGameTitle}
-                className={cn(
-                  "p-2 rounded-sm transition-all cursor-pointer",
-                  "bg-white/20 hover:bg-white/30 text-white",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
-              >
-                {isStarting ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Play className="w-5 h-5" />
-                )}
-              </button>
-              {onStartDuel && (
-                <button
-                  onClick={() => isLoggedIn && onStartDuel(config.id)}
-                  disabled={isStartingDuel || !isLoggedIn}
-                  title={isLoggedIn ? duelTitle : loginForDuelTitle}
-                  className={cn(
-                    "p-2 rounded-sm transition-all cursor-pointer",
-                    "bg-accent/30 hover:bg-accent/50 text-white",
-                    "disabled:opacity-50 disabled:cursor-not-allowed"
-                  )}
-                >
-                  {isStartingDuel ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Swords className="w-5 h-5" />
-                  )}
-                </button>
-              )}
-              <button
-                onClick={() => onViewDetails(config.id)}
-                title={leaderboardTitle}
-                className={cn(
-                  "p-2 rounded-sm transition-all cursor-pointer",
-                  "bg-white/10 hover:bg-white/20 text-white/70 hover:text-white"
-                )}
-              >
-                <Trophy className="w-5 h-5" />
-              </button>
-            </div>
+            {/* Chevron Icon */}
+            <ChevronRight className="w-6 h-6 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
           </div>
 
           {/* Top 3 Players */}
@@ -180,8 +122,11 @@ export function GameTypeCard({
 
   // Flat variant (default)
   return (
-    <div className="flex flex-col p-4 rounded-lg border transition-all duration-200 bg-surface-1 border-surface-3 hover:border-primary/50 min-h-[160px]">
-      {/* Header: Icon + Name + Action Buttons */}
+    <div
+      onClick={() => onViewDetails(config.id)}
+      className="flex flex-col p-4 rounded-lg border transition-all duration-200 bg-surface-1 border-surface-3 hover:border-primary/50 min-h-[160px] cursor-pointer"
+    >
+      {/* Header: Icon + Name + Chevron */}
       <div className="flex items-center gap-3 mb-3">
         <span className="text-3xl">{config.icon}</span>
         <div className="flex-1">
@@ -193,53 +138,8 @@ export function GameTypeCard({
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => onStartGame(config.id)}
-            disabled={isStarting}
-            title={startGameTitle}
-            className={cn(
-              "p-2 rounded-sm transition-all cursor-pointer",
-              "bg-primary/10 hover:bg-primary/20 text-primary",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-          >
-            {isStarting ? (
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Play className="w-5 h-5" />
-            )}
-          </button>
-          {onStartDuel && (
-            <button
-              onClick={() => isLoggedIn && onStartDuel(config.id)}
-              disabled={isStartingDuel || !isLoggedIn}
-              title={isLoggedIn ? duelTitle : loginForDuelTitle}
-              className={cn(
-                "p-2 rounded-sm transition-all cursor-pointer",
-                "bg-accent/20 hover:bg-accent/30 text-accent",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
-              )}
-            >
-              {isStartingDuel ? (
-                <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Swords className="w-5 h-5" />
-              )}
-            </button>
-          )}
-          <button
-            onClick={() => onViewDetails(config.id)}
-            title={leaderboardTitle}
-            className={cn(
-              "p-2 rounded-sm transition-all cursor-pointer",
-              "bg-surface-2 hover:bg-surface-3 text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Trophy className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Chevron Icon */}
+        <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" />
       </div>
 
       {/* Top 3 Players */}

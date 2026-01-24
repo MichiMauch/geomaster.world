@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { UserSidebar } from "@/components/guesser/UserSidebar";
 import { GameTypeCard, type TopPlayer } from "@/components/guesser/GameTypeCard";
-import { nanoid } from "nanoid";
 import {
   worldQuizToGameTypeConfig,
   type DatabaseWorldQuizType,
@@ -34,11 +32,8 @@ interface TopPlayersMap {
 export default function SpecialQuizPage() {
   const locale = useLocale();
   const router = useRouter();
-  const { data: session } = useSession();
   const [topPlayers, setTopPlayers] = useState<TopPlayersMap>({});
   const [loading, setLoading] = useState(true);
-  const [startingGame, setStartingGame] = useState<string | null>(null);
-  const [startingDuel, setStartingDuel] = useState<string | null>(null);
   const [quizTypesLoading, setQuizTypesLoading] = useState(true);
   const [specialTypes, setSpecialTypes] = useState<GameTypeConfig[]>([]);
 
@@ -96,58 +91,9 @@ export default function SpecialQuizPage() {
     fetchTopPlayers();
   }, [quizTypesLoading, specialTypes]);
 
-  // Navigate to detail page (leaderboard)
+  // Navigate to detail page
   const handleViewDetails = (gameTypeId: string) => {
     router.push(`/${locale}/guesser/${gameTypeId}`);
-  };
-
-  // Start game directly
-  const handleStartGame = async (gameTypeId: string) => {
-    setStartingGame(gameTypeId);
-    try {
-      const guestId = !session?.user ? nanoid() : undefined;
-      const response = await fetch("/api/ranked/games", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameType: gameTypeId, guestId }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/${locale}/guesser/play/${data.gameId}`);
-      } else {
-        const error = await response.json();
-        console.error("Failed to create game:", error);
-      }
-    } catch (error) {
-      console.error("Error starting game:", error);
-    } finally {
-      setStartingGame(null);
-    }
-  };
-
-  // Start duel game
-  const handleStartDuel = async (gameTypeId: string) => {
-    setStartingDuel(gameTypeId);
-    try {
-      const response = await fetch("/api/ranked/games/duel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameType: gameTypeId }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/${locale}/guesser/play/${data.gameId}`);
-      } else {
-        const error = await response.json();
-        console.error("Failed to create duel:", error);
-      }
-    } catch (error) {
-      console.error("Error starting duel:", error);
-    } finally {
-      setStartingDuel(null);
-    }
   };
 
   return (
@@ -207,14 +153,9 @@ export default function SpecialQuizPage() {
                     locale={locale}
                     topPlayers={topPlayers[config.id] || []}
                     loading={loading}
-                    isStarting={startingGame === config.id}
-                    onStartGame={handleStartGame}
                     onViewDetails={handleViewDetails}
                     variant="overlay"
                     backgroundImage={SPECIAL_IMAGES[config.id]}
-                    onStartDuel={handleStartDuel}
-                    isStartingDuel={startingDuel === config.id}
-                    isLoggedIn={!!session?.user}
                   />
                 ))}
               </div>
