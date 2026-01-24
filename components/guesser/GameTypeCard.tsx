@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Play } from "lucide-react";
 import type { GameTypeConfig } from "@/lib/game-types";
 
 export interface TopPlayer {
@@ -65,9 +64,16 @@ export function GameTypeCard({
         {/* Dark overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 transition-colors" />
 
+        {/* Play Button - bottom right */}
+        <div className="absolute bottom-4 right-4 z-20">
+          <div className="w-12 h-12 rounded-full bg-primary/90 group-hover:bg-primary group-hover:scale-110 transition-all duration-300 flex items-center justify-center shadow-lg">
+            <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+          </div>
+        </div>
+
         {/* Content */}
         <div className="relative z-10 p-5 flex flex-col h-full">
-          {/* Header: Icon/Flag + Name + Chevron */}
+          {/* Header: Icon/Flag + Name */}
           <div className="flex items-center gap-3 mb-3">
             {flagImage ? (
               <Image src={flagImage} alt={name} width={40} height={30} className="w-10 h-auto" unoptimized />
@@ -82,9 +88,6 @@ export function GameTypeCard({
                 </span>
               )}
             </div>
-
-            {/* Chevron Icon */}
-            <ChevronRight className="w-6 h-6 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
           </div>
 
           {/* Top 3 Players */}
@@ -124,9 +127,9 @@ export function GameTypeCard({
   return (
     <div
       onClick={() => onViewDetails(config.id)}
-      className="flex flex-col p-4 rounded-lg border transition-all duration-200 bg-surface-1 border-surface-3 hover:border-primary/50 min-h-[160px] cursor-pointer"
+      className="group relative flex flex-col p-4 rounded-lg border transition-all duration-200 bg-surface-1 border-surface-3 hover:border-primary/50 min-h-[160px] cursor-pointer"
     >
-      {/* Header: Icon + Name + Chevron */}
+      {/* Header: Icon + Name */}
       <div className="flex items-center gap-3 mb-3">
         <span className="text-3xl">{config.icon}</span>
         <div className="flex-1">
@@ -137,9 +140,13 @@ export function GameTypeCard({
             </span>
           )}
         </div>
+      </div>
 
-        {/* Chevron Icon */}
-        <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" />
+      {/* Play Button - bottom right */}
+      <div className="absolute bottom-3 right-3">
+        <div className="w-10 h-10 rounded-full bg-primary/80 group-hover:bg-primary group-hover:scale-110 transition-all duration-300 flex items-center justify-center">
+          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+        </div>
       </div>
 
       {/* Top 3 Players */}
