@@ -178,7 +178,7 @@ export default function GuesserCategoriesPage() {
                   <button
                     key={category.id}
                     onClick={() => handleCategoryClick(category.id)}
-                    className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-primary transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.4)] text-left cursor-pointer min-h-[240px]"
+                    className="group relative overflow-hidden rounded-xl border border-primary/40 hover:border-primary transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.4)] text-left cursor-pointer min-h-[240px]"
                   >
                     {/* Background image */}
                     <div
