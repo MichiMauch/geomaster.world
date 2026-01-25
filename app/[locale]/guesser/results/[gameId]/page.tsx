@@ -11,6 +11,7 @@ import Link from "next/link";
 import { StarRating, ScoreDisplay, RoundReview } from "@/components/guesser/results";
 import { LevelUpCelebration } from "@/components/LevelUpCelebration";
 import { ShareDuelChallengeModal } from "@/components/duel/ShareDuelChallengeModal";
+import { ShareResultModal } from "@/components/guesser/ShareResultModal";
 import { buildChallengeUrl } from "@/lib/duel-utils";
 
 interface PredictedRank {
@@ -60,6 +61,7 @@ export default function GuesserResultsPage() {
   const [predictedRank, setPredictedRank] = useState<PredictedRank | null>(null);
   const [showRoundReview, setShowRoundReview] = useState(false);
   const [showDuelShareModal, setShowDuelShareModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [isDuelRedirecting, setIsDuelRedirecting] = useState(false);
   const [isDuelChallenger, setIsDuelChallenger] = useState(false);
   const [revancheInviteSent, setRevancheInviteSent] = useState(false);
@@ -256,30 +258,6 @@ export default function GuesserResultsPage() {
     return name || results.gameType;
   };
 
-  // Share result
-  const handleShare = async () => {
-    if (!results) return;
-    const shareUrl = `${window.location.origin}/${locale}/guesser/${results.gameType}`;
-    const gameName = getLocalizedGameTypeName();
-    const text =
-      locale === "de"
-        ? `Ich habe bei GeoMaster ${results.totalScore} Punkte im Spiel "${gameName}" erreicht! Kannst du mich schlagen?`
-        : locale === "sl"
-        ? `V igri GeoMaster sem dosegel ${results.totalScore} točk v "${gameName}"! Me lahko premagas?`
-        : `I scored ${results.totalScore} points in "${gameName}" on GeoMaster! Can you beat me?`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "GeoMaster", text, url: shareUrl });
-      } catch {
-        // User cancelled or share failed
-      }
-    } else {
-      // Fallback: copy to clipboard
-      await navigator.clipboard.writeText(`${text} ${shareUrl}`);
-    }
-  };
-
   // Background component for reuse
   const BackgroundMap = () => (
     <div className="absolute inset-0 -z-10">
@@ -326,10 +304,9 @@ export default function GuesserResultsPage() {
       {/* Main Card - Hidden for duel challengers (they see the share modal instead) */}
       {!isDuelChallenger && (
       <div
-        className={`w-full max-w-md rounded-2xl border border-white/10 p-6 sm:p-8 text-center transition-opacity duration-700 ease-out ${
+        className={`w-full max-w-md rounded-2xl border border-white/10 p-6 sm:p-8 text-center transition-opacity duration-700 ease-out bg-surface-1 ${
           cardVisible ? "opacity-100" : "opacity-0"
         }`}
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.08)", backdropFilter: "blur(8px)" }}
       >
         {/* 1. Title ("Starke Leistung!") */}
         <ScoreDisplay score={results.totalScore} titleOnly />
@@ -435,7 +412,7 @@ export default function GuesserResultsPage() {
             <span className="hidden sm:inline">{t("leaderboard", { defaultValue: "Rangliste" })}</span>
           </Button>
           <Button
-            onClick={handleShare}
+            onClick={() => setShowShareModal(true)}
             variant="outline"
             size="icon"
             className="shrink-0"
@@ -473,6 +450,18 @@ export default function GuesserResultsPage() {
         isOpen={showRoundReview}
         onClose={() => setShowRoundReview(false)}
       />
+
+      {/* Share Result Modal (Single Mode) */}
+      {results && (
+        <ShareResultModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          locale={locale}
+          gameType={results.gameType}
+          gameTypeName={getLocalizedGameTypeName()}
+          score={results.totalScore}
+        />
+      )}
 
       {/* Test LevelUpCelebration with ?testLevelUp=true */}
       <LevelUpCelebration
