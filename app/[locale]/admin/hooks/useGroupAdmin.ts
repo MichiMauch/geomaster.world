@@ -6,7 +6,7 @@ interface UseGroupAdminReturn {
   groups: Group[];
   loading: boolean;
   setGroups: React.Dispatch<React.SetStateAction<Group[]>>;
-  deleteGroup: (groupId: string, groupName: string) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
   fetchGroups: () => Promise<void>;
 }
 
@@ -35,11 +35,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     fetchGroups();
   }, [fetchGroups]);
 
-  const deleteGroup = useCallback(async (groupId: string, groupName: string) => {
-    if (!confirm(`Gruppe "${groupName}" wirklich löschen? Alle Spiele, Runden und Guesses werden ebenfalls gelöscht!`)) {
-      return;
-    }
-
+  const deleteGroup = useCallback(async (groupId: string) => {
     try {
       const response = await fetch("/api/admin/groups", {
         method: "DELETE",

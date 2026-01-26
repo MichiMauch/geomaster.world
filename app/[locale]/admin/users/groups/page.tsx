@@ -11,9 +11,9 @@ export default function GroupsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { groups, loading, deleteGroup } = useGroupAdmin();
 
-  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+  const handleDeleteGroup = async (groupId: string) => {
     setDeletingId(groupId);
-    await deleteGroup(groupId, groupName);
+    await deleteGroup(groupId);
     setDeletingId(null);
   };
 

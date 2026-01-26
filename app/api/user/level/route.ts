@@ -6,6 +6,7 @@ import { rankings, userStreaks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getUserLevel, getLevelProgress, getLevelName, LEVELS } from "@/lib/levels";
 import { logger } from "@/lib/logger";
+import { withRetry } from "@/lib/db/retry";
 
 export async function GET(request: Request) {
   try {
@@ -16,27 +17,33 @@ export async function GET(request: Request) {
     }
 
     // Get user's alltime overall ranking to get total score
-    const userRanking = await db
-      .select()
-      .from(rankings)
-      .where(
-        and(
-          eq(rankings.userId, session.user.id),
-          eq(rankings.period, "alltime"),
-          eq(rankings.gameType, "overall")
+    const userRanking = await withRetry(
+      () => db
+        .select()
+        .from(rankings)
+        .where(
+          and(
+            eq(rankings.userId, session.user.id),
+            eq(rankings.period, "alltime"),
+            eq(rankings.gameType, "overall")
+          )
         )
-      )
-      .get();
+        .get(),
+      "fetch_user_ranking"
+    );
 
     const totalPoints = userRanking?.totalScore ?? 0;
     const levelProgress = getLevelProgress(totalPoints);
 
     // Get user's streak data
-    const streak = await db
-      .select()
-      .from(userStreaks)
-      .where(eq(userStreaks.userId, session.user.id))
-      .get();
+    const streak = await withRetry(
+      () => db
+        .select()
+        .from(userStreaks)
+        .where(eq(userStreaks.userId, session.user.id))
+        .get(),
+      "fetch_user_streak"
+    );
 
     // Get locale from request headers or default to "en"
     const acceptLanguage = request.headers.get("accept-language") || "en";

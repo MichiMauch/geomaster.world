@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { TranslationService } from "@/lib/services/translation-service";
 import { logger } from "@/lib/logger";
+import { withRetry } from "@/lib/db/retry";
 
 // GET /api/world-quiz-types - List all world quiz types with location counts
 // Optional query param: ?active=true to only get active types
@@ -38,16 +39,22 @@ export async function GET(req: NextRequest) {
       query = query.where(eq(worldQuizTypes.isActive, true)) as typeof query;
     }
 
-    const allTypes = await query.orderBy(worldQuizTypes.name);
+    const allTypes = await withRetry(
+      () => query.orderBy(worldQuizTypes.name),
+      "fetch_quiz_types"
+    );
 
     // Get location counts for each category
-    const locationCounts = await db
-      .select({
-        category: worldLocations.category,
-        count: sql<number>`count(*)`.as("count"),
-      })
-      .from(worldLocations)
-      .groupBy(worldLocations.category);
+    const locationCounts = await withRetry(
+      () => db
+        .select({
+          category: worldLocations.category,
+          count: sql<number>`count(*)`.as("count"),
+        })
+        .from(worldLocations)
+        .groupBy(worldLocations.category),
+      "fetch_location_counts"
+    );
 
     const countMap = new Map(locationCounts.map((lc) => [lc.category, lc.count]));
 
@@ -97,7 +104,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if type already exists
-    const existing = await db.select().from(worldQuizTypes).where(eq(worldQuizTypes.id, id));
+    const existing = await withRetry(
+      () => db.select().from(worldQuizTypes).where(eq(worldQuizTypes.id, id)),
+      "check_quiz_type_exists"
+    );
     if (existing.length > 0) {
       return NextResponse.json({ error: "World quiz type with this ID already exists" }, { status: 409 });
     }
@@ -117,21 +127,24 @@ export async function POST(req: NextRequest) {
       // Continue with original name if translation fails
     }
 
-    await db.insert(worldQuizTypes).values({
-      id,
-      name,
-      nameEn,
-      nameSl,
-      icon,
-      centerLat,
-      centerLng,
-      defaultZoom,
-      minZoom,
-      timeoutPenalty,
-      scoreScaleFactor,
-      isActive: true,
-      createdAt: new Date(),
-    });
+    await withRetry(
+      () => db.insert(worldQuizTypes).values({
+        id,
+        name,
+        nameEn,
+        nameSl,
+        icon,
+        centerLat,
+        centerLng,
+        defaultZoom,
+        minZoom,
+        timeoutPenalty,
+        scoreScaleFactor,
+        isActive: true,
+        createdAt: new Date(),
+      }),
+      "create_quiz_type"
+    );
 
     return NextResponse.json({ success: true, id, nameEn, nameSl });
   } catch (error) {

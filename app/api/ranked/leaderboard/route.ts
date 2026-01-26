@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { RankingService, type RankingPeriod } from "@/lib/services/ranking-service";
+import { withRetry } from "@/lib/db/retry";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -19,21 +20,27 @@ export async function GET(request: Request) {
 
     // Mode "games": Return individual game results (player can appear multiple times)
     if (mode === "games") {
-      const topGames = await RankingService.getTopGames({
-        gameType,
-        period, // Pass period for filtering (weekly, daily, monthly)
-        limit,
-        offset,
-      });
+      const topGames = await withRetry(
+        () => RankingService.getTopGames({
+          gameType,
+          period, // Pass period for filtering (weekly, daily, monthly)
+          limit,
+          offset,
+        }),
+        "fetch_top_games"
+      );
 
       // Get user's game stats (games count, best score, rank) if logged in
       let userGameStats = null;
       if (session?.user?.id) {
-        userGameStats = await RankingService.getUserGameStats({
-          userId: session.user.id,
-          gameType,
-          period,
-        });
+        userGameStats = await withRetry(
+          () => RankingService.getUserGameStats({
+            userId: session.user.id,
+            gameType,
+            period,
+          }),
+          "fetch_user_game_stats"
+        );
       }
 
       return NextResponse.json({
@@ -77,24 +84,30 @@ export async function GET(request: Request) {
     }
 
     // Get rankings
-    const rankings = await RankingService.getRankings({
-      gameType,
-      period,
-      periodKey,
-      limit,
-      offset,
-      sortBy,
-    });
+    const rankings = await withRetry(
+      () => RankingService.getRankings({
+        gameType,
+        period,
+        periodKey,
+        limit,
+        offset,
+        sortBy,
+      }),
+      "fetch_rankings"
+    );
 
     // Get current user's rank if logged in
     let userRank = null;
     if (session?.user?.id) {
-      userRank = await RankingService.getUserRank({
-        userId: session.user.id,
-        gameType,
-        period,
-        periodKey,
-      });
+      userRank = await withRetry(
+        () => RankingService.getUserRank({
+          userId: session.user.id,
+          gameType,
+          period,
+          periodKey,
+        }),
+        "fetch_user_rank"
+      );
     }
 
     // Get period information

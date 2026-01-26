@@ -14,7 +14,7 @@ import type { GameTypeConfig } from "@/lib/game-types";
 import MissionControlBackground from "@/components/MissionControlBackground";
 
 // Special quiz type IDs - these are shown in the special category, not here
-const SPECIAL_QUIZ_IDS = ["country-flags", "visual-middle", "place-names", "emoji-countries", "james-bond-007"];
+const SPECIAL_QUIZ_IDS = ["country-flags", "visual-middle", "place-names", "emoji-countries", "james-bond-007", "myths-monsters"];
 
 // World quiz images mapping (quiz ID -> image path)
 const WORLD_QUIZ_IMAGES: Record<string, string> = {

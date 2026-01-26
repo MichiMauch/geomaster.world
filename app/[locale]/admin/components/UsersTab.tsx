@@ -1,15 +1,16 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
+import ConfirmModal from "@/components/ConfirmModal";
 import { cn } from "@/lib/utils";
 import type { User } from "../types";
 
 interface UsersTabProps {
   users: User[];
-  onDelete: (userId: string, userName: string | null) => Promise<void>;
+  onDelete: (userId: string) => Promise<void>;
   onToggleHint: (userId: string, currentState: boolean | null) => Promise<void>;
   onToggleSuperAdmin: (userId: string, currentState: boolean | null) => Promise<void>;
   deletingId: string | null;
@@ -17,7 +18,7 @@ interface UsersTabProps {
 
 interface UserRowProps {
   user: User;
-  onDelete: (userId: string, userName: string | null) => Promise<void>;
+  onOpenDeleteModal: (userId: string, userName: string) => void;
   onToggleHint: (userId: string, currentState: boolean | null) => Promise<void>;
   onToggleSuperAdmin: (userId: string, currentState: boolean | null) => Promise<void>;
   isDeleting: boolean;
@@ -25,7 +26,7 @@ interface UserRowProps {
 
 const UserRow = memo(function UserRow({
   user,
-  onDelete,
+  onOpenDeleteModal,
   onToggleHint,
   onToggleSuperAdmin,
   isDeleting,
@@ -41,8 +42,8 @@ const UserRow = memo(function UserRow({
         </div>
       </td>
       <td className="px-6 py-4 text-text-muted text-sm">{user.email}</td>
-      <td className="px-6 py-4 text-center text-text-secondary">{user.groupCount}</td>
-      <td className="px-6 py-4 text-center text-text-secondary">{user.guessCount}</td>
+      <td className="px-6 py-4 text-center text-text-secondary">{user.soloCount}</td>
+      <td className="px-6 py-4 text-center text-text-secondary">{user.duelCount}</td>
       <td className="px-6 py-4 text-center">
         <button
           onClick={() => onToggleSuperAdmin(user.id, user.isSuperAdmin)}
@@ -74,7 +75,7 @@ const UserRow = memo(function UserRow({
           <Button
             variant="danger"
             size="sm"
-            onClick={() => onDelete(user.id, user.name)}
+            onClick={() => onOpenDeleteModal(user.id, user.name || "Unbenannt")}
             disabled={isDeleting}
             isLoading={isDeleting}
           >
@@ -89,42 +90,72 @@ const UserRow = memo(function UserRow({
 });
 
 export function UsersTab({ users, onDelete, onToggleHint, onToggleSuperAdmin, deletingId }: UsersTabProps) {
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    userId: string | null;
+    userName: string;
+  }>({
+    isOpen: false,
+    userId: null,
+    userName: "",
+  });
+
+  const handleOpenDeleteModal = (userId: string, userName: string) => {
+    setDeleteModal({ isOpen: true, userId, userName });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.userId) return;
+    await onDelete(deleteModal.userId);
+    setDeleteModal({ isOpen: false, userId: null, userName: "" });
+  };
+
   return (
-    <Card variant="surface" padding="none" className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-surface-2 border-b border-glass-border">
-            <tr>
-              <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">User</th>
-              <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">Email</th>
-              <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Gruppen</th>
-              <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Guesses</th>
-              <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Admin</th>
-              <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Hilfskreis</th>
-              <th className="text-right px-6 py-3 text-caption font-medium text-text-secondary">Aktionen</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-glass-border">
-            {users.map((user) => (
-              <UserRow
-                key={user.id}
-                user={user}
-                onDelete={onDelete}
-                onToggleHint={onToggleHint}
-                onToggleSuperAdmin={onToggleSuperAdmin}
-                isDeleting={deletingId === user.id}
-              />
-            ))}
-            {users.length === 0 && (
+    <>
+      <Card variant="surface" padding="none" className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-surface-2 border-b border-glass-border">
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-text-muted">
-                  Keine User vorhanden
-                </td>
+                <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">User</th>
+                <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">Email</th>
+                <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Solo</th>
+                <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Duell</th>
+                <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Admin</th>
+                <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Hilfskreis</th>
+                <th className="text-right px-6 py-3 text-caption font-medium text-text-secondary">Aktionen</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+            </thead>
+            <tbody className="divide-y divide-glass-border">
+              {users.map((user) => (
+                <UserRow
+                  key={user.id}
+                  user={user}
+                  onOpenDeleteModal={handleOpenDeleteModal}
+                  onToggleHint={onToggleHint}
+                  onToggleSuperAdmin={onToggleSuperAdmin}
+                  isDeleting={deletingId === user.id}
+                />
+              ))}
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-text-muted">
+                    Keine User vorhanden
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="User löschen"
+        message={`User "${deleteModal.userName}" wirklich löschen? Alle Guesses und Gruppenmitgliedschaften werden ebenfalls gelöscht!`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteModal({ isOpen: false, userId: null, userName: "" })}
+      />
+    </>
   );
 }

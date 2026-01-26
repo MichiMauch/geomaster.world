@@ -86,7 +86,14 @@
       "Bash(cp:*)",
       "Bash(sleep:*)",
       "Bash(cd:*)",
-      "Bash(pwd:*)"
+      "Bash(pwd:*)",
+      "Bash(scp public/images/007*.webp root@78.46.189.129:/tmp/)",
+      "WebFetch(domain:status.turso.tech)",
+      "WebFetch(domain:docs.turso.tech)",
+      "Bash(sqlite3:*)",
+      "Bash(vercel:*)",
+      "Skill(convert-image)",
+      "Skill(convert-transparent)"
     ],
     "deny": [],
     "ask": []

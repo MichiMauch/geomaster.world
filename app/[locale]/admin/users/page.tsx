@@ -14,9 +14,9 @@ export default function UsersPage() {
     toggleSuperAdmin,
   } = useUserAdmin();
 
-  const handleDeleteUser = async (userId: string, userName: string | null) => {
+  const handleDeleteUser = async (userId: string) => {
     setDeletingId(userId);
-    await deleteUser(userId, userName);
+    await deleteUser(userId);
     setDeletingId(null);
   };
 

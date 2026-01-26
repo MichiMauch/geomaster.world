@@ -82,8 +82,8 @@ async function main() {
   let skipped = 0;
 
   for (const loc of data.locations) {
-    // Format: briefing <br> location_name - film
-    const name = `${loc.briefing} <br> ${loc.location_name} - ${loc.film}`;
+    // Format: film \n briefing \n location_name (newlines for proper display)
+    const name = `${loc.film}\n${loc.briefing}\n${loc.location_name}`;
     const locationId = nanoid();
 
     try {

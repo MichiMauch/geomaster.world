@@ -94,7 +94,7 @@ export const GameBadgeBar = memo(function GameBadgeBar({
           locale={locale}
         />
       ) : (
-        <span className="text-sm sm:text-base font-bold text-text-primary">
+        <span className="text-sm sm:text-base font-bold text-text-primary whitespace-pre-line">
           {currentRound.locationName}
         </span>
       )}

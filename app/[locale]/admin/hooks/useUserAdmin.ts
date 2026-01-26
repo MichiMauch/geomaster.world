@@ -6,7 +6,7 @@ interface UseUserAdminReturn {
   users: User[];
   loading: boolean;
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
-  deleteUser: (userId: string, userName: string | null) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
   toggleHint: (userId: string, currentState: boolean | null) => Promise<void>;
   toggleSuperAdmin: (userId: string, currentState: boolean | null) => Promise<void>;
   fetchUsers: () => Promise<void>;
@@ -37,11 +37,7 @@ export function useUserAdmin(): UseUserAdminReturn {
     fetchUsers();
   }, [fetchUsers]);
 
-  const deleteUser = useCallback(async (userId: string, userName: string | null) => {
-    if (!confirm(`User "${userName || 'Unbenannt'}" wirklich löschen? Alle Guesses und Gruppenmitgliedschaften werden ebenfalls gelöscht!`)) {
-      return;
-    }
-
+  const deleteUser = useCallback(async (userId: string) => {
     try {
       const response = await fetch("/api/admin/users", {
         method: "DELETE",

@@ -7,7 +7,7 @@ import { forwardRef } from "react";
 const inputVariants = cva(
   // Base styles
   `w-full rounded-lg bg-surface-2 border border-glass-border
-   text-text-primary placeholder:text-text-muted
+   text-text-primary placeholder:text-text-muted caret-primary
    transition-all duration-200 ease-out
    focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
    disabled:cursor-not-allowed disabled:opacity-50`,
@@ -126,7 +126,7 @@ const OTPInput = forwardRef<HTMLDivElement, OTPInputProps>(
               onPaste={handlePaste}
               className={cn(
                 `w-12 h-14 text-center text-xl font-bold rounded-lg
-                 bg-surface-2 border border-glass-border text-text-primary
+                 bg-surface-2 border border-glass-border text-text-primary caret-primary
                  transition-all duration-200 ease-out
                  focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent`,
                 error && "border-error focus:ring-error"

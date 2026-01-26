@@ -15,8 +15,8 @@ export interface User {
   hintEnabled: boolean | null;
   isSuperAdmin: boolean | null;
   createdAt: string;
-  groupCount: number;
-  guessCount: number;
+  soloCount: number;
+  duelCount: number;
 }
 
 export interface Location {

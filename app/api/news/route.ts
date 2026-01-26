@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { TranslationService } from "@/lib/services/translation-service";
 import { logger } from "@/lib/logger";
+import { withRetry } from "@/lib/db/retry";
 
 // GET /api/news - List all news items (newest first)
 // Optional query params: ?limit=3 to limit results
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
       query = query.limit(limit) as typeof query;
     }
 
-    const allNews = await query;
+    const allNews = await withRetry(() => query, "fetch_news");
 
     return NextResponse.json(allNews, {
       headers: {
@@ -88,16 +89,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const result = await db.insert(newsItems).values({
-      title,
-      titleEn: finalTitleEn,
-      content,
-      contentEn: finalContentEn,
-      link: link || null,
-      linkText: linkText || null,
-      linkTextEn: finalLinkTextEn || null,
-      createdAt: new Date(),
-    }).returning({ id: newsItems.id });
+    const result = await withRetry(
+      () => db.insert(newsItems).values({
+        title,
+        titleEn: finalTitleEn,
+        content,
+        contentEn: finalContentEn,
+        link: link || null,
+        linkText: linkText || null,
+        linkTextEn: finalLinkTextEn || null,
+        createdAt: new Date(),
+      }).returning({ id: newsItems.id }),
+      "create_news"
+    );
 
     return NextResponse.json({
       success: true,
