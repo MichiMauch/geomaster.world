@@ -20,7 +20,7 @@ function transformName(oldName: string): string | null {
   // Current format (with <br> tags): "film <br> briefing <br> location_name"
   // New format (with newlines): "film\nbriefing\nlocation_name"
 
-  const brMatch = oldName.match(/^(.+?) <br> (.+?) <br> (.+)$/s);
+  const brMatch = oldName.match(/^(.+?) <br> (.+?) <br> (.+)$/);
   if (!brMatch) {
     return null;
   }
