@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { users, groupMembers, guesses } from "@/lib/db/schema";
+import { users, groupMembers, guesses, games } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
@@ -25,10 +25,12 @@ export async function GET() {
         hintEnabled: users.hintEnabled,
         isSuperAdmin: users.isSuperAdmin,
         createdAt: sql<string>`COALESCE(${users.emailVerified}, datetime('now'))`,
-        groupCount: sql<number>`(SELECT COUNT(*) FROM groupMembers WHERE groupMembers.userId = ${users.id})`,
-        guessCount: sql<number>`(SELECT COUNT(*) FROM guesses WHERE guesses.userId = ${users.id})`,
+        soloCount: sql<number>`COUNT(CASE WHEN ${games.mode} = 'ranked' THEN 1 END)`.mapWith(Number),
+        duelCount: sql<number>`COUNT(CASE WHEN ${games.mode} = 'duel' THEN 1 END)`.mapWith(Number),
       })
       .from(users)
+      .leftJoin(games, eq(games.userId, users.id))
+      .groupBy(users.id)
       .orderBy(users.name);
 
     return NextResponse.json({ users: allUsers });
