@@ -30,6 +30,8 @@ export async function GET(req: NextRequest) {
         minZoom: worldQuizTypes.minZoom,
         timeoutPenalty: worldQuizTypes.timeoutPenalty,
         scoreScaleFactor: worldQuizTypes.scoreScaleFactor,
+        description: worldQuizTypes.description,
+        descriptionEn: worldQuizTypes.descriptionEn,
         isActive: worldQuizTypes.isActive,
         createdAt: worldQuizTypes.createdAt,
       })

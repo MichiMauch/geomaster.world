@@ -101,6 +101,8 @@ export interface DatabaseWorldQuizType {
   nameEn: string | null;
   nameSl: string | null;
   icon: string;
+  description: string | null;
+  descriptionEn: string | null;
   landmarkImage: string | null;
   backgroundImage: string | null;
   centerLat: number;
@@ -127,6 +129,11 @@ export function worldQuizToGameTypeConfig(worldQuiz: DatabaseWorldQuizType): Gam
       sl: worldQuiz.nameSl || worldQuiz.name,
     },
     icon: worldQuiz.icon,
+    description: worldQuiz.description ? {
+      de: worldQuiz.description,
+      en: worldQuiz.descriptionEn || worldQuiz.description,
+      sl: worldQuiz.description,
+    } : undefined,
     landmarkImage: worldQuiz.landmarkImage,
     backgroundImage: worldQuiz.backgroundImage,
     geoJsonFile: "/world.geojson", // All world quizzes use the same world map

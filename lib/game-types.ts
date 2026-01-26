@@ -5,6 +5,7 @@ export interface GameTypeConfig {
   type: "country" | "world" | "image" | "panorama";
   name: { de: string; en: string; sl: string };
   icon: string;
+  description?: { de: string; en: string; sl: string };
   geoJsonFile: string;
   bounds: CountryBounds | null; // null = world map (no bounds)
   timeoutPenalty: number; // km or pixels for image maps

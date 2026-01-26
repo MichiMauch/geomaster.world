@@ -293,6 +293,8 @@ export const worldQuizTypes = sqliteTable("worldQuizTypes", {
   nameEn: text("name_en"), // "World Capitals"
   nameSl: text("name_sl"), // "Prestolnice"
   icon: text("icon").notNull(), // "🏛️"
+  description: text("description"), // "Erkunde berühmte Hauptstädte der Welt"
+  descriptionEn: text("description_en"), // "Explore famous world capitals"
   // Bilder für die Spieleseite
   landmarkImage: text("landmark_image"), // z.B. "/images/capitals-landmark.webp"
   backgroundImage: text("background_image"), // z.B. "/images/capitals-bg.webp"

@@ -146,6 +146,7 @@ export default function GuesserGameTypePage() {
   }
 
   const gameName = gameConfig.name[locale as keyof typeof gameConfig.name] || gameConfig.name.de;
+  const gameDescription = gameConfig.description?.[locale as keyof typeof gameConfig.description] || gameConfig.description?.de;
 
   // Get top 10 rankings for the podium display
   const top10Rankings: RankingEntry[] = soloRankings.slice(0, 10);
@@ -213,6 +214,9 @@ export default function GuesserGameTypePage() {
                 {gameName}
               </h1>
             </div>
+            {gameDescription && (
+              <p className="text-sm text-muted-foreground mb-2">{gameDescription}</p>
+            )}
             {/* Mode Toggle - full width under title */}
             <ModeToggle
               mode={mode}

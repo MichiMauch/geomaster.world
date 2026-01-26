@@ -102,6 +102,7 @@ export function GameTypeCard({
 }: GameTypeCardProps) {
   const localeKey = locale as "de" | "en" | "sl";
   const name = config.name[localeKey] || config.name.en;
+  const description = config.description?.[localeKey] || config.description?.en;
 
   const noPlayersText = locale === "de" ? "Noch keine Spieler" : locale === "en" ? "No players yet" : "Se brez igralcev";
   const locationsText = locale === "de" ? "Orte" : locale === "en" ? "locations" : "lokacij";
@@ -131,7 +132,7 @@ export function GameTypeCard({
         {/* Content */}
         <div className="relative z-10 p-5 flex flex-col h-full">
           {/* Header: Icon/Flag + Name */}
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-2">
             {flagImage ? (
               <Image src={flagImage} alt={name} width={40} height={30} className="w-10 h-auto" unoptimized />
             ) : (
@@ -146,6 +147,11 @@ export function GameTypeCard({
               )}
             </div>
           </div>
+
+          {/* Description */}
+          {description && (
+            <p className="text-xs text-white/70 mb-3 line-clamp-2">{description}</p>
+          )}
 
           {/* Top 3 Players */}
           <div className="flex-1">
@@ -187,7 +193,7 @@ export function GameTypeCard({
       className="group relative flex flex-col p-4 rounded-lg border transition-all duration-200 bg-surface-1 border-surface-3 hover:border-primary/50 min-h-[160px] cursor-pointer"
     >
       {/* Header: Icon + Name */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-2">
         <span className="text-3xl">{config.icon}</span>
         <div className="flex-1">
           <span className="text-base font-semibold text-foreground">{name}</span>
@@ -198,6 +204,11 @@ export function GameTypeCard({
           )}
         </div>
       </div>
+
+      {/* Description */}
+      {description && (
+        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{description}</p>
+      )}
 
       {/* Cyberpunk Play Button - bottom right */}
       <div className="absolute bottom-3 right-3">

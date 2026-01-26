@@ -14,7 +14,7 @@ import type { GameTypeConfig } from "@/lib/game-types";
 import MissionControlBackground from "@/components/MissionControlBackground";
 
 // Special quiz type IDs - these have unique gameplay mechanics
-const SPECIAL_QUIZ_IDS = ["country-flags", "visual-middle", "place-names", "emoji-countries", "james-bond-007", "myths-monsters"];
+const SPECIAL_QUIZ_IDS = ["myths-monsters", "james-bond-007", "country-flags", "visual-middle", "place-names", "emoji-countries"];
 
 // Special quiz images mapping (quiz ID -> image path)
 const SPECIAL_IMAGES: Record<string, string> = {
@@ -47,6 +47,7 @@ export default function SpecialQuizPage() {
           const data: DatabaseWorldQuizType[] = await res.json();
           // Filter only special quiz types
           const specialQuizTypes = data.filter((w) => SPECIAL_QUIZ_IDS.includes(w.id));
+          specialQuizTypes.sort((a, b) => SPECIAL_QUIZ_IDS.indexOf(a.id) - SPECIAL_QUIZ_IDS.indexOf(b.id));
           const specialConfigs = specialQuizTypes.map(worldQuizToGameTypeConfig);
           setSpecialTypes(specialConfigs);
         }
