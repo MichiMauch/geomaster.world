@@ -3,8 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
-import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes, panoramaTypes, users, duelResults } from "@/lib/db/schema";
-import { eq, and, or } from "drizzle-orm";
+import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes, panoramaTypes, users } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { getGameTypeConfig, isWorldGameType, getWorldCategory, isPanoramaGameType, getPanoramaCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
@@ -132,23 +132,21 @@ export async function POST(request: Request) {
         );
       }
 
-      // Prevent replaying an already-completed duel
-      const existingResult = await db
-        .select({ id: duelResults.id })
-        .from(duelResults)
+      // Prevent replaying an already-accepted duel (check games table, not duelResults,
+      // because duelResults is only written after the accepter completes the game)
+      const existingGame = await db
+        .select({ id: games.id })
+        .from(games)
         .where(
           and(
-            eq(duelResults.duelSeed, challengeData.seed),
-            eq(duelResults.gameType, gameType),
-            or(
-              eq(duelResults.accepterId, session.user.id),
-              eq(duelResults.challengerId, session.user.id)
-            )
+            eq(games.duelSeed, challengeData.seed),
+            eq(games.userId, session.user.id),
+            eq(games.mode, "duel")
           )
         )
         .get();
 
-      if (existingResult) {
+      if (existingGame) {
         return NextResponse.json(
           { error: "already_played" },
           { status: 400 }
