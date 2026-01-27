@@ -413,6 +413,7 @@ export const duelStats = sqliteTable("duelStats", {
   wins: integer("wins").notNull().default(0),
   losses: integer("losses").notNull().default(0),
   winRate: real("winRate").notNull().default(0), // Calculated: wins / totalDuels
+  duelPoints: integer("duelPoints").notNull().default(0), // Points: +3 for beating equal/stronger, +0 for weaker
   rank: integer("rank"), // Leaderboard position (null until calculated)
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });

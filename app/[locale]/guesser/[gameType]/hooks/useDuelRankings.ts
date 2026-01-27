@@ -9,6 +9,7 @@ export interface DuelRankingEntry {
   losses: number;
   totalDuels: number;
   winRate: number;
+  duelPoints: number;
 }
 
 interface UseDuelRankingsReturn {

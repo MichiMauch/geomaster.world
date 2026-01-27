@@ -5,90 +5,88 @@ import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge, MedalBadge } from "@/components/ui/Badge";
-import { Swords, Trophy } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Trophy, Target } from "lucide-react";
 import MissionControlBackground from "@/components/MissionControlBackground";
 import { PodiumLeaderboard } from "@/app/[locale]/guesser/[gameType]/components";
-import type { DuelRankingEntry } from "@/app/[locale]/guesser/[gameType]/hooks/useDuelRankings";
+import type { RankingEntry } from "@/app/[locale]/guesser/[gameType]/types";
 
-interface DuelLeaderboardEntry {
+interface RankedLeaderboardEntry {
   rank: number;
   userId: string;
-  userName: string;
+  userName: string | null;
   userImage: string | null;
-  wins: number;
-  losses: number;
-  totalDuels: number;
-  winRate: number;
-  duelPoints: number;
+  totalScore: number;
+  totalGames: number;
+  averageScore: number;
+  bestScore: number;
 }
 
 const labels = {
   de: {
-    title: "Duell-Champions",
+    title: "Ranked Champions",
     subtitle: "Die besten Spielerinnen und Spieler aller Zeiten",
     rank: "Rang",
     player: "Spieler",
-    points: "Punkte",
-    wins: "Siege",
-    losses: "Niederlagen",
-    duels: "Duelle",
-    winRate: "Siegrate",
-    noData: "Noch keine Duelle gespielt",
+    totalScore: "Gesamtpunkte",
+    games: "Spiele",
+    bestScore: "Best Score",
+    avgScore: "Ø Score",
+    noData: "Noch keine Spiele gespielt",
     back: "Zurück",
     loading: "Lade Rangliste...",
   },
   en: {
-    title: "Duel Champions",
-    subtitle: "The best duelists of all time",
+    title: "Ranked Champions",
+    subtitle: "The best players of all time",
     rank: "Rank",
     player: "Player",
-    points: "Points",
-    wins: "Wins",
-    losses: "Losses",
-    duels: "Duels",
-    winRate: "Win Rate",
-    noData: "No duels played yet",
+    totalScore: "Total Score",
+    games: "Games",
+    bestScore: "Best Score",
+    avgScore: "Avg Score",
+    noData: "No games played yet",
     back: "Back",
     loading: "Loading leaderboard...",
   },
   sl: {
-    title: "Prvaki dvobojev",
-    subtitle: "Najboljši dvobojniki vseh časov",
+    title: "Prvaki rangiranih iger",
+    subtitle: "Najboljši igralci vseh časov",
     rank: "Uvrstitev",
     player: "Igralec",
-    points: "Točke",
-    wins: "Zmage",
-    losses: "Porazi",
-    duels: "Dvoboji",
-    winRate: "Stopnja zmag",
-    noData: "Še ni odigranih dvobojev",
+    totalScore: "Skupne točke",
+    games: "Igre",
+    bestScore: "Najboljši rezultat",
+    avgScore: "Povp. rezultat",
+    noData: "Še ni odigranih iger",
     back: "Nazaj",
     loading: "Nalagam lestvico...",
   },
 };
 
-export default function DuelLeaderboardPage() {
+export default function RankedLeaderboardPage() {
   const { data: session } = useSession();
   const params = useParams();
   const locale = (params.locale as string) || "de";
 
   const t = labels[locale as keyof typeof labels] || labels.de;
 
-  const [leaderboard, setLeaderboard] = useState<DuelLeaderboardEntry[]>([]);
+  const [leaderboard, setLeaderboard] = useState<RankedLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/ranked/leaderboard/duel`);
+        const response = await fetch(
+          `/api/ranked/leaderboard?gameType=overall&period=alltime&sortBy=total&limit=100`
+        );
         if (response.ok) {
           const data = await response.json();
-          setLeaderboard(data.leaderboard || []);
+          setLeaderboard(data.rankings || []);
         }
       } catch (error) {
-        console.error("Error fetching duel leaderboard:", error);
+        console.error("Error fetching ranked leaderboard:", error);
       } finally {
         setLoading(false);
       }
@@ -97,17 +95,15 @@ export default function DuelLeaderboardPage() {
     fetchLeaderboard();
   }, []);
 
-  // Convert to DuelRankingEntry for PodiumLeaderboard
-  const podiumRankings: DuelRankingEntry[] = leaderboard.slice(0, 10).map((entry) => ({
-    rank: entry.rank,
-    userId: entry.userId,
+  // Convert to RankingEntry for PodiumLeaderboard
+  // Map totalScore into bestScore so the podium displays totalScore
+  const podiumRankings: RankingEntry[] = leaderboard.slice(0, 10).map((entry, index) => ({
+    rank: index + 1,
     userName: entry.userName,
     userImage: entry.userImage,
-    wins: entry.wins,
-    losses: entry.losses,
-    totalDuels: entry.totalDuels,
-    winRate: entry.winRate,
-    duelPoints: entry.duelPoints,
+    bestScore: entry.totalScore, // Podium displays bestScore, so we map totalScore here
+    totalScore: entry.totalScore,
+    totalGames: entry.totalGames,
   }));
 
   const remainingEntries = leaderboard.slice(3);
@@ -134,8 +130,8 @@ export default function DuelLeaderboardPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-accent" />
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground font-heading">
@@ -157,7 +153,7 @@ export default function DuelLeaderboardPage() {
             locale={locale}
             showPodium={true}
             showList={false}
-            variant="duel"
+            variant="solo"
           />
         </div>
 
@@ -166,7 +162,7 @@ export default function DuelLeaderboardPage() {
           <Card variant="elevated" padding="none">
             <CardHeader className="border-b border-glass-border p-4">
               <div className="flex items-center gap-2">
-                <Swords className="w-5 h-5 text-accent" />
+                <Target className="w-5 h-5 text-primary" />
                 <CardTitle className="text-lg">{t.title}</CardTitle>
               </div>
             </CardHeader>
@@ -176,14 +172,14 @@ export default function DuelLeaderboardPage() {
                 <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-surface-2/50 text-xs font-semibold text-text-muted uppercase tracking-wide">
                   <div className="col-span-1">{t.rank}</div>
                   <div className="col-span-4">{t.player}</div>
-                  <div className="col-span-2 text-center">{t.points}</div>
-                  <div className="col-span-2 text-center">{t.wins}</div>
-                  <div className="col-span-1 text-center">{t.losses}</div>
-                  <div className="col-span-2 text-center">{t.winRate}</div>
+                  <div className="col-span-2 text-center">{t.totalScore}</div>
+                  <div className="col-span-2 text-center">{t.games}</div>
+                  <div className="col-span-1 text-center">{t.bestScore}</div>
+                  <div className="col-span-2 text-center">{t.avgScore}</div>
                 </div>
 
                 {/* Data Rows (Rank 4+) */}
-                {remainingEntries.map((entry) => {
+                {remainingEntries.map((entry, index) => {
                   const isCurrentUser = session?.user?.id === entry.userId;
 
                   return (
@@ -195,46 +191,46 @@ export default function DuelLeaderboardPage() {
                     >
                       {/* Rank */}
                       <div className="col-span-1">
-                        <span className="text-text-muted font-medium">{entry.rank}</span>
+                        <span className="text-text-muted font-medium">{index + 4}</span>
                       </div>
 
                       {/* Player */}
                       <div className="col-span-4 flex items-center gap-3">
                         <Avatar
                           src={entry.userImage || undefined}
-                          name={entry.userName}
+                          name={entry.userName || "?"}
                           size="sm"
                         />
                         <span className={`font-medium ${isCurrentUser ? "text-primary" : "text-text-primary"}`}>
-                          {entry.userName}
+                          {entry.userName || "Anonym"}
                         </span>
                         {isCurrentUser && (
                           <Badge variant="primary" size="sm">Du</Badge>
                         )}
                       </div>
 
-                      {/* Points */}
+                      {/* Total Score */}
                       <div className="col-span-2 text-center">
-                        <span className="font-bold text-accent text-lg">{entry.duelPoints}</span>
+                        <span className="font-bold text-primary text-lg">{entry.totalScore.toLocaleString()}</span>
                       </div>
 
-                      {/* Wins */}
+                      {/* Games */}
                       <div className="col-span-2 text-center">
-                        <span className="font-bold text-success">{entry.wins}</span>
+                        <span className="font-bold text-foreground">{entry.totalGames}</span>
                       </div>
 
-                      {/* Losses */}
+                      {/* Best Score */}
                       <div className="col-span-1 text-center">
-                        <span className="text-error">{entry.losses}</span>
+                        <span className="text-foreground">{entry.bestScore.toLocaleString()}</span>
                       </div>
 
-                      {/* Win Rate */}
+                      {/* Average Score */}
                       <div className="col-span-2 text-center">
                         <Badge
-                          variant={entry.winRate >= 0.6 ? "success" : entry.winRate >= 0.4 ? "warning" : "default"}
+                          variant={entry.averageScore >= 400 ? "success" : entry.averageScore >= 250 ? "warning" : "default"}
                           size="sm"
                         >
-                          {Math.round(entry.winRate * 100)}%
+                          {Math.round(entry.averageScore)}
                         </Badge>
                       </div>
                     </div>
@@ -248,7 +244,7 @@ export default function DuelLeaderboardPage() {
         {/* Empty state (no data at all) */}
         {!loading && leaderboard.length === 0 && (
           <div className="text-center py-12 text-text-muted">
-            <Swords className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>{t.noData}</p>
           </div>
         )}

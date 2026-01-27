@@ -29,6 +29,7 @@ export interface DuelLeaderboardEntry {
   losses: number;
   totalDuels: number;
   winRate: number;
+  duelPoints: number;
 }
 
 export interface DuelResultWithNames {
@@ -96,9 +97,27 @@ export class DuelService {
       createdAt: now,
     });
 
+    // Look up both players' current duelPoints BEFORE updating
+    const winnerPointsRow = await db
+      .select({ duelPoints: duelStats.duelPoints })
+      .from(duelStats)
+      .where(and(eq(duelStats.userId, winnerId), eq(duelStats.gameType, gameType)))
+      .get();
+    const loserPointsRow = await db
+      .select({ duelPoints: duelStats.duelPoints })
+      .from(duelStats)
+      .where(and(eq(duelStats.userId, loserId), eq(duelStats.gameType, gameType)))
+      .get();
+
+    const winnerCurrentPoints = winnerPointsRow?.duelPoints ?? 0;
+    const loserCurrentPoints = loserPointsRow?.duelPoints ?? 0;
+
+    // +3 if opponent had >= your points, +0 otherwise
+    const pointsEarned = loserCurrentPoints >= winnerCurrentPoints ? 3 : 0;
+
     // Update stats for both players
-    await this.updateDuelStats(challengerId, gameType, winnerId === challengerId, now);
-    await this.updateDuelStats(accepterId, gameType, winnerId === accepterId, now);
+    await this.updateDuelStats(winnerId, gameType, true, pointsEarned, now);
+    await this.updateDuelStats(loserId, gameType, false, 0, now);
 
     // Recalculate ranks for this game type
     await this.recalculateRanks(gameType);
@@ -147,6 +166,7 @@ export class DuelService {
     userId: string,
     gameType: string,
     isWinner: boolean,
+    pointsToAdd: number,
     now: Date
   ): Promise<void> {
     // Check if stats exist
@@ -170,6 +190,7 @@ export class DuelService {
           wins: newWins,
           losses: newLosses,
           winRate: newWinRate,
+          duelPoints: existingStats.duelPoints + pointsToAdd,
           updatedAt: now,
         })
         .where(eq(duelStats.id, existingStats.id));
@@ -183,6 +204,7 @@ export class DuelService {
         wins: isWinner ? 1 : 0,
         losses: isWinner ? 0 : 1,
         winRate: isWinner ? 1 : 0,
+        duelPoints: pointsToAdd,
         rank: null,
         updatedAt: now,
       });
@@ -199,7 +221,7 @@ export class DuelService {
       .select()
       .from(duelStats)
       .where(eq(duelStats.gameType, gameType))
-      .orderBy(desc(duelStats.wins), desc(duelStats.winRate), desc(duelStats.totalDuels));
+      .orderBy(desc(duelStats.duelPoints), desc(duelStats.wins), desc(duelStats.winRate), desc(duelStats.totalDuels));
 
     // Update ranks
     for (let i = 0; i < allStats.length; i++) {
@@ -224,6 +246,7 @@ export class DuelService {
         losses: duelStats.losses,
         totalDuels: duelStats.totalDuels,
         winRate: duelStats.winRate,
+        duelPoints: duelStats.duelPoints,
         rank: duelStats.rank,
         userName: users.name,
         userNickname: users.nickname,
@@ -232,7 +255,7 @@ export class DuelService {
       .from(duelStats)
       .leftJoin(users, eq(duelStats.userId, users.id))
       .where(eq(duelStats.gameType, gameType))
-      .orderBy(desc(duelStats.wins), desc(duelStats.winRate), desc(duelStats.totalDuels))
+      .orderBy(desc(duelStats.duelPoints), desc(duelStats.wins), desc(duelStats.winRate))
       .limit(limit);
 
     return stats.map((stat, index) => ({
@@ -244,6 +267,7 @@ export class DuelService {
       losses: stat.losses,
       totalDuels: stat.totalDuels,
       winRate: stat.winRate,
+      duelPoints: stat.duelPoints,
     }));
   }
 
@@ -258,10 +282,11 @@ export class DuelService {
         totalWins: sum(duelStats.wins).mapWith(Number),
         totalLosses: sum(duelStats.losses).mapWith(Number),
         totalDuels: sum(duelStats.totalDuels).mapWith(Number),
+        totalDuelPoints: sum(duelStats.duelPoints).mapWith(Number),
       })
       .from(duelStats)
       .groupBy(duelStats.userId)
-      .orderBy(desc(sum(duelStats.wins)))
+      .orderBy(desc(sum(duelStats.duelPoints)), desc(sum(duelStats.wins)))
       .limit(limit);
 
     // Get user details and calculate overall stats
@@ -285,6 +310,7 @@ export class DuelService {
         losses,
         totalDuels,
         winRate,
+        duelPoints: stat.totalDuelPoints || 0,
       });
     }
 
@@ -332,7 +358,7 @@ export class DuelService {
   static async getUserStats(
     userId: string,
     gameType: string
-  ): Promise<{ wins: number; losses: number; totalDuels: number; winRate: number; rank: number | null } | null> {
+  ): Promise<{ wins: number; losses: number; totalDuels: number; winRate: number; rank: number | null; duelPoints: number } | null> {
     const stats = await db
       .select()
       .from(duelStats)
@@ -347,6 +373,7 @@ export class DuelService {
       totalDuels: stats.totalDuels,
       winRate: stats.winRate,
       rank: stats.rank,
+      duelPoints: stats.duelPoints,
     };
   }
 

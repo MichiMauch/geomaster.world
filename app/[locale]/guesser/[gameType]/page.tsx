@@ -253,6 +253,7 @@ export default function GuesserGameTypePage() {
                     winRate={duelStats?.winRate || 0}
                     totalDuels={duelStats?.totalDuels || 0}
                     rank={duelStats?.rank || null}
+                    duelPoints={duelStats?.duelPoints || 0}
                   />
                 ) : (
                   <LoginCard />

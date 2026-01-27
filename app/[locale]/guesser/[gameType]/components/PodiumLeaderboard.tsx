@@ -21,10 +21,10 @@ interface PodiumLeaderboardProps {
 }
 
 // Labels for duel leaderboard
-const duelLabels: Record<string, { title: string; wins: string }> = {
-  de: { title: "Duell-Champions", wins: "Siege" },
-  en: { title: "Duel Champions", wins: "Wins" },
-  sl: { title: "Dvobojevalni prvaki", wins: "Zmage" },
+const duelLabels: Record<string, { title: string; points: string }> = {
+  de: { title: "Duell-Champions", points: "Punkte" },
+  en: { title: "Duel Champions", points: "Points" },
+  sl: { title: "Dvobojevalni prvaki", points: "Točke" },
 };
 
 export const PodiumLeaderboard = memo(function PodiumLeaderboard({
@@ -40,10 +40,10 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
   const isDuel = variant === "duel";
   const duelLabel = duelLabels[locale] || duelLabels.de;
 
-  // Helper to get display value (bestScore for solo, wins for duel)
+  // Helper to get display value (bestScore for solo, duelPoints for duel)
   const getDisplayValue = (entry: RankingEntry | DuelRankingEntry): number => {
-    if (isDuel && "wins" in entry) {
-      return entry.wins;
+    if (isDuel && "duelPoints" in entry) {
+      return entry.duelPoints;
     }
     return (entry as RankingEntry).bestScore || 0;
   };
@@ -52,7 +52,7 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
   const top3 = [...rankings.slice(0, 3)];
   while (top3.length < 3) {
     if (isDuel) {
-      top3.push({ rank: top3.length + 1, userName: null, userImage: null, wins: 0, losses: 0, totalDuels: 0, winRate: 0, userId: "" } as DuelRankingEntry);
+      top3.push({ rank: top3.length + 1, userName: null, userImage: null, wins: 0, losses: 0, totalDuels: 0, winRate: 0, duelPoints: 0, userId: "" } as DuelRankingEntry);
     } else {
       top3.push({ rank: top3.length + 1, userName: null, bestScore: 0 } as RankingEntry);
     }
@@ -216,7 +216,7 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
                         : "text-white"
                     )}>
                       {isEmpty ? "—" : displayValue.toLocaleString()}
-                      {isDuel && !isEmpty && <span className="text-xs ml-1 text-white/70">W</span>}
+                      {isDuel && !isEmpty && <span className="text-xs ml-1 text-white/70">P</span>}
                     </span>
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export const PodiumLeaderboard = memo(function PodiumLeaderboard({
                   isDuel ? "text-accent" : "text-foreground"
                 )}>
                   {displayValue.toLocaleString()}
-                  {isDuel && <span className="text-xs ml-1 text-muted-foreground">{duelLabel.wins}</span>}
+                  {isDuel && <span className="text-xs ml-1 text-muted-foreground">{duelLabel.points}</span>}
                 </span>
               </div>
             );

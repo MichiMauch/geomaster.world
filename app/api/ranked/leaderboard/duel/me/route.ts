@@ -42,6 +42,7 @@ export async function GET(request: Request) {
         totalDuels: 0,
         winRate: 0,
         rank: null,
+        duelPoints: 0,
       });
     }
 

@@ -6,6 +6,7 @@ import { useParams, useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { User, Swords, Trophy } from "lucide-react";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { useScrollHide } from "@/hooks/useScrollHide";
 import { UserDropdown } from "@/components/header/UserDropdown";
@@ -36,6 +37,9 @@ export function Header() {
 
   // Check if on news page
   const isNewsPage = pathname === `/${locale}/news`;
+
+  // Check if on leaderboard page
+  const isLeaderboardPage = pathname?.startsWith(`/${locale}/guesser/leaderboard`);
 
   // Show profile prompt toast for users without a name
   useEffect(() => {
@@ -109,7 +113,7 @@ export function Header() {
           </Link>
 
           {/* Link to Game Selection - on guesser game pages and news page */}
-          {(isGuesserGamePage || isNewsPage) && (
+          {(isGuesserGamePage || isNewsPage || isLeaderboardPage) && (
             <Link
               href={`/${locale}/guesser`}
               className="flex items-center gap-2 ml-4 pl-4 border-l border-glass-border text-text-secondary hover:text-primary transition-colors"
@@ -122,6 +126,29 @@ export function Header() {
               </span>
             </Link>
           )}
+
+          {/* Leaderboard Links */}
+          <div className="flex items-center gap-3 ml-4 pl-4 border-l border-glass-border">
+            <Trophy className="w-4 h-4 text-text-muted" />
+            <Link
+              href={`/${locale}/guesser/leaderboards/ranked`}
+              className="flex items-center gap-1.5 text-text-secondary hover:text-primary transition-colors text-sm font-medium"
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden sm:inline">
+                {locale === "de" ? "Solo-Abenteuer" : locale === "sl" ? "Solo pustolovščina" : "Solo Adventure"}
+              </span>
+            </Link>
+            <Link
+              href={`/${locale}/guesser/leaderboards/duels`}
+              className="flex items-center gap-1.5 text-text-secondary hover:text-accent transition-colors text-sm font-medium"
+            >
+              <Swords className="w-4 h-4" />
+              <span className="hidden sm:inline">
+                {locale === "de" ? "1:1 Duelle" : locale === "sl" ? "1:1 Dvoboji" : "1:1 Duels"}
+              </span>
+            </Link>
+          </div>
 
           {/* Page Title */}
           {(pageTitle || isAdminPage) && (

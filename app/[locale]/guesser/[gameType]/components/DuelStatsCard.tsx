@@ -10,11 +10,13 @@ interface DuelStatsCardProps {
   winRate: number;
   totalDuels: number;
   rank: number | null;
+  duelPoints: number;
 }
 
-const labels: Record<string, { title: string; wins: string; winRate: string; duels: string; rank: string }> = {
+const labels: Record<string, { title: string; points: string; wins: string; winRate: string; duels: string; rank: string }> = {
   de: {
     title: "DEINE STATS",
+    points: "Punkte",
     wins: "Siege",
     winRate: "Win-Rate",
     duels: "Duelle",
@@ -22,6 +24,7 @@ const labels: Record<string, { title: string; wins: string; winRate: string; due
   },
   en: {
     title: "YOUR STATS",
+    points: "Points",
     wins: "Wins",
     winRate: "Win Rate",
     duels: "Duels",
@@ -29,6 +32,7 @@ const labels: Record<string, { title: string; wins: string; winRate: string; due
   },
   sl: {
     title: "TVOJE STATISTIKE",
+    points: "Točke",
     wins: "Zmage",
     winRate: "Stopnja zmag",
     duels: "Dvoboji",
@@ -85,6 +89,7 @@ export const DuelStatsCard = memo(function DuelStatsCard({
   winRate,
   totalDuels,
   rank,
+  duelPoints,
 }: DuelStatsCardProps) {
   const t = labels[locale] || labels.de;
 
@@ -118,19 +123,19 @@ export const DuelStatsCard = memo(function DuelStatsCard({
         {t.title}
       </h3>
 
-      {/* Two columns: Wins | Win-Rate */}
+      {/* Two columns: Points | Win-Rate */}
       <div className="grid grid-cols-2 gap-6 mb-4">
-        {/* Left column: Wins */}
+        {/* Left column: Duel Points */}
         <div className="flex flex-col items-center">
           <div className="relative">
-            <RingProgress percentage={totalDuels > 0 ? (wins / totalDuels) * 100 : 0} size={80} />
+            <RingProgress percentage={Math.min(duelPoints, 100)} size={80} />
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-2xl font-bold text-accent">
-                {wins}
+                {duelPoints}
               </span>
             </div>
           </div>
-          <span className="text-xs text-muted-foreground mt-2">{t.wins}</span>
+          <span className="text-xs text-muted-foreground mt-2">{t.points}</span>
         </div>
 
         {/* Right column: Win Rate */}
@@ -149,6 +154,10 @@ export const DuelStatsCard = memo(function DuelStatsCard({
 
       {/* Bottom stats */}
       <div className="flex justify-center gap-6 pt-3 border-t border-surface-3">
+        <div className="text-center">
+          <span className="text-lg font-bold text-success">{wins}</span>
+          <span className="text-xs text-muted-foreground ml-1">{t.wins}</span>
+        </div>
         <div className="text-center">
           <span className="text-lg font-bold text-foreground">{totalDuels}</span>
           <span className="text-xs text-muted-foreground ml-1">{t.duels}</span>

@@ -6,6 +6,7 @@ export interface DuelPlayerStats {
   totalDuels: number;
   winRate: number;
   rank: number | null;
+  duelPoints: number;
 }
 
 interface UseDuelPlayerStatsReturn {
