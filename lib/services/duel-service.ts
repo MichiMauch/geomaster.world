@@ -112,8 +112,10 @@ export class DuelService {
     const winnerCurrentPoints = winnerPointsRow?.duelPoints ?? 0;
     const loserCurrentPoints = loserPointsRow?.duelPoints ?? 0;
 
-    // +3 if opponent had >= your points, +0 otherwise
-    const pointsEarned = loserCurrentPoints >= winnerCurrentPoints ? 3 : 0;
+    // +3 base for any win, +3 bonus if opponent had >= your points
+    const basePoints = 3;
+    const bonusPoints = loserCurrentPoints >= winnerCurrentPoints ? 3 : 0;
+    const pointsEarned = basePoints + bonusPoints;
 
     // Update stats for both players
     await this.updateDuelStats(winnerId, gameType, true, pointsEarned, now);

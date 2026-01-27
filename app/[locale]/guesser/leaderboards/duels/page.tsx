@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge, MedalBadge } from "@/components/ui/Badge";
-import { Swords, Trophy } from "lucide-react";
+import { Swords, Trophy, Info } from "lucide-react";
 import MissionControlBackground from "@/components/MissionControlBackground";
 import { PodiumLeaderboard } from "@/app/[locale]/guesser/[gameType]/components";
 import type { DuelRankingEntry } from "@/app/[locale]/guesser/[gameType]/hooks/useDuelRankings";
@@ -37,6 +37,7 @@ const labels = {
     noData: "Noch keine Duelle gespielt",
     back: "Zurück",
     loading: "Lade Rangliste...",
+    scoringInfo: "Sieg gegen stärkeren Gegner: +3 Punkte + 3 Bonus = 6\nSieg gegen schwächeren Gegner: +3 Punkte, kein Bonus\nNiederlage: 0 Punkte",
   },
   en: {
     title: "Duel Champions",
@@ -51,6 +52,7 @@ const labels = {
     noData: "No duels played yet",
     back: "Back",
     loading: "Loading leaderboard...",
+    scoringInfo: "Win vs stronger opponent: +3 points + 3 bonus = 6\nWin vs weaker opponent: +3 points, no bonus\nLoss: 0 points",
   },
   sl: {
     title: "Prvaki dvobojev",
@@ -65,6 +67,7 @@ const labels = {
     noData: "Še ni odigranih dvobojev",
     back: "Nazaj",
     loading: "Nalagam lestvico...",
+    scoringInfo: "Zmaga proti močnejšemu: +3 točke + 3 bonus = 6\nZmaga proti šibkejšemu: +3 točke, brez bonusa\nPoraz: 0 točk",
   },
 };
 
@@ -141,8 +144,14 @@ export default function DuelLeaderboardPage() {
               <h1 className="text-3xl font-bold text-foreground font-heading">
                 {t.title}
               </h1>
-              <p className="text-text-muted">
+              <p className="text-text-muted flex items-center gap-1.5">
                 {t.subtitle}
+                <span className="relative group">
+                  <Info className="w-4 h-4 text-text-muted/60 hover:text-accent cursor-help transition-colors" />
+                  <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 p-3 rounded-lg bg-surface-1 border border-glass-border shadow-xl text-xs text-text-secondary whitespace-pre-line opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                    {t.scoringInfo}
+                  </span>
+                </span>
               </p>
             </div>
           </div>
