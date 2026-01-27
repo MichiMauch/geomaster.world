@@ -3,8 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
-import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes, panoramaTypes, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { games, gameRounds, locations, worldLocations, panoramaLocations, countries, worldQuizTypes, panoramaTypes, users, duelResults } from "@/lib/db/schema";
+import { eq, and, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { getGameTypeConfig, isWorldGameType, getWorldCategory, isPanoramaGameType, getPanoramaCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
@@ -128,6 +128,29 @@ export async function POST(request: Request) {
       if (challengeData.challengerId === session.user.id) {
         return NextResponse.json(
           { error: "Cannot accept your own challenge" },
+          { status: 400 }
+        );
+      }
+
+      // Prevent replaying an already-completed duel
+      const existingResult = await db
+        .select({ id: duelResults.id })
+        .from(duelResults)
+        .where(
+          and(
+            eq(duelResults.duelSeed, challengeData.seed),
+            eq(duelResults.gameType, gameType),
+            or(
+              eq(duelResults.accepterId, session.user.id),
+              eq(duelResults.challengerId, session.user.id)
+            )
+          )
+        )
+        .get();
+
+      if (existingResult) {
+        return NextResponse.json(
+          { error: "already_played" },
           { status: 400 }
         );
       }

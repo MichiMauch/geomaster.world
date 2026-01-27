@@ -26,6 +26,9 @@ const labels = {
     score: "Punkte",
     time: "Sek.",
     or: "oder",
+    alreadyPlayed: "Dieses Duell wurde bereits gespielt",
+    alreadyPlayedDesc: "Du kannst ein Duell nur einmal spielen. Fordere deinen Gegner zu einem neuen Duell heraus!",
+    ok: "Verstanden",
   },
   en: {
     title: "Choose Game Mode",
@@ -43,6 +46,9 @@ const labels = {
     score: "Points",
     time: "Sec.",
     or: "or",
+    alreadyPlayed: "This duel has already been played",
+    alreadyPlayedDesc: "You can only play a duel once. Challenge your opponent to a new duel!",
+    ok: "Got it",
   },
   sl: {
     title: "Izberi način igre",
@@ -60,6 +66,9 @@ const labels = {
     score: "Točk",
     time: "Sek.",
     or: "ali",
+    alreadyPlayed: "Ta dvoboj je bil že odigran",
+    alreadyPlayedDesc: "Dvoboj lahko igraš samo enkrat. Izzovi nasprotnika na nov dvoboj!",
+    ok: "Razumem",
   },
 };
 
@@ -75,6 +84,7 @@ export default function SelectModePage() {
 
   const [creatingGame, setCreatingGame] = useState(false);
   const [challengeData, setChallengeData] = useState<DuelChallenge | null>(null);
+  const [errorModal, setErrorModal] = useState<string | null>(null);
 
   // Check for challenge in URL
   useEffect(() => {
@@ -135,12 +145,16 @@ export default function SelectModePage() {
         }
         router.push(`/${locale}/guesser/play/${data.gameId}`);
       } else {
-        const error = await response.json();
-        alert(error.error || "Failed to create duel");
+        const errData = await response.json();
+        if (errData.error === "already_played") {
+          setErrorModal("alreadyPlayed");
+        } else {
+          setErrorModal(errData.error || "Failed to create duel");
+        }
       }
     } catch (error) {
       console.error("Error creating duel:", error);
-      alert("Failed to create duel");
+      setErrorModal("Failed to create duel");
     } finally {
       setCreatingGame(false);
     }
@@ -233,6 +247,27 @@ export default function SelectModePage() {
             </Link>
           </CardContent>
         </Card>
+
+        {/* Error Modal */}
+        {errorModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <Card variant="glass-elevated" padding="lg" className="max-w-sm w-full mx-4 animate-fade-in">
+              <CardContent className="text-center space-y-4 pt-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+                  <Swords className="w-8 h-8 text-accent" />
+                </div>
+                <h2 className="text-xl font-bold text-text-primary">{t.alreadyPlayed}</h2>
+                <p className="text-text-secondary text-sm">{t.alreadyPlayedDesc}</p>
+                <Button variant="accent" size="lg" className="w-full" onClick={() => {
+                  setErrorModal(null);
+                  router.push(`/${locale}/guesser/${gameType}`);
+                }}>
+                  {t.ok}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     );
   }
@@ -359,6 +394,27 @@ export default function SelectModePage() {
           </Link>
         </div>
       </div>
+
+      {/* Error Modal */}
+      {errorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Card variant="glass-elevated" padding="lg" className="max-w-sm w-full mx-4 animate-fade-in">
+            <CardContent className="text-center space-y-4 pt-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+                <Swords className="w-8 h-8 text-accent" />
+              </div>
+              <h2 className="text-xl font-bold text-text-primary">{t.alreadyPlayed}</h2>
+              <p className="text-text-secondary text-sm">{t.alreadyPlayedDesc}</p>
+              <Button variant="accent" size="lg" className="w-full" onClick={() => {
+                setErrorModal(null);
+                router.push(`/${locale}/guesser/${gameType}`);
+              }}>
+                {t.ok}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
