@@ -86,6 +86,9 @@ export default function SelectModePage() {
   const [challengeData, setChallengeData] = useState<DuelChallenge | null>(null);
   const [errorModal, setErrorModal] = useState<string | null>(null);
 
+  const isLoading = status === "loading";
+  const isLoggedIn = !!session?.user?.id;
+
   // Check for challenge in URL
   useEffect(() => {
     const challenge = searchParams.get("challenge");
@@ -94,6 +97,27 @@ export default function SelectModePage() {
       setChallengeData(decoded);
     }
   }, [searchParams]);
+
+  // Immediately check if this duel was already played
+  useEffect(() => {
+    if (!challengeData || !isLoggedIn) return;
+    const checkAlreadyPlayed = async () => {
+      try {
+        const res = await fetch(
+          `/api/ranked/games/duel/check?seed=${encodeURIComponent(challengeData.seed)}&gameType=${encodeURIComponent(gameType)}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.alreadyPlayed) {
+            setErrorModal("alreadyPlayed");
+          }
+        }
+      } catch {
+        // Ignore check errors — the create endpoint will catch it anyway
+      }
+    };
+    checkAlreadyPlayed();
+  }, [challengeData, isLoggedIn, gameType]);
 
   const handleStartNormal = async () => {
     setCreatingGame(true);
@@ -159,9 +183,6 @@ export default function SelectModePage() {
       setCreatingGame(false);
     }
   };
-
-  const isLoading = status === "loading";
-  const isLoggedIn = !!session?.user?.id;
 
   // If there's a challenge, show the challenge acceptance UI
   if (challengeData) {
