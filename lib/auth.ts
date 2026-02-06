@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    signIn: async ({ user, account }) => {
+    signIn: async ({ user, account, profile }) => {
       // Get actual user ID from database (user.id might be email for email provider)
       let actualUserId: string | null = null;
       if (user.email) {
@@ -96,6 +96,13 @@ export const authOptions: NextAuthOptions = {
           columns: { id: true },
         });
         actualUserId = dbUser?.id ?? null;
+      }
+
+      // Update Google profile image on every login
+      if (account?.provider === "google" && (profile as any)?.picture && user.email) {
+        await db.update(users)
+          .set({ image: (profile as any).picture })
+          .where(eq(users.email, user.email));
       }
 
       // Log successful sign-in (fire and forget - don't block sign-in)

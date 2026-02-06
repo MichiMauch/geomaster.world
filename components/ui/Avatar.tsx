@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useState } from "react";
 
 const avatarVariants = cva(
   // Base styles
@@ -44,7 +44,12 @@ function getInitials(name: string): string {
 
 const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, size, src, name, fallback, ...props }, ref) => {
+    const [imgError, setImgError] = useState(false);
     const initials = name ? getInitials(name) : fallback || "?";
+
+    useEffect(() => {
+      setImgError(false);
+    }, [src]);
 
     return (
       <div
@@ -52,11 +57,12 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
         className={cn(avatarVariants({ size, className }))}
         {...props}
       >
-        {src ? (
+        {src && !imgError ? (
           <img
             src={src}
             alt={name || "Avatar"}
             className="h-full w-full object-cover"
+            onError={() => setImgError(true)}
           />
         ) : (
           <span>{initials}</span>

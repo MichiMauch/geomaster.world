@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -33,6 +34,8 @@ export function MobileHeaderActions() {
     );
   }
 
+  const [imgError, setImgError] = useState(false);
+
   const initials = user.name
     ? user.name
         .split(" ")
@@ -49,11 +52,12 @@ export function MobileHeaderActions() {
         href={`/${locale}/profile`}
         className="block"
       >
-        {user.image ? (
+        {user.image && !imgError ? (
           <img
             src={user.image}
             alt={user.name || "User"}
             className="w-8 h-8 rounded-full border border-glass-border"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-background text-sm font-bold">

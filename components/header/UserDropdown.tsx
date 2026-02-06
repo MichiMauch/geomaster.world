@@ -20,6 +20,7 @@ interface UserDropdownProps {
 
 export function UserDropdown({ user, locale }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("header");
   const tCommon = useTranslations("common");
@@ -47,11 +48,12 @@ export function UserDropdown({ user, locale }: UserDropdownProps) {
         )}
       >
         {/* Avatar */}
-        {user.image ? (
+        {user.image && !imgError ? (
           <img
             src={user.image}
             alt={user.name || "User"}
             className="w-8 h-8 rounded-full border border-glass-border"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-background text-sm font-bold">
