@@ -214,6 +214,12 @@ export function useGameData({ gameId, locale }: UseGameDataProps) {
           setLocationStartedAt(data.startedAt ?? null);
         }
 
+        // If server says needsMapReady, reset startLocationCalledRef so
+        // startLocation() can be called again if needed (e.g., data was incomplete)
+        if (data.needsMapReady) {
+          startLocationCalledRef.current = null;
+        }
+
         return {
           activeRound: data.activeRound || null,
           timeRemaining: data.timeRemaining || 0,

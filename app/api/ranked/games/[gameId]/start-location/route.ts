@@ -9,6 +9,76 @@ import { NextResponse } from "next/server";
 import { getLocalizedName } from "@/lib/location-utils";
 import { isPanoramaGameType, GAME_TYPES } from "@/lib/game-types";
 
+// Helper: location info type used across handlers
+type LocationInfo = {
+  name: string;
+  nameDe: string | null;
+  nameEn: string | null;
+  nameSl: string | null;
+  latitude: number;
+  longitude: number;
+  mapillaryImageKey?: string | null;
+  heading?: number | null;
+  pitch?: number | null;
+};
+
+// Helper function to fetch location details for a game round
+async function fetchLocationDetails(round: { locationSource: string | null; locationId: string }): Promise<LocationInfo | null> {
+  if (round.locationSource === "panoramaLocations") {
+    const loc = await db
+      .select()
+      .from(panoramaLocations)
+      .where(eq(panoramaLocations.id, round.locationId))
+      .get();
+    if (loc) {
+      return {
+        name: loc.name,
+        nameDe: loc.nameDe,
+        nameEn: loc.nameEn,
+        nameSl: loc.nameSl,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        mapillaryImageKey: loc.mapillaryImageKey,
+        heading: loc.heading,
+        pitch: loc.pitch,
+      };
+    }
+  } else if (round.locationSource === "worldLocations") {
+    const loc = await db
+      .select()
+      .from(worldLocations)
+      .where(eq(worldLocations.id, round.locationId))
+      .get();
+    if (loc) {
+      return {
+        name: loc.name,
+        nameDe: loc.nameDe,
+        nameEn: loc.nameEn,
+        nameSl: loc.nameSl,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      };
+    }
+  } else {
+    const loc = await db
+      .select()
+      .from(locations)
+      .where(eq(locations.id, round.locationId))
+      .get();
+    if (loc) {
+      return {
+        name: loc.name,
+        nameDe: loc.nameDe,
+        nameEn: loc.nameEn,
+        nameSl: loc.nameSl,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      };
+    }
+  }
+  return null;
+}
+
 // Helper function to get timeoutPenalty from DB for dynamic game types
 async function getTimeoutPenaltyFromDB(gameType: string): Promise<number> {
   // Static config first
@@ -174,70 +244,7 @@ export async function POST(
       .where(eq(games.id, gameId));
 
     // Fetch location details
-    let locationInfo: {
-      name: string;
-      nameDe: string | null;
-      nameEn: string | null;
-      nameSl: string | null;
-      latitude: number;
-      longitude: number;
-      mapillaryImageKey?: string | null;
-      heading?: number | null;
-      pitch?: number | null;
-    } | null = null;
-
-    if (targetRound.locationSource === "panoramaLocations") {
-      const loc = await db
-        .select()
-        .from(panoramaLocations)
-        .where(eq(panoramaLocations.id, targetRound.locationId))
-        .get();
-      if (loc) {
-        locationInfo = {
-          name: loc.name,
-          nameDe: loc.nameDe,
-          nameEn: loc.nameEn,
-          nameSl: loc.nameSl,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-          mapillaryImageKey: loc.mapillaryImageKey,
-          heading: loc.heading,
-          pitch: loc.pitch,
-        };
-      }
-    } else if (targetRound.locationSource === "worldLocations") {
-      const loc = await db
-        .select()
-        .from(worldLocations)
-        .where(eq(worldLocations.id, targetRound.locationId))
-        .get();
-      if (loc) {
-        locationInfo = {
-          name: loc.name,
-          nameDe: loc.nameDe,
-          nameEn: loc.nameEn,
-          nameSl: loc.nameSl,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-        };
-      }
-    } else {
-      const loc = await db
-        .select()
-        .from(locations)
-        .where(eq(locations.id, targetRound.locationId))
-        .get();
-      if (loc) {
-        locationInfo = {
-          name: loc.name,
-          nameDe: loc.nameDe,
-          nameEn: loc.nameEn,
-          nameSl: loc.nameSl,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-        };
-      }
-    }
+    const locationInfo = await fetchLocationDetails(targetRound);
 
     if (!locationInfo) {
       return NextResponse.json(
@@ -349,11 +356,47 @@ export async function GET(
         });
       }
 
-      // Return waiting state - map needs to call /map-ready
+      // Fetch full location details so the client can render the map
+      const locationInfo = await fetchLocationDetails(activeRound);
+      if (!locationInfo) {
+        return NextResponse.json(
+          { error: "Location data not found" },
+          { status: 500 }
+        );
+      }
+
+      // Determine time limit
+      const gameType = activeRound.gameType || game.gameType || "country:switzerland";
+      const isPanoramaGame = isPanoramaGameType(gameType);
+      const defaultTimeLimit = isPanoramaGame ? 60 : 30;
+      const timeLimitSeconds = activeRound.timeLimitSeconds ?? game.timeLimitSeconds ?? defaultTimeLimit;
+
+      // For panorama games, don't show the location name
+      const isPanorama = isPanoramaGameType(activeRound.gameType);
+      const isCountryQuiz = activeRound.gameType?.startsWith("world:") &&
+        ["country-flags", "place-names", "emoji-countries"].includes(activeRound.gameType.split(":")[1]);
+
+      const locationName = isPanorama
+        ? ""
+        : isCountryQuiz
+          ? locationInfo.name
+          : getLocalizedName(locationInfo, locale);
+
+      // Return full round data + waiting state - map needs to call /map-ready
       return NextResponse.json({
         activeRound: {
           id: activeRound.id,
+          roundNumber: activeRound.roundNumber,
           locationIndex: activeRound.locationIndex,
+          locationName,
+          latitude: locationInfo.latitude,
+          longitude: locationInfo.longitude,
+          country: activeRound.country,
+          gameType: activeRound.gameType,
+          timeLimitSeconds,
+          mapillaryImageKey: locationInfo.mapillaryImageKey ?? null,
+          heading: locationInfo.heading ?? null,
+          pitch: locationInfo.pitch ?? null,
         },
         waitingForMapReady: true,
         needsMapReady: true,
@@ -462,70 +505,7 @@ export async function GET(
     const timeRemaining = Math.max(0, timeLimitSeconds - elapsedSeconds);
 
     // Fetch location details
-    let locationInfo: {
-      name: string;
-      nameDe: string | null;
-      nameEn: string | null;
-      nameSl: string | null;
-      latitude: number;
-      longitude: number;
-      mapillaryImageKey?: string | null;
-      heading?: number | null;
-      pitch?: number | null;
-    } | null = null;
-
-    if (activeRound.locationSource === "panoramaLocations") {
-      const loc = await db
-        .select()
-        .from(panoramaLocations)
-        .where(eq(panoramaLocations.id, activeRound.locationId))
-        .get();
-      if (loc) {
-        locationInfo = {
-          name: loc.name,
-          nameDe: loc.nameDe,
-          nameEn: loc.nameEn,
-          nameSl: loc.nameSl,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-          mapillaryImageKey: loc.mapillaryImageKey,
-          heading: loc.heading,
-          pitch: loc.pitch,
-        };
-      }
-    } else if (activeRound.locationSource === "worldLocations") {
-      const loc = await db
-        .select()
-        .from(worldLocations)
-        .where(eq(worldLocations.id, activeRound.locationId))
-        .get();
-      if (loc) {
-        locationInfo = {
-          name: loc.name,
-          nameDe: loc.nameDe,
-          nameEn: loc.nameEn,
-          nameSl: loc.nameSl,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-        };
-      }
-    } else {
-      const loc = await db
-        .select()
-        .from(locations)
-        .where(eq(locations.id, activeRound.locationId))
-        .get();
-      if (loc) {
-        locationInfo = {
-          name: loc.name,
-          nameDe: loc.nameDe,
-          nameEn: loc.nameEn,
-          nameSl: loc.nameSl,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-        };
-      }
-    }
+    const locationInfo = await fetchLocationDetails(activeRound);
 
     if (!locationInfo) {
       return NextResponse.json(

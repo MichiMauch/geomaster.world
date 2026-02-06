@@ -260,19 +260,36 @@ export default function GuesserPlayPage({
             setCurrentRoundIndex(roundIndex);
           }
 
-          if (status.timeExpired) {
+          // If active round has no coordinates (incomplete data), re-fetch via startLocation
+          if (status.activeRound.latitude == null || status.activeRound.longitude == null) {
+            const locationIndex = status.activeRound.locationIndex;
+            try {
+              const result = await startLocation(locationIndex);
+              if (!result.success) {
+                console.error("Failed to re-fetch location data:", result.error);
+              }
+            } catch (err) {
+              console.error("Error re-fetching location data:", err);
+            }
+          } else if (status.timeExpired) {
             // Time already expired - trigger timeout
             handleTimeout();
           }
         } else if (status.needsStart && status.nextLocationIndex) {
           // Need to start the next location
-          const result = await startLocation(status.nextLocationIndex);
+          try {
+            const result = await startLocation(status.nextLocationIndex);
 
-          if (result.success && result.round) {
-            const roundIndex = rounds.findIndex(r => r.locationIndex === status.nextLocationIndex);
-            if (roundIndex !== -1) {
-              setCurrentRoundIndex(roundIndex);
+            if (result.success && result.round) {
+              const roundIndex = rounds.findIndex(r => r.locationIndex === status.nextLocationIndex);
+              if (roundIndex !== -1) {
+                setCurrentRoundIndex(roundIndex);
+              }
+            } else if (!result.success && !result.alreadyGuessed) {
+              console.error("Failed to start location:", result.error);
             }
+          } catch (err) {
+            console.error("Error starting location:", err);
           }
         }
       } finally {
@@ -595,6 +612,14 @@ export default function GuesserPlayPage({
             height="100%"
             onReady={handleMapReady}
           />
+        ) : isPanorama && !currentRound?.mapillaryImageKey ? (
+          // Panorama mode but mapillaryImageKey not yet loaded - show spinner
+          <div className="absolute inset-0 flex items-center justify-center bg-background">
+            <div className="text-center space-y-4">
+              <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-text-secondary">{tCommon("loading")}</p>
+            </div>
+          </div>
         ) : (
           <CountryMap
             roundId={currentRound?.id}
