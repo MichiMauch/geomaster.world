@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { CursorGlow } from "./CursorGlow";
+import { MobileBottomNavigation } from "./MobileBottomNavigation";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
 
 interface LocaleProvidersProps {
@@ -33,7 +34,8 @@ export function LocaleProviders({ children, messages, locale, timeZone }: Locale
       <PageTitleProvider>
         <CursorGlow />
         {showHeader && <Header />}
-        <div className="flex-1">{children}</div>
+        <div className={`flex-1 ${showHeader ? "pb-20 sm:pb-0" : ""}`}>{children}</div>
+        {showHeader && <MobileBottomNavigation />}
         {showFooter && <Footer />}
       </PageTitleProvider>
     </NextIntlClientProvider>

@@ -6,12 +6,13 @@ import { useParams, useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { User, Swords, Trophy } from "lucide-react";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { useScrollHide } from "@/hooks/useScrollHide";
 import { UserDropdown } from "@/components/header/UserDropdown";
 import { GuestDropdown } from "@/components/header/GuestDropdown";
 import { NotificationBell } from "@/components/header/NotificationBell";
+import { MobileHeaderActions } from "@/components/header/MobileHeaderActions";
+import { DesktopNavigation } from "@/components/header/DesktopNavigation";
 import toast from "react-hot-toast";
 
 export function Header() {
@@ -31,15 +32,6 @@ export function Header() {
 
   // Check if on admin page
   const isAdminPage = pathname?.startsWith(`/${locale}/admin`);
-
-  // Check if on guesser game type page (e.g., /de/guesser/country:switzerland)
-  const isGuesserGamePage = pathname?.match(new RegExp(`^/${locale}/guesser/[^/]+$`));
-
-  // Check if on news page
-  const isNewsPage = pathname === `/${locale}/news`;
-
-  // Check if on leaderboard page
-  const isLeaderboardPage = pathname?.startsWith(`/${locale}/guesser/leaderboard`);
 
   // Show profile prompt toast for users without a name
   useEffect(() => {
@@ -86,14 +78,14 @@ export function Header() {
         isHidden ? "-translate-y-full" : "translate-y-0"
       )}
     >
-      <div className="max-w-[1440px] mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-[1440px] mx-auto px-4 py-3 flex items-center justify-between relative">
         {/* Left side: Back button + Logo */}
         <div className="flex items-center gap-3">
-          {/* Back Button - only show if not on home page */}
+          {/* Back Button - only show if not on home page, hidden on mobile */}
           {!isHomePage && (
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-1 text-text-secondary hover:text-text-primary transition-colors p-1.5 -ml-1.5 rounded-lg hover:bg-surface-2"
+              className="hidden sm:flex items-center gap-1 text-text-secondary hover:text-text-primary transition-colors p-1.5 -ml-1.5 rounded-lg hover:bg-surface-2"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -112,44 +104,6 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Link to Game Selection - on guesser game pages and news page */}
-          {(isGuesserGamePage || isNewsPage || isLeaderboardPage) && (
-            <Link
-              href={`/${locale}/guesser`}
-              className="flex items-center gap-2 ml-4 pl-4 border-l border-glass-border text-text-secondary hover:text-primary transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-              <span className="text-sm font-medium">
-                {locale === "de" ? "Spiele" : locale === "en" ? "Games" : "Igre"}
-              </span>
-            </Link>
-          )}
-
-          {/* Leaderboard Links */}
-          <div className="flex items-center gap-3 ml-4 pl-4 border-l border-glass-border">
-            <Trophy className="w-4 h-4 text-text-muted" />
-            <Link
-              href={`/${locale}/guesser/leaderboards/ranked`}
-              className="flex items-center gap-1.5 text-text-secondary hover:text-primary transition-colors text-sm font-medium"
-            >
-              <User className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {locale === "de" ? "Solo-Abenteuer" : locale === "sl" ? "Solo pustolovščina" : "Solo Adventure"}
-              </span>
-            </Link>
-            <Link
-              href={`/${locale}/guesser/leaderboards/duels`}
-              className="flex items-center gap-1.5 text-text-secondary hover:text-accent transition-colors text-sm font-medium"
-            >
-              <Swords className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {locale === "de" ? "1:1 Duelle" : locale === "sl" ? "1:1 Dvoboji" : "1:1 Duels"}
-              </span>
-            </Link>
-          </div>
-
           {/* Page Title */}
           {(pageTitle || isAdminPage) && (
             <div className="flex items-center gap-2 ml-4 pl-4 border-l border-glass-border">
@@ -160,26 +114,34 @@ export function Header() {
           )}
         </div>
 
+        {/* Center: Floating Nav Pill (absolute centered) */}
+        <DesktopNavigation locale={locale} pathname={pathname} />
+
         {/* Right side: User Info */}
         <div className="flex items-center gap-3">
-          {status === "loading" ? (
-            <div className="w-8 h-8 rounded-full bg-surface-2 animate-pulse" />
-          ) : user ? (
-            <>
-              <NotificationBell locale={locale} />
-              <UserDropdown
-                user={{
-                  name: user.name,
-                  email: user.email,
-                  image: user.image,
-                  isSuperAdmin: user.isSuperAdmin,
-                }}
-                locale={locale}
-              />
-            </>
-          ) : (
-            <GuestDropdown locale={locale} />
-          )}
+          {/* Desktop: full controls */}
+          <div className="hidden sm:flex items-center gap-3">
+            {status === "loading" ? (
+              <div className="w-8 h-8 rounded-full bg-surface-2 animate-pulse" />
+            ) : user ? (
+              <>
+                <NotificationBell locale={locale} />
+                <UserDropdown
+                  user={{
+                    name: user.name,
+                    email: user.email,
+                    image: user.image,
+                    isSuperAdmin: user.isSuperAdmin,
+                  }}
+                  locale={locale}
+                />
+              </>
+            ) : (
+              <GuestDropdown locale={locale} />
+            )}
+          </div>
+          {/* Mobile: compact actions */}
+          <MobileHeaderActions />
         </div>
       </div>
     </header>
