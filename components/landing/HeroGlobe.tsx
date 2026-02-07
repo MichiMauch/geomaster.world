@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType, type MutableRefObject } from "react";
+import type { GlobeMethods, GlobeProps } from "react-globe.gl";
 
 // Check if WebGL is available (needed for Three.js/react-globe.gl)
 function isWebGLAvailable(): boolean {
@@ -106,17 +107,14 @@ interface HeroGlobeProps {
 
 export default function HeroGlobe({ className }: HeroGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const globeRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cloudsGlobeRef = useRef<any>(null);
+  const globeRef = useRef<GlobeMethods | undefined>(undefined) as MutableRefObject<GlobeMethods | undefined>;
+  const cloudsGlobeRef = useRef<GlobeMethods | undefined>(undefined) as MutableRefObject<GlobeMethods | undefined>;
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isClient, setIsClient] = useState(false);
   const [webglSupported, setWebglSupported] = useState(true);
   const [globeReady, setGlobeReady] = useState(false);
   const [cloudsReady, setCloudsReady] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [GlobeComponent, setGlobeComponent] = useState<ComponentType<any> | null>(null);
+  const [GlobeComponent, setGlobeComponent] = useState<ComponentType<GlobeProps & { ref?: React.MutableRefObject<GlobeMethods | undefined> }> | null>(null);
 
   // Handle client-side mounting, WebGL detection, and dynamic Globe import
   useEffect(() => {

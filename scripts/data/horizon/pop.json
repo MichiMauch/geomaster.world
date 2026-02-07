@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sp_moon",
+    "name": "Entfernung zum Mond",
+    "value": 384400,
+    "unit": "km",
+    "category": "space",
+    "difficulty": 1,
+    "trap_note": "Alle Planeten des Sonnensystems würden knapp dazwischen passen."
+  },
+  {
+    "id": "sp_iss",
+    "name": "ISS Flughöhe",
+    "value": 408,
+    "unit": "km",
+    "category": "space",
+    "difficulty": 2,
+    "trap_note": "Viel näher als man denkt. Hamburg-München ist weiter."
+  },
+  {
+    "id": "sp_sun_light",
+    "name": "Licht zur Erde",
+    "value": 499,
+    "unit": "Sekunden",
+    "category": "space",
+    "difficulty": 2,
+    "trap_note": "Das Licht der Sonne braucht ca. 8 Minuten und 19 Sekunden."
+  },
+  {
+    "id": "sp_day_venus",
+    "name": "Tag auf der Venus",
+    "value": 5832,
+    "unit": "Stunden",
+    "category": "space",
+    "difficulty": 3,
+    "trap_note": "Ein Tag auf der Venus dauert länger als ein Jahr auf der Venus!"
+  }
+]

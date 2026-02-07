@@ -1,6 +1,6 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import { compare } from "bcryptjs";
@@ -99,9 +99,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Update Google profile image on every login
-      if (account?.provider === "google" && (profile as any)?.picture && user.email) {
+      if (account?.provider === "google" && (profile as GoogleProfile | undefined)?.picture && user.email) {
         await db.update(users)
-          .set({ image: (profile as any).picture })
+          .set({ image: (profile as GoogleProfile).picture })
           .where(eq(users.email, user.email));
       }
 

@@ -53,38 +53,30 @@ export function useGameTimer({
     return userGuesses.some(g => g.gameRoundId === currentRound.id);
   }, [currentRound, userGuesses]);
 
-  // Timer activation logic - now syncs with server time for logged-in users
+  // Effect 1: Timer activation — determines if the timer should be running
   // IMPORTANT: Timer only starts when mapReady is true (map is visible to player)
   useEffect(() => {
-    const roundId = currentRound?.id;
-
-    // Deactivate timer conditions
-    // Key change: also require mapReady to be true before starting timer
     if (showResult || loading || !currentRound || currentRoundGuessed || !mapReady) {
       setTimerActive(false);
       return;
     }
-
     // For logged-in users: also require locationStartedAt to be set (from map-ready API)
     if (!isGuest && !locationStartedAt) {
       setTimerActive(false);
       return;
     }
-
-    // Activate timer when all conditions are met
     setTimerActive(true);
+  }, [showResult, loading, currentRound, currentRoundGuessed, mapReady, isGuest, locationStartedAt]);
 
-    // Prevent re-initialization of time for the same round (but timer is already active above)
-    if (initializedRoundRef.current === roundId) {
-      return;
-    }
+  // Effect 2: Time initialization — sets the starting time when a new round begins
+  useEffect(() => {
+    const roundId = currentRound?.id;
+    if (!roundId || initializedRoundRef.current === roundId) return;
 
-    // Mark this round as initialized
-    initializedRoundRef.current = roundId ?? null;
+    initializedRoundRef.current = roundId;
 
     // For logged-in users: use server time if available
     if (!isGuest && serverTimeRemaining !== null && serverTimeRemaining !== undefined && locationStartedAt) {
-      // Calculate actual remaining time based on when location started
       const elapsedMs = Date.now() - locationStartedAt;
       const elapsedSeconds = elapsedMs / 1000;
       const timeLimit = getCurrentTimeLimit();
@@ -95,8 +87,7 @@ export function useGameTimer({
       if (elapsedSeconds < 1) {
         setTimeRemaining(timeLimit);
       } else {
-        const actualRemaining = Math.max(0, timeLimit - elapsedSeconds);
-        setTimeRemaining(actualRemaining);
+        setTimeRemaining(Math.max(0, timeLimit - elapsedSeconds));
       }
 
       lastServerSyncRef.current = Date.now();
@@ -104,7 +95,7 @@ export function useGameTimer({
       // Guest mode or no server data: use client-side timer
       setTimeRemaining(getCurrentTimeLimit());
     }
-  }, [currentRound?.id, showResult, loading, currentRoundGuessed, getCurrentTimeLimit, serverTimeRemaining, locationStartedAt, isGuest, mapReady]);
+  }, [currentRound?.id, isGuest, serverTimeRemaining, locationStartedAt, getCurrentTimeLimit]);
 
   // Countdown timer with centiseconds
   useEffect(() => {

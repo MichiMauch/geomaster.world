@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import { MapContainer, Marker, Popup, useMapEvents, GeoJSON, Polyline, ZoomControl, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -100,7 +100,7 @@ function FitBoundsOnResult({
   return null;
 }
 
-export default function PanoramaMap({
+export default memo(function PanoramaMap({
   mapillaryImageKey,
   heading,
   pitch,
@@ -116,6 +116,7 @@ export default function PanoramaMap({
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
+  const [viewerError, setViewerError] = useState<string | null>(null);
   const viewerContainerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const currentImageKeyRef = useRef<string | null>(null);
@@ -133,45 +134,41 @@ export default function PanoramaMap({
       .catch((err) => logger.error("Error loading GeoJSON", err));
   }, []);
 
-  // Initialize Mapillary viewer
+  // Initialize Mapillary viewer (without imageId to avoid stuck state on load failure)
   useEffect(() => {
     if (!mounted || !viewerContainerRef.current || viewerRef.current) return;
 
     const accessToken = process.env.NEXT_PUBLIC_MAPILLARY_ACCESS_TOKEN;
     if (!accessToken) {
       logger.error("Mapillary access token not configured");
+      setViewerError("Mapillary nicht konfiguriert");
       return;
     }
 
     const viewer = new Viewer({
       accessToken,
       container: viewerContainerRef.current,
-      imageId: mapillaryImageKey,
       component: {
-        // Enable navigation for movement
         sequence: true,
         direction: true,
-        // Disable cover (auto-start)
         cover: false,
-        // Disable attribution for cleaner look (optional)
         attribution: true,
       },
     });
 
     viewerRef.current = viewer;
-    currentImageKeyRef.current = mapillaryImageKey;
 
     // Set viewerReady when image loads
     viewer.on("image", () => {
       setViewerReady(true);
-      // Set initial camera position if provided
-      if (heading !== undefined || pitch !== undefined) {
-        // Mapillary uses bearing (0-360) and tilt (-90 to 90)
-        const bearing = heading ?? 0;
-        const tilt = pitch ?? 0;
-        viewer.setCenter([0.5, 0.5]); // Center
-        // Note: setBearing and setTilt may need to be called after image loads
-      }
+      setViewerError(null);
+    });
+
+    // Navigate to initial image via moveTo (returns a Promise we can catch)
+    currentImageKeyRef.current = mapillaryImageKey;
+    viewer.moveTo(mapillaryImageKey).catch((err) => {
+      logger.error("Mapillary: failed to load image", { imageId: mapillaryImageKey, error: err });
+      setViewerError("Street View konnte nicht geladen werden");
     });
 
     return () => {
@@ -180,15 +177,17 @@ export default function PanoramaMap({
         viewerRef.current = null;
       }
     };
-  }, [mounted, mapillaryImageKey, heading, pitch]);
+  }, [mounted]);
 
   // Update image when mapillaryImageKey changes (only if different from current)
   useEffect(() => {
     if (viewerRef.current && mapillaryImageKey && currentImageKeyRef.current !== mapillaryImageKey) {
       currentImageKeyRef.current = mapillaryImageKey;
-      setViewerReady(false); // Reset viewer ready state for new image
+      setViewerReady(false);
+      setViewerError(null);
       viewerRef.current.moveTo(mapillaryImageKey).catch((err) => {
-        logger.error("Error moving to image", err);
+        logger.error("Mapillary: failed to load image", { imageId: mapillaryImageKey, error: err });
+        setViewerError("Street View konnte nicht geladen werden");
       });
     }
   }, [mapillaryImageKey]);
@@ -206,6 +205,25 @@ export default function PanoramaMap({
       onReady();
     }
   }, [mounted, geoData, viewerReady, onReady, roundId]);
+
+  // Timeout: If viewer doesn't become ready within 15s, call onReady anyway
+  // so the game timer starts and the player isn't stuck forever
+  useEffect(() => {
+    if (onReadyCalledRef.current || !mounted || !onReady) return;
+
+    const timeout = setTimeout(() => {
+      if (!onReadyCalledRef.current) {
+        logger.error("Mapillary: viewer ready timeout (15s)", { imageId: mapillaryImageKey });
+        if (!viewerError) {
+          setViewerError("Street View lädt sehr langsam oder ist nicht verfügbar");
+        }
+        onReadyCalledRef.current = true;
+        onReady();
+      }
+    }, 15_000);
+
+    return () => clearTimeout(timeout);
+  }, [mounted, mapillaryImageKey, roundId, onReady, viewerError]);
 
   if (!mounted) {
     return (
@@ -244,12 +262,12 @@ export default function PanoramaMap({
           className="w-full h-full bg-black"
           style={{ minHeight: "200px" }}
         />
-        {/* Loading overlay if no access token */}
-        {!process.env.NEXT_PUBLIC_MAPILLARY_ACCESS_TOKEN && (
-          <div className="absolute inset-0 bg-surface-1 flex items-center justify-center">
-            <div className="text-center text-text-muted">
-              <p className="text-lg font-semibold">Mapillary nicht konfiguriert</p>
-              <p className="text-sm mt-2">NEXT_PUBLIC_MAPILLARY_ACCESS_TOKEN fehlt</p>
+        {/* Error overlay */}
+        {viewerError && (
+          <div className="absolute inset-0 bg-surface-1/90 flex items-center justify-center">
+            <div className="text-center text-text-muted px-4">
+              <p className="text-lg font-semibold text-error">{viewerError}</p>
+              <p className="text-sm mt-2">Bitte versuche es später erneut oder überspringe diese Runde.</p>
             </div>
           </div>
         )}
@@ -320,4 +338,4 @@ export default function PanoramaMap({
       </div>
     </div>
   );
-}
+});

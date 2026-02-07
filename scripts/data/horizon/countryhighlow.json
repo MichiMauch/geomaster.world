@@ -1,0 +1,722 @@
+[
+  {
+    "id": "ng",
+    "name": "Nigeria",
+    "population": 218500000,
+    "area_km2": 923768,
+    "highest_point": 2419,
+    "difficulty": 2,
+    "trap_note": "Unterschätzt! Hat mehr Einwohner als Russland oder Japan."
+  },
+  {
+    "id": "ru",
+    "name": "Russland",
+    "population": 144200000,
+    "area_km2": 17098242,
+    "highest_point": 5642,
+    "difficulty": 1,
+    "trap_note": "Flächenriese, aber weniger Einwohner als Bangladesch oder Nigeria."
+  },
+  {
+    "id": "bd",
+    "name": "Bangladesch",
+    "population": 171200000,
+    "area_km2": 147570,
+    "highest_point": 1052,
+    "difficulty": 2,
+    "trap_note": "Winzige Fläche, aber extrem viele Menschen (mehr als Russland!)."
+  },
+  {
+    "id": "gl",
+    "name": "Grönland",
+    "population": 56600,
+    "area_km2": 2166086,
+    "highest_point": 3694,
+    "difficulty": 3,
+    "trap_note": "Mercator-Täuschung: Wirkt riesig, ist aber kleiner als Algerien."
+  },
+  {
+    "id": "dz",
+    "name": "Algerien",
+    "population": 44900000,
+    "area_km2": 2381741,
+    "highest_point": 3003,
+    "difficulty": 3,
+    "trap_note": "Tatsächlich größer als Grönland (Fläche)."
+  },
+  {
+    "id": "ca",
+    "name": "Kanada",
+    "population": 38900000,
+    "area_km2": 9984670,
+    "highest_point": 5959,
+    "difficulty": 1,
+    "trap_note": "Zweitgrößtes Land, aber weniger Einwohner als Spanien oder Polen."
+  },
+  {
+    "id": "es",
+    "name": "Spanien",
+    "population": 47600000,
+    "area_km2": 505990,
+    "highest_point": 3718,
+    "difficulty": 2,
+    "trap_note": "Hat deutlich mehr Einwohner als das riesige Kanada."
+  },
+  {
+    "id": "jp",
+    "name": "Japan",
+    "population": 125100000,
+    "area_km2": 377975,
+    "highest_point": 3776,
+    "difficulty": 1,
+    "trap_note": "Kleine Inseln, aber riesige Bevölkerung."
+  },
+  {
+    "id": "kz",
+    "name": "Kasachstan",
+    "population": 19300000,
+    "area_km2": 2724900,
+    "highest_point": 7010,
+    "difficulty": 3,
+    "trap_note": "Neuntgrößtes Land der Welt! Größer als ganz Westeuropa."
+  },
+  {
+    "id": "id",
+    "name": "Indonesien",
+    "population": 275500000,
+    "area_km2": 1904569,
+    "highest_point": 4884,
+    "difficulty": 2,
+    "trap_note": "Platz 4 der Weltbevölkerung! Schlägt fast jeden Gegner."
+  },
+  {
+    "id": "pk",
+    "name": "Pakistan",
+    "population": 235800000,
+    "area_km2": 881913,
+    "highest_point": 8611,
+    "difficulty": 2,
+    "trap_note": "Enorme Bevölkerung (Platz 5), oft unterschätzt."
+  },
+  {
+    "id": "au",
+    "name": "Australien",
+    "population": 26000000,
+    "area_km2": 7692024,
+    "highest_point": 2228,
+    "difficulty": 1,
+    "trap_note": "Riesiger Kontinent, aber sehr wenige Einwohner (weniger als Nepal oder Ghana)."
+  },
+  {
+    "id": "np",
+    "name": "Nepal",
+    "population": 30500000,
+    "area_km2": 147181,
+    "highest_point": 8848,
+    "difficulty": 2,
+    "trap_note": "Hat mehr Einwohner als Australien!"
+  },
+  {
+    "id": "mv",
+    "name": "Malediven",
+    "population": 540000,
+    "area_km2": 300,
+    "highest_point": 2,
+    "difficulty": 1,
+    "trap_note": "Flachstes Land der Welt (Höchster Punkt 2.4m)."
+  },
+  {
+    "id": "nl",
+    "name": "Niederlande",
+    "population": 17700000,
+    "area_km2": 41543,
+    "highest_point": 322,
+    "difficulty": 1,
+    "trap_note": "Extrem dicht besiedelt."
+  },
+  {
+    "id": "va",
+    "name": "Vatikanstadt",
+    "population": 800,
+    "area_km2": 0.44,
+    "highest_point": 75,
+    "difficulty": 1,
+    "trap_note": "Der ultimative 'Lower' Button für fast alles."
+  },
+  {
+    "id": "mn",
+    "name": "Mongolei",
+    "population": 3400000,
+    "area_km2": 1564110,
+    "highest_point": 4374,
+    "difficulty": 2,
+    "trap_note": "Das am dünnsten besiedelte Land der Welt."
+  },
+  {
+    "id": "eg",
+    "name": "Ägypten",
+    "population": 110000000,
+    "area_km2": 1002450,
+    "highest_point": 2629,
+    "difficulty": 1,
+    "trap_note": "Hat die 100-Mio-Marke geknackt. Mehr als Deutschland oder Türkei."
+  },
+  {
+    "id": "tr",
+    "name": "Türkei",
+    "population": 85000000,
+    "area_km2": 783562,
+    "highest_point": 5137,
+    "difficulty": 2,
+    "trap_note": "Ziemlich genau gleichauf mit Deutschland bei der Bevölkerung."
+  },
+  {
+    "id": "de",
+    "name": "Deutschland",
+    "population": 84300000,
+    "area_km2": 357588,
+    "highest_point": 2962,
+    "difficulty": 1,
+    "trap_note": "Referenzwert für viele Spieler."
+  },
+  {
+    "id": "us",
+    "name": "USA",
+    "population": 333000000,
+    "area_km2": 9833520,
+    "highest_point": 6190,
+    "difficulty": 1,
+    "trap_note": "Platz 3 in Bevölkerung und Fläche."
+  },
+  {
+    "id": "cn",
+    "name": "China",
+    "population": 1412000000,
+    "area_km2": 9596961,
+    "highest_point": 8848,
+    "difficulty": 1,
+    "trap_note": "Bevölkerungsgigant, aber flächenmäßig knapp kleiner als USA/Kanada."
+  },
+  {
+    "id": "in",
+    "name": "Indien",
+    "population": 1417000000,
+    "area_km2": 3287263,
+    "highest_point": 8586,
+    "difficulty": 1,
+    "trap_note": "Hat China in der Bevölkerung mittlerweile überholt!"
+  },
+  {
+    "id": "br",
+    "name": "Brasilien",
+    "population": 215000000,
+    "area_km2": 8515767,
+    "highest_point": 2995,
+    "difficulty": 1,
+    "trap_note": "Südamerikas Riese in Fläche und Menschen."
+  },
+  {
+    "id": "is",
+    "name": "Island",
+    "population": 376000,
+    "area_km2": 103000,
+    "highest_point": 2110,
+    "difficulty": 2,
+    "trap_note": "Sehr wenige Einwohner (weniger als Luxemburg)."
+  },
+  {
+    "id": "dk",
+    "name": "Dänemark",
+    "population": 5900000,
+    "area_km2": 42943,
+    "highest_point": 170,
+    "difficulty": 2,
+    "trap_note": "Sehr flach (Møllehøj ~170m)."
+  },
+  {
+    "id": "ch",
+    "name": "Schweiz",
+    "population": 8700000,
+    "area_km2": 41285,
+    "highest_point": 4634,
+    "difficulty": 1,
+    "trap_note": "Kleines Land, sehr hohe Berge (Dufourspitze)."
+  },
+  {
+    "id": "et",
+    "name": "Äthiopien",
+    "population": 123000000,
+    "area_km2": 1104300,
+    "highest_point": 4550,
+    "difficulty": 3,
+    "trap_note": "Hat mehr Einwohner als Ägypten oder Vietnam!"
+  },
+  {
+    "id": "vn",
+    "name": "Vietnam",
+    "population": 99000000,
+    "area_km2": 331210,
+    "highest_point": 3143,
+    "difficulty": 2,
+    "trap_note": "Knapp unter 100 Mio, aber auf sehr kleiner Fläche."
+  },
+  {
+    "id": "mc",
+    "name": "Monaco",
+    "population": 36000,
+    "area_km2": 2,
+    "highest_point": 161,
+    "difficulty": 2,
+    "trap_note": "Winzige Fläche, aber sehr hohe Bevölkerungsdichte."
+  },
+  {
+    "id": "ph",
+    "name": "Philippinen",
+    "population": 115600000,
+    "area_km2": 300000,
+    "highest_point": 2954,
+    "difficulty": 2,
+    "trap_note": "Über 100 Millionen Einwohner! Mehr als Ägypten oder Deutschland."
+  },
+  {
+    "id": "mx",
+    "name": "Mexiko",
+    "population": 128900000,
+    "area_km2": 1964375,
+    "highest_point": 5636,
+    "difficulty": 1,
+    "trap_note": "Einwohnerzahl oft unterschätzt (Platz 10 der Welt)."
+  },
+  {
+    "id": "cd",
+    "name": "DR Kongo",
+    "population": 102300000,
+    "area_km2": 2344858,
+    "highest_point": 5109,
+    "difficulty": 3,
+    "trap_note": "Riesig in Fläche (größer als Grönland) und Bevölkerung (über 100 Mio)."
+  },
+  {
+    "id": "ir",
+    "name": "Iran",
+    "population": 88600000,
+    "area_km2": 1648195,
+    "highest_point": 5610,
+    "difficulty": 2,
+    "trap_note": "Hat mehr Einwohner als Deutschland und ist fast 5x so groß."
+  },
+  {
+    "id": "gb",
+    "name": "Vereinigtes Königreich",
+    "population": 67700000,
+    "area_km2": 242495,
+    "highest_point": 1345,
+    "difficulty": 1,
+    "trap_note": "Flächenmäßig kleiner als viele denken (kleiner als Italien oder Neuseeland)."
+  },
+  {
+    "id": "fr",
+    "name": "Frankreich",
+    "population": 68000000,
+    "area_km2": 551695,
+    "highest_point": 4810,
+    "difficulty": 1,
+    "trap_note": "Flächenmäßig das größte Land der EU (Metropolitan)."
+  },
+  {
+    "id": "it",
+    "name": "Italien",
+    "population": 58900000,
+    "area_km2": 301340,
+    "highest_point": 4810,
+    "difficulty": 1,
+    "trap_note": "Bevölkerung schrumpft, wird bald von Ländern wie Tansania überholt."
+  },
+  {
+    "id": "kr",
+    "name": "Südkorea",
+    "population": 51700000,
+    "area_km2": 100210,
+    "highest_point": 1950,
+    "difficulty": 2,
+    "trap_note": "Winzige Fläche (wie Island), aber 50+ Millionen Menschen."
+  },
+  {
+    "id": "co",
+    "name": "Kolumbien",
+    "population": 51900000,
+    "area_km2": 1141748,
+    "highest_point": 5700,
+    "difficulty": 2,
+    "trap_note": "Mehr Einwohner als Spanien oder Argentinien."
+  },
+  {
+    "id": "ar",
+    "name": "Argentinien",
+    "population": 46200000,
+    "area_km2": 2780400,
+    "highest_point": 6961,
+    "difficulty": 2,
+    "trap_note": "Achtgrößtes Land der Welt! Der Aconcagua ist der höchste Berg außerhalb Asiens."
+  },
+  {
+    "id": "za",
+    "name": "Südafrika",
+    "population": 60600000,
+    "area_km2": 1221037,
+    "highest_point": 3450,
+    "difficulty": 2,
+    "trap_note": "Fast so groß wie zwei Mal Frankreich."
+  },
+  {
+    "id": "tz",
+    "name": "Tansania",
+    "population": 67400000,
+    "area_km2": 945087,
+    "highest_point": 5895,
+    "difficulty": 3,
+    "trap_note": "Heimat des Kilimandscharo (höchster Berg Afrikas) und schnell wachsende Bevölkerung."
+  },
+  {
+    "id": "mm",
+    "name": "Myanmar",
+    "population": 54200000,
+    "area_km2": 676578,
+    "highest_point": 5881,
+    "difficulty": 3,
+    "trap_note": "Unterschätzt: Größer als Frankreich und fast so viele Einwohner wie Italien."
+  },
+  {
+    "id": "th",
+    "name": "Thailand",
+    "population": 71700000,
+    "area_km2": 513120,
+    "highest_point": 2565,
+    "difficulty": 2,
+    "trap_note": "Hat mehr Einwohner als Großbritannien oder Frankreich."
+  },
+  {
+    "id": "ua",
+    "name": "Ukraine",
+    "population": 36700000,
+    "area_km2": 603500,
+    "highest_point": 2061,
+    "difficulty": 2,
+    "trap_note": "Flächenmäßig eines der größten Länder Europas."
+  },
+  {
+    "id": "pl",
+    "name": "Polen",
+    "population": 36800000,
+    "area_km2": 312696,
+    "highest_point": 2499,
+    "difficulty": 2,
+    "trap_note": "Vergleichbar mit Kanada bei der Einwohnerzahl."
+  },
+  {
+    "id": "sa",
+    "name": "Saudi-Arabien",
+    "population": 36400000,
+    "area_km2": 2149690,
+    "highest_point": 3000,
+    "difficulty": 2,
+    "trap_note": "Riesige Fläche (Platz 12), aber fast nur Wüste."
+  },
+  {
+    "id": "pe",
+    "name": "Peru",
+    "population": 34000000,
+    "area_km2": 1285216,
+    "highest_point": 6768,
+    "difficulty": 2,
+    "trap_note": "Enorm hoch gelegene Gebiete (Anden)."
+  },
+  {
+    "id": "my",
+    "name": "Malaysia",
+    "population": 33900000,
+    "area_km2": 330803,
+    "highest_point": 4095,
+    "difficulty": 3,
+    "trap_note": "Über 4000m hoher Berg (Kinabalu), höher als alles in Deutschland/Japan."
+  },
+  {
+    "id": "uz",
+    "name": "Usbekistan",
+    "population": 35600000,
+    "area_km2": 447400,
+    "highest_point": 4643,
+    "difficulty": 3,
+    "trap_note": "Bevölkerungsreichstes Land in Zentralasien."
+  },
+  {
+    "id": "ao",
+    "name": "Angola",
+    "population": 35600000,
+    "area_km2": 1246700,
+    "highest_point": 2620,
+    "difficulty": 3,
+    "trap_note": "Riesige Fläche, größer als Südafrika."
+  },
+  {
+    "id": "gh",
+    "name": "Ghana",
+    "population": 33500000,
+    "area_km2": 238533,
+    "highest_point": 885,
+    "difficulty": 3,
+    "trap_note": "Mehr Einwohner als Australien oder Saudi-Arabien."
+  },
+  {
+    "id": "af",
+    "name": "Afghanistan",
+    "population": 41100000,
+    "area_km2": 652230,
+    "highest_point": 7492,
+    "difficulty": 3,
+    "trap_note": "Extreme Bevölkerungsexplosion, mehr Einwohner als Kanada oder Polen."
+  },
+  {
+    "id": "se",
+    "name": "Schweden",
+    "population": 10500000,
+    "area_km2": 450295,
+    "highest_point": 2106,
+    "difficulty": 2,
+    "trap_note": "Große Fläche (größer als Deutschland), aber sehr leer."
+  },
+  {
+    "id": "no",
+    "name": "Norwegen",
+    "population": 5500000,
+    "area_km2": 385207,
+    "highest_point": 2469,
+    "difficulty": 2,
+    "trap_note": "Sehr lange Küstenlinie, aber wenige Menschen."
+  },
+  {
+    "id": "fi",
+    "name": "Finnland",
+    "population": 5600000,
+    "area_km2": 338424,
+    "highest_point": 1324,
+    "difficulty": 2,
+    "trap_note": "Ähnlich wie Norwegen/Schweden: Groß aber leer."
+  },
+  {
+    "id": "nz",
+    "name": "Neuseeland",
+    "population": 5200000,
+    "area_km2": 268021,
+    "highest_point": 3724,
+    "difficulty": 2,
+    "trap_note": "Aoraki/Mount Cook ist fast so hoch wie der Fuji."
+  },
+  {
+    "id": "pg",
+    "name": "Papua-Neuguinea",
+    "population": 10100000,
+    "area_km2": 462840,
+    "highest_point": 4509,
+    "difficulty": 3,
+    "trap_note": "Oft völlig unbekannt: Riesige Insel, sehr hohe Berge (höher als die Alpen!)."
+  },
+  {
+    "id": "cl",
+    "name": "Chile",
+    "population": 19600000,
+    "area_km2": 756102,
+    "highest_point": 6893,
+    "difficulty": 2,
+    "trap_note": "Heimat des Ojos del Salado (höchster Vulkan der Erde)."
+  },
+  {
+    "id": "ve",
+    "name": "Venezuela",
+    "population": 28300000,
+    "area_km2": 916445,
+    "highest_point": 4978,
+    "difficulty": 2,
+    "trap_note": "Fast 3x so groß wie Deutschland."
+  },
+  {
+    "id": "kp",
+    "name": "Nordkorea",
+    "population": 26000000,
+    "area_km2": 120540,
+    "highest_point": 2744,
+    "difficulty": 2,
+    "trap_note": "Mehr Einwohner als Australien oder Taiwan."
+  },
+  {
+    "id": "tw",
+    "name": "Taiwan",
+    "population": 23600000,
+    "area_km2": 36193,
+    "highest_point": 3952,
+    "difficulty": 2,
+    "trap_note": "Extrem hohe Berge (Yu Shan ~4000m) auf einer kleinen Insel."
+  },
+  {
+    "id": "lk",
+    "name": "Sri Lanka",
+    "population": 22200000,
+    "area_km2": 65610,
+    "highest_point": 2524,
+    "difficulty": 2,
+    "trap_note": "Kleine Insel mit der Bevölkerung von Australien."
+  },
+  {
+    "id": "mg",
+    "name": "Madagaskar",
+    "population": 29600000,
+    "area_km2": 587041,
+    "highest_point": 2876,
+    "difficulty": 2,
+    "trap_note": "Viertgrößte Insel der Welt, größer als Frankreich (Metropolitan)."
+  },
+  {
+    "id": "bt",
+    "name": "Bhutan",
+    "population": 782000,
+    "area_km2": 38394,
+    "highest_point": 7570,
+    "difficulty": 3,
+    "trap_note": "Der höchste unbestiegene Berg der Welt (Gangkhar Puensum) liegt hier."
+  },
+  {
+    "id": "bo",
+    "name": "Bolivien",
+    "population": 12200000,
+    "area_km2": 1098581,
+    "highest_point": 6542,
+    "difficulty": 2,
+    "trap_note": "Eines der höchstgelegenen Länder der Welt."
+  },
+  {
+    "id": "be",
+    "name": "Belgien",
+    "population": 11700000,
+    "area_km2": 30528,
+    "highest_point": 694,
+    "difficulty": 2,
+    "trap_note": "Sehr klein, aber mehr Einwohner als Griechenland oder Portugal."
+  },
+  {
+    "id": "at",
+    "name": "Österreich",
+    "population": 9000000,
+    "area_km2": 83871,
+    "highest_point": 3798,
+    "difficulty": 2,
+    "trap_note": "Kleiner als man denkt, aber hohe Berge (Großglockner)."
+  },
+  {
+    "id": "pt",
+    "name": "Portugal",
+    "population": 10400000,
+    "area_km2": 92090,
+    "highest_point": 2351,
+    "difficulty": 2,
+    "trap_note": "Höchster Punkt liegt auf den Azoren (Pico), nicht auf dem Festland!"
+  },
+  {
+    "id": "gr",
+    "name": "Griechenland",
+    "population": 10400000,
+    "area_km2": 131957,
+    "highest_point": 2918,
+    "difficulty": 2,
+    "trap_note": "Sehr bergig (Olymp), nicht nur Strände."
+  },
+  {
+    "id": "sg",
+    "name": "Singapur",
+    "population": 5600000,
+    "area_km2": 728,
+    "highest_point": 163,
+    "difficulty": 1,
+    "trap_note": "Winziger Stadtstaat mit mehr Einwohnern als Norwegen oder Neuseeland."
+  },
+  {
+    "id": "hk",
+    "name": "Hongkong",
+    "population": 7300000,
+    "area_km2": 1106,
+    "highest_point": 957,
+    "difficulty": 2,
+    "trap_note": "Mehr Einwohner als Dänemark oder Singapur."
+  },
+  {
+    "id": "qa",
+    "name": "Katar",
+    "population": 2700000,
+    "area_km2": 11586,
+    "highest_point": 103,
+    "difficulty": 3,
+    "trap_note": "Extrem flach und sehr klein."
+  },
+  {
+    "id": "ae",
+    "name": "Ver. Arab. Emirate",
+    "population": 9400000,
+    "area_km2": 83600,
+    "highest_point": 1910,
+    "difficulty": 2,
+    "trap_note": "Mehr Einwohner als Österreich oder die Schweiz!"
+  },
+  {
+    "id": "na",
+    "name": "Namibia",
+    "population": 2600000,
+    "area_km2": 825615,
+    "highest_point": 2573,
+    "difficulty": 3,
+    "trap_note": "Eines der am dünnsten besiedelten Länder. Riesig (2x Deutschland), aber leer."
+  },
+  {
+    "id": "ls",
+    "name": "Lesotho",
+    "population": 2300000,
+    "area_km2": 30355,
+    "highest_point": 3482,
+    "difficulty": 3,
+    "trap_note": "Das 'Königreich im Himmel'. Der tiefste Punkt des Landes liegt auf 1400m!"
+  },
+  {
+    "id": "cu",
+    "name": "Kuba",
+    "population": 11200000,
+    "area_km2": 109884,
+    "highest_point": 1974,
+    "difficulty": 2,
+    "trap_note": "Größte Insel der Karibik."
+  },
+  {
+    "id": "pr",
+    "name": "Puerto Rico",
+    "population": 3200000,
+    "area_km2": 9104,
+    "highest_point": 1338,
+    "difficulty": 3,
+    "trap_note": "Kleine Insel mit der Bevölkerung der Mongolei."
+  },
+  {
+    "id": "ad",
+    "name": "Andorra",
+    "population": 80000,
+    "area_km2": 468,
+    "highest_point": 2942,
+    "difficulty": 3,
+    "trap_note": "Kleiner Zwergstaat in den Pyrenäen."
+  },
+  {
+    "id": "ly",
+    "name": "Libyen",
+    "population": 6800000,
+    "area_km2": 1759540,
+    "highest_point": 2267,
+    "difficulty": 3,
+    "trap_note": "Riesige Fläche (Platz 16 der Welt), aber sehr wenige Einwohner."
+  }
+]

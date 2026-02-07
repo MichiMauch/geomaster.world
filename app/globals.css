@@ -208,6 +208,10 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--glow-success);
 }
 
+.glow-error {
+  box-shadow: var(--glow-error);
+}
+
 /* Focus Ring */
 .focus-ring:focus-visible {
   outline: none;
@@ -629,6 +633,47 @@ h1, h2, h3, h4, h5, h6 {
 /* ============================================
    WINNER CELEBRATION ANIMATIONS
    ============================================ */
+
+/* Timer Shrink Bar — shrinks from 100% to 0% over 10s with color change */
+@keyframes timer-shrink {
+  0% {
+    width: 100%;
+    background-color: var(--primary);
+  }
+  60% {
+    background-color: var(--primary);
+  }
+  75% {
+    background-color: var(--accent);
+  }
+  90% {
+    background-color: var(--error);
+  }
+  100% {
+    width: 0%;
+    background-color: var(--error);
+  }
+}
+
+.animate-timer-shrink {
+  animation: timer-shrink 10s linear forwards;
+}
+
+/* Float Up — for "+850" points display */
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float-up {
+  animation: float-up 800ms ease-out forwards;
+}
 
 /* Winner Entrance - Tilted dramatic entry */
 @keyframes winner-entrance {

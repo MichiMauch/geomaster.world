@@ -431,6 +431,28 @@ export const notifications = sqliteTable("notifications", {
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 
+// Horizon Items (Higher or Lower game)
+export const horizonItems = sqliteTable("stats_battle_items", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  value: real("value").notNull(),
+  unit: text("unit").notNull(),
+  category: text("category").notNull(),
+  difficulty: integer("difficulty").notNull().default(2),
+  trapNote: text("trap_note"),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+// Horizon Results (Higher or Lower game results)
+export const horizonResults = sqliteTable("horizonResults", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  userId: text("userId").references(() => users.id, { onDelete: "cascade" }),
+  guestId: text("guestId"),
+  score: integer("score").notNull(),
+  roundsSurvived: integer("roundsSurvived").notNull(),
+  completedAt: integer("completedAt", { mode: "timestamp" }).notNull(),
+});
+
 // Types
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type RegistrationAttempt = typeof registrationAttempts.$inferSelect;
@@ -455,3 +477,5 @@ export type NewsItem = typeof newsItems.$inferSelect;
 export type DuelResult = typeof duelResults.$inferSelect;
 export type DuelStat = typeof duelStats.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type HorizonItem = typeof horizonItems.$inferSelect;
+export type HorizonResult = typeof horizonResults.$inferSelect;

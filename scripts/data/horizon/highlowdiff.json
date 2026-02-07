@@ -1,0 +1,344 @@
+[
+  {
+    "id": "c_tokyo",
+    "name": "Tokio (Metropolregion)",
+    "value": 37200000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 1,
+    "trap_note": "Die größte Metropolregion der Welt."
+  },
+  {
+    "id": "c_delhi",
+    "name": "Delhi",
+    "value": 32900000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 2,
+    "trap_note": "Rasant gewachsen, fast so groß wie Tokio."
+  },
+  {
+    "id": "c_shanghai",
+    "name": "Shanghai",
+    "value": 29200000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 2,
+    "trap_note": "Größer als New York oder Mexiko-Stadt."
+  },
+  {
+    "id": "c_dhaka",
+    "name": "Dhaka (Bangladesch)",
+    "value": 23200000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 3,
+    "trap_note": "Oft unterschätzt: Größer als New York, Moskau oder Peking."
+  },
+  {
+    "id": "c_nyc",
+    "name": "New York City (Metro)",
+    "value": 18900000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 1,
+    "trap_note": "Wirkt riesig, ist aber kleiner als Manila oder Kairo."
+  },
+  {
+    "id": "c_istanbul",
+    "name": "Istanbul",
+    "value": 15800000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 2,
+    "trap_note": "Größte Stadt Europas (wenn man den asiatischen Teil mitzählt) – größer als London oder Paris."
+  },
+  {
+    "id": "c_london",
+    "name": "London",
+    "value": 9500000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 1,
+    "trap_note": "Kleiner als man denkt im globalen Vergleich (kleiner als Wuhan oder Lima)."
+  },
+  {
+    "id": "c_berlin",
+    "name": "Berlin",
+    "value": 3700000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 1,
+    "trap_note": "Winzig im Vergleich zu asiatischen Megacities."
+  },
+  {
+    "id": "c_chongqing",
+    "name": "Chongqing",
+    "value": 32000000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 3,
+    "trap_note": "Die größte Stadt, die niemand kennt. Mehr Einwohner als Shanghai (je nach Definition)."
+  },
+  {
+    "id": "l_burj",
+    "name": "Burj Khalifa",
+    "value": 828,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 1,
+    "trap_note": "Das höchste Gebäude der Welt. Fast 1km hoch."
+  },
+  {
+    "id": "l_shanghai_tower",
+    "name": "Shanghai Tower",
+    "value": 632,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 2,
+    "trap_note": "Zweithöchstes Gebäude, deutlich höher als das One World Trade Center."
+  },
+  {
+    "id": "l_eiffel",
+    "name": "Eiffelturm",
+    "value": 330,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 1,
+    "trap_note": "Kleiner als das Empire State Building."
+  },
+  {
+    "id": "l_empire",
+    "name": "Empire State Building",
+    "value": 443,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 1,
+    "trap_note": "Höher als der Eiffelturm, aber kleiner als der Taipei 101."
+  },
+  {
+    "id": "l_giza",
+    "name": "Cheops-Pyramide",
+    "value": 138,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 2,
+    "trap_note": "Wirkt massiv, ist aber niedriger als der Kölner Dom."
+  },
+  {
+    "id": "l_cologne",
+    "name": "Kölner Dom",
+    "value": 157,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 2,
+    "trap_note": "Höher als die Pyramiden von Gizeh!"
+  },
+  {
+    "id": "l_liberty",
+    "name": "Freiheitsstatue",
+    "value": 93,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 2,
+    "trap_note": "Überraschend klein! Kleiner als Big Ben oder der Kölner Dom."
+  },
+  {
+    "id": "l_ulm",
+    "name": "Ulmer Münster",
+    "value": 161,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 3,
+    "trap_note": "Der höchste Kirchturm der Welt (höher als der Kölner Dom)."
+  },
+  {
+    "id": "l_titanic",
+    "name": "Titanic (Länge)",
+    "value": 269,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 2,
+    "trap_note": "Kürzer als moderne Kreuzfahrtschiffe (Oasis Class ~360m)."
+  },
+  {
+    "id": "n_everest",
+    "name": "Mount Everest",
+    "value": 8848,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 1,
+    "trap_note": "Der Höchste über dem Meeresspiegel."
+  },
+  {
+    "id": "n_k2",
+    "name": "K2",
+    "value": 8611,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 2,
+    "trap_note": "Nur knapp kleiner als der Everest, aber viel schwieriger."
+  },
+  {
+    "id": "n_montblanc",
+    "name": "Mont Blanc",
+    "value": 4807,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 1,
+    "trap_note": "Höchster Berg der Alpen, aber ein Zwerg gegen Himalaya oder Anden."
+  },
+  {
+    "id": "n_kilimanjaro",
+    "name": "Kilimandscharo",
+    "value": 5895,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 2,
+    "trap_note": "Höher als der Mont Blanc oder alle Berge in den USA (Lower 48)."
+  },
+  {
+    "id": "n_fuji",
+    "name": "Mount Fuji",
+    "value": 3776,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 2,
+    "trap_note": "Kleiner als der Mont Blanc."
+  },
+  {
+    "id": "n_nile",
+    "name": "Nil",
+    "value": 6650,
+    "unit": "Kilometer",
+    "category": "nature",
+    "difficulty": 1,
+    "trap_note": "Gilt meist als der längste Fluss der Erde (knapp vor Amazonas)."
+  },
+  {
+    "id": "n_amazon",
+    "name": "Amazonas",
+    "value": 6400,
+    "unit": "Kilometer",
+    "category": "nature",
+    "difficulty": 1,
+    "trap_note": "Zweitlängster Fluss, aber wasserreichster."
+  },
+  {
+    "id": "n_yangtze",
+    "name": "Jangtsekiang",
+    "value": 6300,
+    "unit": "Kilometer",
+    "category": "nature",
+    "difficulty": 2,
+    "trap_note": "Längster Fluss Asiens, länger als der Mississippi."
+  },
+  {
+    "id": "n_rhine",
+    "name": "Rhein",
+    "value": 1230,
+    "unit": "Kilometer",
+    "category": "nature",
+    "difficulty": 1,
+    "trap_note": "Sehr wichtig, aber kurz im globalen Vergleich."
+  },
+  {
+    "id": "n_danube",
+    "name": "Donau",
+    "value": 2850,
+    "unit": "Kilometer",
+    "category": "nature",
+    "difficulty": 2,
+    "trap_note": "Zweitlängster Fluss Europas, mehr als doppelt so lang wie der Rhein."
+  },
+  {
+    "id": "o_pacific",
+    "name": "Pazifischer Ozean (Tiefe)",
+    "value": 11034,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 1,
+    "trap_note": "Marianengraben: Tiefer als der Everest hoch ist."
+  },
+  {
+    "id": "o_atlantic",
+    "name": "Atlantik (Tiefe)",
+    "value": 8408,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 2,
+    "trap_note": "Puerto-Rico-Graben. Weniger tief als der Pazifik."
+  },
+  {
+    "id": "o_mediterranean",
+    "name": "Mittelmeer (Tiefe)",
+    "value": 5267,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 3,
+    "trap_note": "Calypso-Tief: Tiefer als der Mont Blanc hoch ist!"
+  },
+  {
+    "id": "c_lagos",
+    "name": "Lagos (Nigeria)",
+    "value": 21000000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 3,
+    "trap_note": "Größte Stadt Afrikas, größer als New York oder Peking."
+  },
+  {
+    "id": "c_mexico",
+    "name": "Mexiko-Stadt",
+    "value": 21800000,
+    "unit": "Einwohner",
+    "category": "city",
+    "difficulty": 2,
+    "trap_note": "Riesig, aber mittlerweile von vielen asiatischen Städten überholt."
+  },
+  {
+    "id": "l_wall",
+    "name": "Chinesische Mauer (Länge)",
+    "value": 21196,
+    "unit": "Kilometer",
+    "category": "landmark",
+    "difficulty": 1,
+    "trap_note": "Länger als die Strecke vom Nordpol zum Südpol!"
+  },
+  {
+    "id": "l_gotthard",
+    "name": "Gotthard-Basistunnel",
+    "value": 57,
+    "unit": "Kilometer",
+    "category": "landmark",
+    "difficulty": 2,
+    "trap_note": "Längster Eisenbahntunnel der Welt."
+  },
+  {
+    "id": "n_titicaca",
+    "name": "Titicacasee (Höhe)",
+    "value": 3812,
+    "unit": "Meter",
+    "category": "nature",
+    "difficulty": 3,
+    "trap_note": "Höchster schiffbarer See. Liegt höher als die Zugspitze."
+  },
+  {
+    "id": "l_brandenburg",
+    "name": "Brandenburger Tor",
+    "value": 26,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 1,
+    "trap_note": "Kleiner als der Arc de Triomphe in Paris (50m)."
+  },
+  {
+    "id": "l_arc",
+    "name": "Arc de Triomphe",
+    "value": 50,
+    "unit": "Meter",
+    "category": "landmark",
+    "difficulty": 2,
+    "trap_note": "Fast doppelt so hoch wie das Brandenburger Tor."
+  }
+]

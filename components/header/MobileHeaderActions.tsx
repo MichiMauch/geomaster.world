@@ -10,6 +10,7 @@ export function MobileHeaderActions() {
   const { data: session, status } = useSession();
   const params = useParams();
   const locale = (params.locale as string) || "de";
+  const [imgError, setImgError] = useState(false);
 
   if (status === "loading") {
     return (
@@ -33,8 +34,6 @@ export function MobileHeaderActions() {
       </div>
     );
   }
-
-  const [imgError, setImgError] = useState(false);
 
   const initials = user.name
     ? user.name

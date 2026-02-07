@@ -81,6 +81,54 @@ const categoryDescriptions: Record<string, Record<string, string>> = {
   },
 };
 
+interface GameCardProps {
+  image: string;
+  title: string;
+  description: string;
+  actionText: string;
+  icon: React.ReactNode;
+  badge?: string;
+  onClick: () => void;
+}
+
+function GameCard({ image, title, description, actionText, icon, badge, onClick }: GameCardProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-xl border border-primary/40 hover:border-primary transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.4)] text-left cursor-pointer min-h-[240px]"
+    >
+      <div
+        className="absolute inset-0 bg-cover bg-center rounded-sm transition-transform duration-300 group-hover:scale-105"
+        style={{ backgroundImage: `url('${image}')` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 transition-colors" />
+      {badge && (
+        <Badge variant="accent" size="md" className="absolute top-3 right-3 z-20">
+          {badge}
+        </Badge>
+      )}
+      <div className="relative z-10 p-6 flex flex-col h-full">
+        <div className="mb-4">{icon}</div>
+        <div className="flex-1 flex flex-col">
+          <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
+          <p className="text-sm text-white/80 flex-1">{description}</p>
+        </div>
+        <div className="mt-4 flex items-center text-sm font-medium text-white/70 group-hover:text-white transition-colors">
+          <span>{actionText}</span>
+          <svg
+            className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 interface NewsItem {
   id: string;
   title: string;
@@ -170,67 +218,39 @@ export default function GuesserCategoriesPage() {
           {/* Categories (3 cols) */}
           <div className="lg:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {GAME_CATEGORIES.map((category) => {
-                const name = categoryNames[category.id][locale] || categoryNames[category.id].en;
-                const description = categoryDescriptions[category.id][locale] || categoryDescriptions[category.id].en;
+              {/* Horizon Card */}
+              <GameCard
+                image="/images/horizon-bg.webp"
+                title="Horizon"
+                description={
+                  locale === "de"
+                    ? "Höher oder tiefer? Vergleiche Länder, Berge, Städte und mehr!"
+                    : locale === "sl"
+                      ? "Višje ali nižje? Primerjaj države, gore, mesta in več!"
+                      : "Higher or lower? Compare countries, mountains, cities and more!"
+                }
+                actionText={locale === "de" ? "Jetzt spielen" : locale === "sl" ? "Igraj zdaj" : "Play now"}
+                icon={<span className="text-4xl">🔺🔻</span>}
+                badge={locale === "de" ? "NEU" : locale === "sl" ? "NOVO" : "NEW"}
+                onClick={() => router.push(`/${locale}/guesser/horizon`)}
+              />
 
-                return (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className="group relative overflow-hidden rounded-xl border border-primary/40 hover:border-primary transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.4)] text-left cursor-pointer min-h-[240px]"
-                  >
-                    {/* Background image */}
-                    <div
-                      className="absolute inset-0 bg-cover bg-center rounded-sm transition-transform duration-300 group-hover:scale-105"
-                      style={{ backgroundImage: `url('${category.image}')` }}
-                    />
-
-                    {/* Dark overlay for readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 transition-colors" />
-
-                    {/* Badge */}
-                    {category.badge && (
-                      <Badge variant="accent" size="md" className="absolute top-3 right-3 z-20">
-                        {category.badge[locale as keyof typeof category.badge] || category.badge.en}
-                      </Badge>
-                    )}
-
-                    {/* Content */}
-                    <div className="relative z-10 p-6 flex flex-col h-full">
-                      {/* Icon */}
-                      <Image src={category.icon} alt="" width={48} height={48} className="w-12 h-12 mb-4 transition-transform group-hover:scale-110" />
-
-                      {/* Text */}
-                      <div className="flex-1 flex flex-col">
-                        <h2 className="text-xl font-bold text-white mb-2">
-                          {name}
-                        </h2>
-                        <p className="text-sm text-white/80 flex-1">
-                          {description}
-                        </p>
-                      </div>
-
-                      {/* Arrow indicator */}
-                      <div className="mt-4 flex items-center text-sm font-medium text-white/70 group-hover:text-white transition-colors">
-                        <span>
-                          {locale === "de" ? "Spiele entdecken" :
-                           locale === "en" ? "Explore games" :
-                           "Odkrij igre"}
-                        </span>
-                        <svg
-                          className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+              {GAME_CATEGORIES.map((category) => (
+                <GameCard
+                  key={category.id}
+                  image={category.image}
+                  title={categoryNames[category.id][locale] || categoryNames[category.id].en}
+                  description={categoryDescriptions[category.id][locale] || categoryDescriptions[category.id].en}
+                  actionText={
+                    locale === "de" ? "Spiele entdecken" :
+                    locale === "en" ? "Explore games" :
+                    "Odkrij igre"
+                  }
+                  icon={<Image src={category.icon} alt="" width={48} height={48} className="w-12 h-12 transition-transform group-hover:scale-110" />}
+                  badge={category.badge ? (category.badge[locale as keyof typeof category.badge] || category.badge.en) : undefined}
+                  onClick={() => handleCategoryClick(category.id)}
+                />
+              ))}
             </div>
           </div>
 

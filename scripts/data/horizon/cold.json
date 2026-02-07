@@ -1,0 +1,344 @@
+[
+  {
+    "id": "i_greenland",
+    "name": "Grönland (Fläche)",
+    "value": 2130800,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 1,
+    "trap_note": "Die größte Insel der Welt (Australien zählt als Kontinent)."
+  },
+  {
+    "id": "i_newguinea",
+    "name": "Neuguinea (Fläche)",
+    "value": 785753,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Zweitgrößte Insel der Welt! Größer als die Türkei oder Texas."
+  },
+  {
+    "id": "i_borneo",
+    "name": "Borneo (Fläche)",
+    "value": 743330,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Fast so groß wie Neuguinea. Geteilt zwischen drei Ländern."
+  },
+  {
+    "id": "i_madagascar",
+    "name": "Madagaskar (Fläche)",
+    "value": 587041,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 1,
+    "trap_note": "Größer als Frankreich (Metropolitan) oder Spanien."
+  },
+  {
+    "id": "i_baffin",
+    "name": "Baffininsel (Fläche)",
+    "value": 507451,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 3,
+    "trap_note": "Kanadas größte Insel. Größer als Spanien, aber kaum bewohnt."
+  },
+  {
+    "id": "i_sumatra",
+    "name": "Sumatra (Fläche)",
+    "value": 473481,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Größer als Deutschland oder Japan."
+  },
+  {
+    "id": "i_honshu",
+    "name": "Honshū (Fläche)",
+    "value": 227960,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Japans Hauptinsel. Größer als Großbritannien."
+  },
+  {
+    "id": "i_gb",
+    "name": "Großbritannien (Fläche)",
+    "value": 209331,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 1,
+    "trap_note": "Kleiner als Honshu (Japan) oder Sumatra."
+  },
+  {
+    "id": "i_victoria",
+    "name": "Victoria Island (Fläche)",
+    "value": 217291,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 3,
+    "trap_note": "Riesige kanadische Insel, größer als Großbritannien, aber fast niemand kennt sie."
+  },
+  {
+    "id": "i_ellesmere",
+    "name": "Ellesmere Island (Fläche)",
+    "value": 196235,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 3,
+    "trap_note": "Noch eine kanadische Rieseninsel. Fast so groß wie Großbritannien."
+  },
+  {
+    "id": "i_java",
+    "name": "Java (Fläche)",
+    "value": 128297,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Relativ klein (wie Griechenland), aber hier leben 150 Mio. Menschen!"
+  },
+  {
+    "id": "i_cuba",
+    "name": "Kuba (Fläche)",
+    "value": 105806,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Größer als Island oder Irland."
+  },
+  {
+    "id": "i_iceland",
+    "name": "Island (Fläche)",
+    "value": 103000,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Kleiner als Kuba!"
+  },
+  {
+    "id": "i_ireland",
+    "name": "Irland (Insel gesamt)",
+    "value": 84421,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Kleiner als Island oder Kuba."
+  },
+  {
+    "id": "i_hokkaido",
+    "name": "Hokkaidō (Fläche)",
+    "value": 77983,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Japans Nordinsel. Fast so groß wie Irland."
+  },
+  {
+    "id": "i_hispaniola",
+    "name": "Hispaniola (Fläche)",
+    "value": 76192,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Dom Rep + Haiti. Zweitgrößte Karibikinsel, kleiner als Kuba."
+  },
+  {
+    "id": "i_tasmania",
+    "name": "Tasmanien (Fläche)",
+    "value": 65022,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 3,
+    "trap_note": "Größer als die Schweiz!"
+  },
+  {
+    "id": "i_sicily",
+    "name": "Sizilien (Fläche)",
+    "value": 25711,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Größte Insel im Mittelmeer."
+  },
+  {
+    "id": "i_sardinia",
+    "name": "Sardinien (Fläche)",
+    "value": 24090,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 2,
+    "trap_note": "Nur knapp kleiner als Sizilien."
+  },
+  {
+    "id": "i_mallorca",
+    "name": "Mallorca (Fläche)",
+    "value": 3640,
+    "unit": "km²",
+    "category": "islands",
+    "difficulty": 1,
+    "trap_note": "Winzig im Vergleich. Sizilien ist 7x größer."
+  },
+  {
+    "id": "d_london_ny",
+    "name": "London ↔ New York",
+    "value": 5570,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 1,
+    "trap_note": "Der Atlantik ist 'kleiner' als man denkt. Kürzer als London nach Delhi."
+  },
+  {
+    "id": "d_berlin_beijing",
+    "name": "Berlin ↔ Peking",
+    "value": 7350,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 2,
+    "trap_note": "Weiter als über den Atlantik."
+  },
+  {
+    "id": "d_la_tokyo",
+    "name": "Los Angeles ↔ Tokio",
+    "value": 8800,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 2,
+    "trap_note": "Der Pazifik ist riesig! Viel weiter als London-NY."
+  },
+  {
+    "id": "d_africa_length",
+    "name": "Länge Afrika (Nord-Süd)",
+    "value": 8000,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 2,
+    "trap_note": "Von Kairo nach Kapstadt. Afrika ist gigantisch."
+  },
+  {
+    "id": "d_russia_width",
+    "name": "Breite Russland (West-Ost)",
+    "value": 9000,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 2,
+    "trap_note": "Das breiteste Land der Erde. 11 Zeitzonen."
+  },
+  {
+    "id": "d_chile_length",
+    "name": "Länge Chile (Nord-Süd)",
+    "value": 4300,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 2,
+    "trap_note": "Länger als die Breite der USA oder die Strecke Lissabon-Moskau."
+  },
+  {
+    "id": "d_earth_circum",
+    "name": "Erdumfang (Äquator)",
+    "value": 40075,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 1,
+    "trap_note": "Einmal ganz rum."
+  },
+  {
+    "id": "d_iss_orbit",
+    "name": "Strecke der ISS (pro Tag)",
+    "value": 676000,
+    "unit": "km",
+    "category": "distance",
+    "difficulty": 3,
+    "trap_note": "Sie umrundet die Erde 16 Mal am Tag."
+  },
+  {
+    "id": "t_hot_deathvalley",
+    "name": "Death Valley (Hitzerekord)",
+    "value": 56.7,
+    "unit": "°C",
+    "category": "extremes",
+    "difficulty": 1,
+    "trap_note": "Die höchste offiziell gemessene Lufttemperatur der Erde."
+  },
+  {
+    "id": "t_cold_antarctica",
+    "name": "Antarktis (Kälterekord)",
+    "value": -89.2,
+    "unit": "°C",
+    "category": "extremes",
+    "difficulty": 1,
+    "trap_note": "Wostok-Station. Kälter als Trockeneis."
+  },
+  {
+    "id": "t_cold_oymyakon",
+    "name": "Oimjakon (Bewohnter Kälterekord)",
+    "value": -67.7,
+    "unit": "°C",
+    "category": "extremes",
+    "difficulty": 2,
+    "trap_note": "Kältester dauerhaft bewohnter Ort (Russland)."
+  },
+  {
+    "id": "w_caspian",
+    "name": "Kaspisches Meer (Fläche)",
+    "value": 371000,
+    "unit": "km²",
+    "category": "lakes",
+    "difficulty": 1,
+    "trap_note": "Der größte See der Welt. Größer als Deutschland!"
+  },
+  {
+    "id": "w_superior",
+    "name": "Oberer See (Lake Superior)",
+    "value": 82103,
+    "unit": "km²",
+    "category": "lakes",
+    "difficulty": 2,
+    "trap_note": "Größter Süßwassersee nach Fläche. So groß wie Österreich."
+  },
+  {
+    "id": "w_victoria",
+    "name": "Victoriasee (Fläche)",
+    "value": 68800,
+    "unit": "km²",
+    "category": "lakes",
+    "difficulty": 2,
+    "trap_note": "Größter See Afrikas. Größer als Bayern."
+  },
+  {
+    "id": "w_baikal_depth",
+    "name": "Baikalsee (Tiefe)",
+    "value": 1642,
+    "unit": "Meter",
+    "category": "lakes",
+    "difficulty": 2,
+    "trap_note": "Der tiefste See der Welt. Tiefer als das Burj Khalifa hoch ist!"
+  },
+  {
+    "id": "w_bodensee_depth",
+    "name": "Bodensee (Tiefe)",
+    "value": 251,
+    "unit": "Meter",
+    "category": "lakes",
+    "difficulty": 3,
+    "trap_note": "Ziemlich tief, aber eine Pfütze gegen den Baikal."
+  },
+  {
+    "id": "misc_rain_mawsynram",
+    "name": "Mawsynram (Regen pro Jahr)",
+    "value": 11871,
+    "unit": "mm",
+    "category": "extremes",
+    "difficulty": 3,
+    "trap_note": "Der feuchteste Ort der Welt (Indien). Fast 12 Meter Regen!"
+  },
+  {
+    "id": "misc_rain_london",
+    "name": "London (Regen pro Jahr)",
+    "value": 602,
+    "unit": "mm",
+    "category": "extremes",
+    "difficulty": 2,
+    "trap_note": "Trockener als Rom, Sydney oder New York! Der Ruf täuscht."
+  }
+]
