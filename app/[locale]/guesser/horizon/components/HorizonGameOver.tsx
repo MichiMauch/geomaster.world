@@ -11,6 +11,7 @@ interface HorizonGameOverProps {
   formatValue: (value: number, unit: string) => string;
   onPlayAgain: () => void;
   onReset: () => void;
+  onShare: () => void;
   locale: string;
 }
 
@@ -29,6 +30,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
   formatValue,
   onPlayAgain,
   onReset,
+  onShare,
   locale,
 }: HorizonGameOverProps) {
   return (
@@ -104,15 +106,26 @@ export const HorizonGameOver = memo(function HorizonGameOver({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
-            <Link
-              href={`/${locale}/guesser/horizon/leaderboard`}
-              className="flex items-center justify-center gap-2 px-8 py-2.5 w-full rounded-xl text-sm font-semibold uppercase tracking-wider text-yellow-400/60 hover:text-yellow-400 border border-yellow-400/20 hover:border-yellow-400/40 bg-yellow-400/[0.03] transition-colors"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M5 3h14v2h-1.09A8.006 8.006 0 0113 12.89V16h2a3 3 0 013 3v1H6v-1a3 3 0 013-3h2v-3.11A8.006 8.006 0 015.09 5H4V3h1z" />
-              </svg>
-              {locale === "de" ? "Rangliste" : "Leaderboard"}
-            </Link>
+            <div className="flex gap-2 w-full">
+              <Link
+                href={`/${locale}/guesser/horizon/leaderboard`}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold uppercase tracking-wider text-yellow-400/60 hover:text-yellow-400 border border-yellow-400/20 hover:border-yellow-400/40 bg-yellow-400/[0.03] transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 3h14v2h-1.09A8.006 8.006 0 0113 12.89V16h2a3 3 0 013 3v1H6v-1a3 3 0 013-3h2v-3.11A8.006 8.006 0 015.09 5H4V3h1z" />
+                </svg>
+                <span className="hidden sm:inline">{locale === "de" ? "Rangliste" : "Leaderboard"}</span>
+              </Link>
+              <button
+                className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl text-yellow-400/60 hover:text-yellow-400 border border-yellow-400/20 hover:border-yellow-400/40 bg-yellow-400/[0.03] transition-colors cursor-pointer"
+                onClick={onShare}
+                aria-label="Share"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -161,37 +174,49 @@ export const HorizonGameOver = memo(function HorizonGameOver({
               )}
             </div>
 
-            {/* Actions — neon buttons */}
-            <div className="grid grid-cols-3 gap-2 w-full">
+            {/* Primary: Play Again — full width, neon cyan */}
+            <button
+              className="stats-btn-next flex items-center justify-center gap-2 w-full py-3 cursor-pointer text-sm"
+              onClick={onPlayAgain}
+            >
+              {locale === "de" ? "Nochmal" : "Again"}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+
+            {/* Secondary: Back, Share, Rank */}
+            <div className="flex gap-2 w-full">
               <button
-                className="stats-btn-lower flex items-center justify-center gap-1.5 px-3 py-3 cursor-pointer !border-white/30 !text-white/70 !shadow-none text-sm"
-                style={{ background: "rgba(255,255,255,0.05)", textShadow: "none" }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl cursor-pointer border border-white/20 text-white/60 hover:text-white/80 hover:border-white/30 text-sm transition-colors"
+                style={{ background: "rgba(255,255,255,0.05)" }}
                 onClick={onReset}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
-                {locale === "de" ? "Zurück" : "Back"}
+                <span className="hidden sm:inline">{locale === "de" ? "Zurück" : "Back"}</span>
+              </button>
+              <button
+                className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer border border-white/20 text-white/60 hover:text-white/80 hover:border-white/30 transition-colors"
+                style={{ background: "rgba(255,255,255,0.05)" }}
+                onClick={onShare}
+                aria-label="Share"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
               </button>
               <Link
                 href={`/${locale}/guesser/horizon/leaderboard`}
-                className="stats-btn-lower flex items-center justify-center gap-1.5 px-3 py-3 !border-primary/30 !text-primary/70 !shadow-none text-sm hover:!text-primary hover:!border-primary/50 transition-colors"
-                style={{ background: "rgba(0,217,255,0.03)", textShadow: "none" }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-primary/20 text-primary/60 hover:text-primary/80 hover:border-primary/40 text-sm transition-colors"
+                style={{ background: "rgba(0,217,255,0.03)" }}
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M5 3h14v2h-1.09A8.006 8.006 0 0113 12.89V16h2a3 3 0 013 3v1H6v-1a3 3 0 013-3h2v-3.11A8.006 8.006 0 015.09 5H4V3h1z" />
                 </svg>
-                {locale === "de" ? "Rang" : "Rank"}
+                <span className="hidden sm:inline">{locale === "de" ? "Rang" : "Rank"}</span>
               </Link>
-              <button
-                className="stats-btn-next flex items-center justify-center gap-1.5 px-3 py-3 cursor-pointer text-sm"
-                onClick={onPlayAgain}
-              >
-                {locale === "de" ? "Nochmal" : "Again"}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>

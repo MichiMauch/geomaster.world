@@ -9,6 +9,7 @@ import { HorizonStartScreen } from "./components/HorizonStartScreen";
 import { HorizonHUD } from "./components/HorizonHUD";
 import { HorizonGameCards } from "./components/HorizonGameCards";
 import { HorizonGameOver } from "./components/HorizonGameOver";
+import { ShareResultModal } from "@/components/guesser/ShareResultModal";
 
 export default function HorizonPage() {
   const locale = useLocale();
@@ -28,6 +29,7 @@ export default function HorizonPage() {
   const HOLD_DURATION = 1500;
 
   // Sync highscore: use server value (source of truth), fallback to localStorage
+  const [showShareModal, setShowShareModal] = useState(false);
   const [savedHs, setSavedHs] = useState(0);
   const [topPlayer, setTopPlayer] = useState<{ name: string; score: number } | null>(null);
   useEffect(() => {
@@ -243,10 +245,20 @@ export default function HorizonPage() {
             formatValue={game.formatValue}
             onPlayAgain={handlePlayAgain}
             onReset={game.resetGame}
+            onShare={() => setShowShareModal(true)}
             locale={locale}
           />
         )}
       </div>
+
+      <ShareResultModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        locale={locale}
+        gameType="horizon"
+        gameTypeName="Horizon"
+        score={game.score}
+      />
     </div>
   );
 }
