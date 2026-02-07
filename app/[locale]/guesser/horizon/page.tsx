@@ -17,7 +17,7 @@ export default function HorizonPage() {
   const prevScoreRef = useRef(0);
   const [scoreAnimating, setScoreAnimating] = useState(false);
   const [availablePoints, setAvailablePoints] = useState(1000);
-  const roundStartRef = useRef(Date.now());
+  const roundStartRef = useRef(0);
 
   // Hold-to-start reactor
   const [holdProgress, setHoldProgress] = useState(0);
