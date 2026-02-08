@@ -102,8 +102,6 @@ function FitBoundsOnResult({
 
 export default memo(function PanoramaMap({
   mapillaryImageKey,
-  heading,
-  pitch,
   onMarkerPlace,
   markerPosition,
   targetPosition,
@@ -177,6 +175,7 @@ export default memo(function PanoramaMap({
         viewerRef.current = null;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- mapillaryImageKey is used for initial load only; subsequent changes handled in separate effect
   }, [mounted]);
 
   // Update image when mapillaryImageKey changes (only if different from current)

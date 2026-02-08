@@ -92,6 +92,7 @@ function FlagRow({ codes, direction, speed }: FlagRowProps) {
       }}
     >
       {duplicatedCodes.map((code, index) => (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           key={`${code}-${index}`}
           src={`https://flagcdn.com/w160/${code}.png`}

@@ -9,7 +9,7 @@ interface LoginPromptSectionProps {
   locale: string;
 }
 
-export default function LoginPromptSection({ locale }: LoginPromptSectionProps) {
+export default function LoginPromptSection({}: LoginPromptSectionProps) {
   const { status } = useSession();
   const t = useTranslations("landing");
 

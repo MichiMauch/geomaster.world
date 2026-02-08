@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { games, gameRounds, guesses, locations, worldLocations, panoramaLocations, countries, worldQuizTypes } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getLocalizedName } from "@/lib/location-utils";
 import { GAME_TYPES, isWorldGameType, getWorldCategory, isPanoramaGameType } from "@/lib/game-types";

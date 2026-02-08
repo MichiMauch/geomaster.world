@@ -19,9 +19,9 @@ import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
-import { calculateScore as calculateScoreV1 } from "@/lib/score";
+
 import { calculateScore } from "@/lib/scoring";
-import { isImageGameType, GAME_TYPES, isWorldGameType, isSpecialQuizGameType } from "@/lib/game-types";
+import { isImageGameType, GAME_TYPES, isSpecialQuizGameType } from "@/lib/game-types";
 import { isPointInCountry as isPointInCountryPolygon } from "@/lib/utils/geo-check";
 import { isPointInCountry, isCountryQuizGameType } from "@/lib/polygon-validation";
 

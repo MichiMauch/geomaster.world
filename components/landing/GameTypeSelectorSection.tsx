@@ -7,6 +7,7 @@ interface GameTypeSelectorSectionProps {
   locale: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function GameTypeSelectorSection({ locale }: GameTypeSelectorSectionProps) {
   const t = useTranslations("landing");
 

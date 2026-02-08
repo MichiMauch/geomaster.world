@@ -53,7 +53,8 @@ export async function GET(request: Request) {
 /**
  * POST /api/notifications - Mark all notifications as read
  */
-export async function POST(request: Request) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {

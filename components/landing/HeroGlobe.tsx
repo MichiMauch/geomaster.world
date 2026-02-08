@@ -231,6 +231,7 @@ export default function HeroGlobe({ className }: HeroGlobeProps) {
     return (
       <div ref={containerRef} className={className}>
         <div className="w-full h-full flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/globe-fallback.webp"
             alt="Globe"

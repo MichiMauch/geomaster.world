@@ -72,6 +72,7 @@ export function PWAInstallPrompt() {
           {/* App icon */}
           <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark p-0.5">
             <div className="w-full h-full rounded-xl bg-surface-2 flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/android-chrome-96x96.png"
                 alt="GeoMaster"

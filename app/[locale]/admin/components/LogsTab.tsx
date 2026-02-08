@@ -18,7 +18,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { useLogsAdmin, type LogLevel, type LogCategory, type ActivityLog } from "../hooks/useLogsAdmin";
 

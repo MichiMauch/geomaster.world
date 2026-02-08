@@ -4,8 +4,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { activityLogger } from "@/lib/activity-logger";
 import { games, guesses, gameRounds, rankedGameResults, users } from "@/lib/db/schema";
-import { eq, and, sum } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { DuelService } from "@/lib/services/duel-service";
 import { getDisplayName } from "@/lib/utils";
@@ -78,7 +77,6 @@ export async function POST(request: Request) {
 
     let totalScore = 0;
     let totalTime = 0;
-    let totalDistance = 0;
 
     for (const round of rounds) {
       const guess = await db
@@ -92,7 +90,6 @@ export async function POST(request: Request) {
         // For now, we'll store it and retrieve from the guess if you have a score field
         // Or calculate based on distance
         totalTime += guess.timeSeconds || 0;
-        totalDistance += guess.distanceKm;
       }
     }
 
@@ -105,7 +102,6 @@ export async function POST(request: Request) {
 
     if (existingResult) {
       totalScore = existingResult.totalScore;
-      totalDistance = existingResult.totalDistance;
     }
 
     // Mark game as completed

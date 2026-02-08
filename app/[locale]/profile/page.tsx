@@ -140,6 +140,7 @@ export default function ProfilePage() {
           <div className="text-center mb-8">
             {/* Avatar */}
             {profile.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={profile.image}
                 alt={profile.name || "User"}

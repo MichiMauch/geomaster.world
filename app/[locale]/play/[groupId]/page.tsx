@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { CountryMap } from "@/components/Map";
 import { DEFAULT_COUNTRY } from "@/lib/countries";
-import { getEffectiveGameType, getGameTypeConfig } from "@/lib/game-types";
+import { getEffectiveGameType } from "@/lib/game-types";
 import toast from "react-hot-toast";
 import { generateHintCircleCenter, getHintCircleRadius } from "@/lib/hint";
 import { useTranslations } from "next-intl";

@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { ne, or, like, sql } from "drizzle-orm";
+import { or, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDisplayName } from "@/lib/utils";
 

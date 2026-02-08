@@ -35,6 +35,7 @@ export const HorizonGameCards = memo(function HorizonGameCards({
       {/* ── Item A Card ── */}
       <div className="rounded-2xl overflow-hidden relative sm:min-h-[280px] md:min-h-[320px]">
         {/* Background image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`/images/horizon/${getImageSlug(itemA.id)}.webp`}
           alt=""
@@ -81,6 +82,7 @@ export const HorizonGameCards = memo(function HorizonGameCards({
         }`}
       >
         {/* Background image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`/images/horizon/${getImageSlug(itemB.id)}.webp`}
           alt=""

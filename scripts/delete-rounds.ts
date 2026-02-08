@@ -20,13 +20,13 @@ async function deleteRounds() {
     const roundIds = roundsToDelete.map((r) => r.id);
 
     // Delete guesses for these rounds
-    const deletedGuesses = await db
+    await db
       .delete(guesses)
       .where(inArray(guesses.gameRoundId, roundIds));
     console.log("Deleted guesses");
 
     // Delete the rounds
-    const deletedRounds = await db
+    await db
       .delete(gameRounds)
       .where(inArray(gameRounds.id, roundIds));
     console.log("Deleted rounds");

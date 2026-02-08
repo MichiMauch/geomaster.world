@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge, MedalBadge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Swords, Trophy, Info } from "lucide-react";
 import MissionControlBackground from "@/components/MissionControlBackground";
 import { PodiumLeaderboard } from "@/app/[locale]/guesser/[gameType]/components";

@@ -7,7 +7,7 @@ import { games, gameRounds, locations, worldLocations, panoramaLocations, countr
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
-import { getGameTypeConfig, isWorldGameType, getWorldCategory, isPanoramaGameType, getPanoramaCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
+import { isWorldGameType, getWorldCategory, isPanoramaGameType, getPanoramaCategory, GAME_TYPES, type GameTypeConfig } from "@/lib/game-types";
 import { getLocationCountryName } from "@/lib/countries";
 import { getCurrentScoringVersion } from "@/lib/scoring";
 import { countryToGameTypeConfig, worldQuizToGameTypeConfig, panoramaToGameTypeConfig, type DatabaseCountry, type DatabaseWorldQuizType, type DatabasePanoramaType } from "@/lib/utils/country-converter";

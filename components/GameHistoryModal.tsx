@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Card } from "@/components/ui/Card";
+
 import { Avatar } from "@/components/ui/Avatar";
 import { MedalBadge } from "@/components/ui/Badge";
 import { formatTotalDistance } from "@/lib/distance";
@@ -182,7 +182,7 @@ export default function GameHistoryModal({
             </p>
           ) : (
             <div className="space-y-2">
-              {leaderboard.map((entry, index) => (
+              {leaderboard.map((entry) => (
                 <div
                   key={entry.userId}
                   className={cn(

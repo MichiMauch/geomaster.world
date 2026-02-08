@@ -1,8 +1,7 @@
 import { db } from "@/lib/db";
-import { notifications, users } from "@/lib/db/schema";
+import { notifications } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { getDisplayName } from "@/lib/utils";
 
 export type NotificationType = "duel_completed" | "duel_challenge_received";
 

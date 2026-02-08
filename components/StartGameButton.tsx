@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { GAME_TYPES, getGameTypesByType, getGameTypeName, DEFAULT_GAME_TYPE } from "@/lib/game-types";
+import { getGameTypesByType, getGameTypeName, DEFAULT_GAME_TYPE } from "@/lib/game-types";
 
 interface StartGameButtonProps {
   groupId: string;

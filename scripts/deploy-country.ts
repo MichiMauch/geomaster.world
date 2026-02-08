@@ -187,7 +187,7 @@ async function deployCountry(countryId: string) {
       } else {
         console.log(`   \u26A0\uFE0F  landmark: remove.bg failed (${bgResponse.status}), using original`);
       }
-    } catch (err) {
+    } catch {
       console.log("   \u26A0\uFE0F  landmark: remove.bg error, using original");
     }
   } else {

@@ -17,6 +17,7 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ locale }: HeroSectionProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: session, status } = useSession();
   const router = useRouter();
   const t = useTranslations("landing");

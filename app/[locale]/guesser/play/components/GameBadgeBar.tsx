@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import {
   QuestionDisplay,
-  isCountryQuizGameType,
   getCountryQuizCategory,
 } from "@/components/country-quiz/QuestionDisplay";
 import type { GameRound, GuessResult } from "../types";

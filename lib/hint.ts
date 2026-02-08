@@ -1,4 +1,3 @@
-import { getCountryBounds, DEFAULT_COUNTRY } from "./countries";
 import { getGameTypeConfig, DEFAULT_GAME_TYPE } from "./game-types";
 
 const EARTH_RADIUS_KM = 6371;

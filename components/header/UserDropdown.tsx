@@ -49,6 +49,7 @@ export function UserDropdown({ user, locale }: UserDropdownProps) {
       >
         {/* Avatar */}
         {user.image && !imgError ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={user.image}
             alt={user.name || "User"}

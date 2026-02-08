@@ -63,7 +63,6 @@ export interface LevelProgressProps {
 }
 
 export function LevelProgress({
-  level,
   levelName,
   progress,
   pointsToNext,

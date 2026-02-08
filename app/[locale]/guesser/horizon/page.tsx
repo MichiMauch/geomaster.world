@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocale } from "next-intl";
 import confetti from "canvas-confetti";
 import { useHorizon, ROUND_TIME_LIMIT } from "./hooks/useHorizon";
@@ -17,7 +17,7 @@ export default function HorizonPage() {
 
   const boundFormatValue = useCallback(
     (value: number, unit: string) => game.formatValue(value, unit, locale),
-    [game.formatValue, locale]
+    [game, locale]
   );
 
   const prevScoreRef = useRef(0);
@@ -123,7 +123,7 @@ export default function HorizonPage() {
     if (game.phase !== "playing") return;
     const t = setTimeout(() => game.timeUp(), ROUND_TIME_LIMIT);
     return () => clearTimeout(t);
-  }, [game.phase, game.roundKey, game.timeUp]);
+  }, [game]);
 
   const handleStart = useCallback(() => {
     game.startGame();
@@ -180,11 +180,13 @@ export default function HorizonPage() {
     <div className="relative min-h-screen">
       {/* Background image — 9:16 on mobile, 4:3 on desktop (hidden during idle — split world replaces it) */}
       <div className={`absolute inset-0 -z-10 ${game.phase === "idle" ? "hidden" : ""}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/horizon/9-16.webp"
           alt=""
           className="absolute inset-0 w-full h-full object-cover md:hidden"
         />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/horizon/4-3.webp"
           alt=""

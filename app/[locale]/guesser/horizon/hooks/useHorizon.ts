@@ -89,7 +89,6 @@ function saveHighscore(score: number): void {
 export function formatValue(value: number, unit: string, locale?: string): string {
   const absValue = Math.abs(value);
   const loc = locale === "de" ? "de-CH" : "en-US";
-  const sep = locale === "de" ? "," : ".";
 
   if (absValue >= 1_000_000_000) {
     const raw = (value / 1_000_000_000).toFixed(2);

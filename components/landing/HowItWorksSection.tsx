@@ -41,6 +41,7 @@ const steps = [
   },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function HowItWorksSection({ locale }: HowItWorksSectionProps) {
   const t = useTranslations("landing");
 

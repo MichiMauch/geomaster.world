@@ -43,7 +43,7 @@ export default function LeaveGroupButton({ groupId, isOwner }: LeaveGroupButtonP
         const data = await response.json();
         toast.error(data.error || t("errorLeaving"));
       }
-    } catch (error) {
+    } catch {
       toast.error(t("errorLeaving"));
     } finally {
       setLoading(false);

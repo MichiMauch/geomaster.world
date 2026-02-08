@@ -126,7 +126,7 @@ function formatTime(seconds: number): string {
 }
 
 export default function DuelHistoryPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const params = useParams();
   const router = useRouter();
   const locale = (params.locale as string) || "de";

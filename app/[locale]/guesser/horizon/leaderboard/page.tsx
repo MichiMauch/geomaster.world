@@ -46,7 +46,9 @@ export default function HorizonLeaderboardPage() {
     <div className="relative min-h-screen">
       {/* Background */}
       <div className="fixed inset-0 -z-10">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/horizon/9-16.webp" alt="" className="absolute inset-0 w-full h-full object-cover md:hidden" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/horizon/4-3.webp" alt="" className="absolute inset-0 w-full h-full object-cover hidden md:block" />
         <div className="absolute inset-0 bg-black/25" />
       </div>

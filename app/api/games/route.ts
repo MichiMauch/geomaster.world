@@ -15,7 +15,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { DEFAULT_COUNTRY, getCountryKeys } from "@/lib/countries";
-import { getGameTypeIds, isWorldGameType, getWorldCategory, DEFAULT_GAME_TYPE } from "@/lib/game-types";
+import { getGameTypeIds, isWorldGameType, getWorldCategory } from "@/lib/game-types";
 import { getLocalizedName, LocalizedLocation } from "@/lib/location-utils";
 
 export async function GET(request: Request) {

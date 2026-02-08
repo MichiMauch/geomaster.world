@@ -25,30 +25,29 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (token) {
+      const verifyToken = async () => {
+        try {
+          const response = await fetch(`/api/auth/verify?token=${token}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            setStatus("success");
+            // Redirect to login after 3 seconds
+            setTimeout(() => {
+              router.push(`/${locale}`);
+            }, 3000);
+          } else {
+            setStatus("error");
+            setError(data.error);
+          }
+        } catch {
+          setStatus("error");
+          setError(t("verificationError"));
+        }
+      };
       verifyToken();
     }
-  }, [token]);
-
-  const verifyToken = async () => {
-    try {
-      const response = await fetch(`/api/auth/verify?token=${token}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus("success");
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          router.push(`/${locale}`);
-        }, 3000);
-      } else {
-        setStatus("error");
-        setError(data.error);
-      }
-    } catch {
-      setStatus("error");
-      setError(t("verificationError"));
-    }
-  };
+  }, [token, router, locale, t]);
 
   const handleResend = async () => {
     if (!email) return;

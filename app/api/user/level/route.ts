@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rankings, userStreaks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getUserLevel, getLevelProgress, getLevelName, LEVELS } from "@/lib/levels";
+import { getLevelProgress, getLevelName, LEVELS } from "@/lib/levels";
 import { logger } from "@/lib/logger";
 import { withRetry } from "@/lib/db/retry";
 

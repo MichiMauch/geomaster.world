@@ -40,11 +40,13 @@ export const HorizonGameOver = memo(function HorizonGameOver({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       {/* Background image — same as gameplay */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/horizon/9-16.webp"
         alt=""
         className="absolute inset-0 w-full h-full object-cover md:hidden"
       />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/horizon/4-3.webp"
         alt=""
@@ -60,6 +62,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
         /* ════════ THEME A: LEGENDARY (New High Score) ════════ */
         <div className="relative z-10 gameover-legendary-panel max-w-md w-full p-6 sm:p-8 flex flex-col items-center text-center overflow-hidden">
           {/* Card background image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/horizon/gold.webp" alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-black/50" />
           <div className="relative z-[1] flex flex-col items-center w-full">
@@ -134,6 +137,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
         /* ════════ THEME B: SYSTEM FAILURE (Standard Loss) ════════ */
         <div className="relative z-10 gameover-failure-panel max-w-md w-full p-6 sm:p-8 flex flex-col items-center text-center overflow-hidden">
           {/* Card background image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/horizon/red.webp" alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" />
           <div className="absolute inset-0 bg-black/50" />
           <div className="relative z-[1] flex flex-col items-center w-full">

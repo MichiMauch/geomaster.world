@@ -1,4 +1,4 @@
-import { CountryBounds, COUNTRIES } from "./countries";
+import { CountryBounds } from "./countries";
 
 export interface GameTypeConfig {
   id: string;

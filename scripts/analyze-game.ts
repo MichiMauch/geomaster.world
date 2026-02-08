@@ -1,6 +1,6 @@
 import { db } from "../lib/db/index";
 import { games, gameRounds, guesses, users } from "../lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 async function analyzeGame() {
   const gameId = "RsJz9bwYXaFILrohctel6"; // NETNODE Estimation game

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { duelResults, duelStats, users, games, guesses, gameRounds } from "@/lib/db/schema";
-import { eq, and, desc, sql, sum } from "drizzle-orm";
+import { duelResults, duelStats, users, guesses, gameRounds } from "@/lib/db/schema";
+import { eq, and, desc, sum } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getDisplayName } from "@/lib/utils";
 import { determineDuelWinner } from "@/lib/duel-utils";

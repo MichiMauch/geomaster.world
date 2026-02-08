@@ -81,7 +81,6 @@ export default function LeaderboardTeaserSection({ locale }: LeaderboardTeaserSe
 
               const isFirst = displayIndex === 1;
               const isSecond = displayIndex === 0;
-              const isThird = displayIndex === 2;
 
               return (
                 <Card

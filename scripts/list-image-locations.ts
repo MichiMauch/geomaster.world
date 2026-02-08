@@ -14,7 +14,7 @@ try {
       process.env[key.trim()] = values.join("=").trim();
     }
   });
-} catch (e) {
+} catch {
   console.error("Could not load .env.local");
 }
 

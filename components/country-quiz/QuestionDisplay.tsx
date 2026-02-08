@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 
 interface QuestionDisplayProps {
   /** The question content (flag emoji, place name, or emoji combination) */

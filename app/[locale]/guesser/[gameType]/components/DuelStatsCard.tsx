@@ -85,7 +85,6 @@ export const DuelStatsCard = memo(function DuelStatsCard({
   locale,
   loading,
   wins,
-  losses,
   winRate,
   totalDuels,
   rank,

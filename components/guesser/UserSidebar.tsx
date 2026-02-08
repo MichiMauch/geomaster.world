@@ -108,6 +108,7 @@ export function UserSidebar({ className }: UserSidebarProps) {
           {/* Avatar Column */}
           <div className="flex items-center justify-center">
             {session.user.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={session.user.image}
                 alt={session.user.name || "User"}

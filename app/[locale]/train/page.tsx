@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+
 import SwitzerlandMap from "@/components/Map";
 import { calculateDistance } from "@/lib/distance";
 import { useTranslations } from "next-intl";
@@ -17,8 +17,7 @@ interface Location {
 }
 
 export default function TrainPage() {
-  const routeParams = useParams();
-  const locale = routeParams.locale as string;
+
   const t = useTranslations("train");
   const tCommon = useTranslations("common");
   const [locations, setLocations] = useState<Location[]>([]);
@@ -34,25 +33,24 @@ export default function TrainPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch("/api/train/locations");
+        if (response.ok) {
+          const data = await response.json();
+          setLocations(data);
+          if (data.length > 0) {
+            pickRandomLocation(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching locations:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchLocations();
   }, []);
-
-  const fetchLocations = async () => {
-    try {
-      const response = await fetch("/api/train/locations");
-      if (response.ok) {
-        const data = await response.json();
-        setLocations(data);
-        if (data.length > 0) {
-          pickRandomLocation(data);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching locations:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const pickRandomLocation = (locs: Location[]) => {
     const randomIndex = Math.floor(Math.random() * locs.length);

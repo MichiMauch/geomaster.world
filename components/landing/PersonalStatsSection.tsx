@@ -17,7 +17,7 @@ interface UserStats {
   averageScore: number;
 }
 
-export default function PersonalStatsSection({ locale }: PersonalStatsSectionProps) {
+export default function PersonalStatsSection({}: PersonalStatsSectionProps) {
   const { data: session, status } = useSession();
   const t = useTranslations("landing");
   const [stats, setStats] = useState<UserStats | null>(null);

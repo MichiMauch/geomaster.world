@@ -15,7 +15,6 @@ import {
 
 // Use image:garten for tests since country types are now in database
 const TEST_GAME_TYPE = 'image:garten'
-const TEST_SCALE_FACTOR = 0.035 // km (same as image:garten)
 
 describe('Scoring System', () => {
   describe('calculateScore', () => {

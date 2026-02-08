@@ -76,7 +76,6 @@ export function ShareDuelChallengeModal({
   gameType,
   encodedChallenge,
   challengerScore,
-  challengerTime: _challengerTime,
   gameTypeName,
 }: ShareDuelChallengeModalProps) {
   const [showShareModal, setShowShareModal] = useState(false);
@@ -299,6 +298,7 @@ export function ShareDuelChallengeModal({
                   >
                     <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {user.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={user.image} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-sm font-semibold text-text-secondary">

@@ -18,7 +18,7 @@ import { useGameTimer } from "../hooks/useGameTimer";
 import { GameBadgeBar } from "../components/GameBadgeBar";
 import { EmojiQuestionOverlay } from "../components/EmojiQuestionOverlay";
 import { calculateClientScore } from "../utils/scoring";
-import type { GuessResult, LevelUpInfo, Guess } from "../types";
+import type { GuessResult, LevelUpInfo } from "../types";
 
 export default function GuesserPlayPage({
   params,
@@ -54,7 +54,6 @@ export default function GuesserPlayPage({
     locationStartedAt,
     startLocation,
     getActiveLocation,
-    clearActiveRound,
     resetTimerState,
     notifyMapReady,
   } = useGameData({ gameId, locale });
@@ -194,6 +193,7 @@ export default function GuesserPlayPage({
     } finally {
       setSubmitting(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- getCurrentTimeLimit is from useGameTimer which depends on handleTimeout (circular)
   }, [currentRound, submitting, isGuest, game, addGuess]);
 
   const {
@@ -201,7 +201,6 @@ export default function GuesserPlayPage({
     getCurrentTimeLimit,
     stopTimer,
     resetTimer,
-    initFromServer,
     getTimerColor,
   } = useGameTimer({
     currentRound,

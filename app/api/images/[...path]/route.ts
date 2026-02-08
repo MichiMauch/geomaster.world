@@ -45,7 +45,7 @@ export async function GET(
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
       },
     });
-  } catch (error) {
+  } catch {
     // File not found or read error
     return NextResponse.json({ error: "Image not found" }, { status: 404 });
   }

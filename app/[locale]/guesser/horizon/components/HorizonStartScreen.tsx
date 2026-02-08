@@ -43,6 +43,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
             WebkitClipPath: "polygon(0 0, 100% 0, 0 100%)",
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/horizon/n_everest.webp"
             alt=""
@@ -59,6 +60,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
             WebkitClipPath: "polygon(100% 0, 100% 100%, 0 100%)",
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/horizon/c_tokyo.webp"
             alt=""

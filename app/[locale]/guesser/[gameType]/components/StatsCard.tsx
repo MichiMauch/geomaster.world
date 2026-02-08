@@ -87,8 +87,6 @@ export const StatsCard = memo(function StatsCard({
   personalBest,
   personalTotalScore,
   topPercentage,
-  userRank,
-  totalPlayers,
 }: StatsCardProps) {
   const label = labels[locale] || labels.de;
 

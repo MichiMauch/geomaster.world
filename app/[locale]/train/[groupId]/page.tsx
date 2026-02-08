@@ -40,25 +40,24 @@ export default function TrainPage({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch(`/api/locations?groupId=${groupId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLocations(data);
+          if (data.length > 0) {
+            pickRandomLocation(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching locations:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchLocations();
   }, [groupId]);
-
-  const fetchLocations = async () => {
-    try {
-      const response = await fetch(`/api/locations?groupId=${groupId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setLocations(data);
-        if (data.length > 0) {
-          pickRandomLocation(data);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching locations:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const pickRandomLocation = (locs: Location[]) => {
     const randomIndex = Math.floor(Math.random() * locs.length);
