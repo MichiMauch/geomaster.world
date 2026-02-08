@@ -1,6 +1,8 @@
 import { memo } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { HorizonItem } from "../hooks/useHorizon";
+import { translateName, translateUnit, translateTrapNote } from "../translations";
 
 interface HorizonGameOverProps {
   score: number;
@@ -15,12 +17,6 @@ interface HorizonGameOverProps {
   locale: string;
 }
 
-function getGameOverHeadline(score: number, locale: string) {
-  if (score >= 5000) return locale === "de" ? "Unglaublich!" : "Incredible!";
-  if (score >= 2000) return locale === "de" ? "Gut gespielt!" : "Well played!";
-  return "Game Over!";
-}
-
 export const HorizonGameOver = memo(function HorizonGameOver({
   score,
   highscore,
@@ -33,6 +29,14 @@ export const HorizonGameOver = memo(function HorizonGameOver({
   onShare,
   locale,
 }: HorizonGameOverProps) {
+  const t = useTranslations("horizon");
+
+  const getGameOverHeadline = (s: number) => {
+    if (s >= 5000) return t("incredible");
+    if (s >= 2000) return t("wellPlayed");
+    return t("gameOver");
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       {/* Background image — same as gameplay */}
@@ -70,29 +74,27 @@ export const HorizonGameOver = memo(function HorizonGameOver({
             {/* Headline */}
             <h2 className="text-xl sm:text-2xl font-heading font-black uppercase tracking-wider text-yellow-400 mb-3"
                 style={{ textShadow: "0 0 15px rgba(255,215,0,0.5)" }}>
-              {locale === "de" ? "Neuer Rekord!" : "New Record!"}
+              {t("newRecord")}
             </h2>
 
             {/* Score — gold massive */}
             <span className="text-[10px] uppercase tracking-[0.25em] text-yellow-400/50">Score</span>
             <p className="gameover-score-gold text-5xl sm:text-7xl font-mono font-black tabular-nums leading-none animate-score-pop mb-1">
-              {score.toLocaleString("de-CH")}
+              {score.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
             </p>
             <p className="text-xs font-mono text-yellow-400/40 tabular-nums mb-5">
-              {locale === "de" ? "Vorher" : "Previous"}: {highscore.toLocaleString("de-CH")}
+              {t("previous")}: {highscore.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
             </p>
 
             {/* Last question — discreet */}
             <div className="w-full rounded-xl p-3 mb-5 bg-black/40 border border-white/15 backdrop-blur-sm">
               <p className="text-xs text-white/80">
-                <span className="font-semibold text-white">{itemB.name}</span>{" "}
-                {itemB.value >= itemA.value
-                  ? locale === "de" ? "war höher als" : "was higher than"
-                  : locale === "de" ? "war niedriger als" : "was lower than"}{" "}
-                <span className="font-semibold text-white">{itemA.name}</span>
+                <span className="font-semibold text-white">{translateName(itemB.id, itemB.name, locale)}</span>{" "}
+                {itemB.value >= itemA.value ? t("wasHigherThan") : t("wasLowerThan")}{" "}
+                <span className="font-semibold text-white">{translateName(itemA.id, itemA.name, locale)}</span>
                 {" · "}
-                {formatValue(itemB.value, itemB.unit)} vs.{" "}
-                {formatValue(itemA.value, itemA.unit)}
+                {formatValue(itemB.value, translateUnit(itemB.unit, locale))} vs.{" "}
+                {formatValue(itemA.value, translateUnit(itemA.unit, locale))}
               </p>
             </div>
 
@@ -101,7 +103,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
               className="stats-btn-gold flex items-center justify-center gap-3 px-8 py-3 sm:py-4 w-full cursor-pointer"
               onClick={onPlayAgain}
             >
-              {locale === "de" ? "Nochmal spielen" : "Play Again"}
+              {t("playAgain")}
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
@@ -114,7 +116,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M5 3h14v2h-1.09A8.006 8.006 0 0113 12.89V16h2a3 3 0 013 3v1H6v-1a3 3 0 013-3h2v-3.11A8.006 8.006 0 015.09 5H4V3h1z" />
                 </svg>
-                <span className="hidden sm:inline">{locale === "de" ? "Rangliste" : "Leaderboard"}</span>
+                <span className="hidden sm:inline">{t("leaderboard")}</span>
               </Link>
               <button
                 className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl text-yellow-400/60 hover:text-yellow-400 border border-yellow-400/20 hover:border-yellow-400/40 bg-yellow-400/[0.03] transition-colors cursor-pointer"
@@ -137,39 +139,37 @@ export const HorizonGameOver = memo(function HorizonGameOver({
           <div className="relative z-[1] flex flex-col items-center w-full">
             {/* Headline */}
             <h2 className="text-2xl sm:text-3xl font-heading font-bold text-white mb-3 drop-shadow-lg">
-              {getGameOverHeadline(score, locale)}
+              {getGameOverHeadline(score)}
             </h2>
 
             {/* Score — red-tinted massive */}
             <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Score</span>
             <p className="gameover-score-red text-5xl sm:text-7xl font-mono font-black tabular-nums leading-none animate-score-pop mb-1">
-              {score.toLocaleString("de-CH")}
+              {score.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
             </p>
             <p className="text-xs font-mono text-white/30 tabular-nums mb-5">
-              Best: {highscore.toLocaleString("de-CH")}
+              Best: {highscore.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
             </p>
 
             {/* Last question explanation */}
             <div className="w-full rounded-xl p-4 mb-5 bg-black/40 border border-white/15 backdrop-blur-sm">
               <p className="text-sm text-white/90">
                 <span className="font-semibold text-white">
-                  {itemB.name}
+                  {translateName(itemB.id, itemB.name, locale)}
                 </span>{" "}
-                {itemB.value >= itemA.value
-                  ? locale === "de" ? "war höher als" : "was higher than"
-                  : locale === "de" ? "war niedriger als" : "was lower than"}{" "}
+                {itemB.value >= itemA.value ? t("wasHigherThan") : t("wasLowerThan")}{" "}
                 <span className="font-semibold text-white">
-                  {itemA.name}
+                  {translateName(itemA.id, itemA.name, locale)}
                 </span>
               </p>
               <p className="text-sm text-white/70 mt-1">
-                {formatValue(itemB.value, itemB.unit)} vs.{" "}
-                {formatValue(itemA.value, itemA.unit)}
+                {formatValue(itemB.value, translateUnit(itemB.unit, locale))} vs.{" "}
+                {formatValue(itemA.value, translateUnit(itemA.unit, locale))}
               </p>
-              {itemB.trapNote && (
+              {translateTrapNote(itemB.id, itemB.trapNote, locale) && (
                 <p className="text-sm text-white/60 italic mt-2">
-                  {locale === "de" ? "Wusstest du? " : "Did you know? "}
-                  {itemB.trapNote}
+                  {t("didYouKnow")}
+                  {translateTrapNote(itemB.id, itemB.trapNote, locale)}
                 </p>
               )}
             </div>
@@ -179,7 +179,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
               className="stats-btn-next flex items-center justify-center gap-2 w-full py-3 cursor-pointer text-sm"
               onClick={onPlayAgain}
             >
-              {locale === "de" ? "Nochmal" : "Again"}
+              {t("again")}
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
@@ -195,7 +195,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className="hidden sm:inline">{locale === "de" ? "Zurück" : "Back"}</span>
+                <span className="hidden sm:inline">{t("back")}</span>
               </button>
               <button
                 className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer border border-white/20 text-white/60 hover:text-white/80 hover:border-white/30 transition-colors"
@@ -215,7 +215,7 @@ export const HorizonGameOver = memo(function HorizonGameOver({
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M5 3h14v2h-1.09A8.006 8.006 0 0113 12.89V16h2a3 3 0 013 3v1H6v-1a3 3 0 013-3h2v-3.11A8.006 8.006 0 015.09 5H4V3h1z" />
                 </svg>
-                <span className="hidden sm:inline">{locale === "de" ? "Rang" : "Rank"}</span>
+                <span className="hidden sm:inline">{t("rank")}</span>
               </Link>
             </div>
           </div>

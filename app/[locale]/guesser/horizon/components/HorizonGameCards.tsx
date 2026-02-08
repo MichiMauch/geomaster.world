@@ -1,6 +1,8 @@
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import type { HorizonItem, GamePhase } from "../hooks/useHorizon";
 import { getCategoryGradient, getImageSlug } from "../constants";
+import { translateName, translateUnit, translateTrapNote } from "../translations";
 
 interface HorizonGameCardsProps {
   itemA: HorizonItem;
@@ -25,6 +27,7 @@ export const HorizonGameCards = memo(function HorizonGameCards({
   onAdvance,
   locale,
 }: HorizonGameCardsProps) {
+  const t = useTranslations("horizon");
   const grad = getCategoryGradient(itemA.category);
 
   return (
@@ -49,11 +52,11 @@ export const HorizonGameCards = memo(function HorizonGameCards({
 
         <div className="relative z-[1] flex flex-col items-center justify-center text-center p-3 sm:p-6 h-full">
           <h3 className="text-lg sm:text-h2 font-heading text-white mb-1 sm:mb-4 drop-shadow-lg">
-            {itemA.name}
+            {translateName(itemA.id, itemA.name, locale)}
           </h3>
           <p className="text-3xl sm:text-5xl font-heading font-bold text-primary text-glow-primary">
             {formatValue(itemA.value, "")}{" "}
-            <span className="text-sm sm:text-lg font-semibold opacity-70">{itemA.unit}</span>
+            <span className="text-sm sm:text-lg font-semibold opacity-70">{translateUnit(itemA.unit, locale)}</span>
           </p>
         </div>
       </div>
@@ -103,7 +106,7 @@ export const HorizonGameCards = memo(function HorizonGameCards({
 
         <div className="relative z-[1] flex flex-col items-center justify-center text-center p-3 sm:p-6 h-full">
           <h3 className="text-lg sm:text-h2 font-heading text-white mb-1 sm:mb-4 drop-shadow-lg">
-            {itemB.name}
+            {translateName(itemB.id, itemB.name, locale)}
           </h3>
 
           {phase === "revealing" ? (
@@ -116,11 +119,11 @@ export const HorizonGameCards = memo(function HorizonGameCards({
                 }`}
               >
                 {formatValue(itemB.value, "")}{" "}
-                <span className="text-base sm:text-lg font-semibold opacity-70">{itemB.unit}</span>
+                <span className="text-base sm:text-lg font-semibold opacity-70">{translateUnit(itemB.unit, locale)}</span>
               </p>
-              {itemB.trapNote && (
+              {translateTrapNote(itemB.id, itemB.trapNote, locale) && (
                 <p className="text-body-small text-text-muted italic mt-4 max-w-xs">
-                  {itemB.trapNote}
+                  {translateTrapNote(itemB.id, itemB.trapNote, locale)}
                 </p>
               )}
               {lastGuessCorrect && (
@@ -128,7 +131,7 @@ export const HorizonGameCards = memo(function HorizonGameCards({
                   className="stats-btn-next flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 mt-3 sm:mt-4 w-full max-w-[300px] cursor-pointer"
                   onClick={onAdvance}
                 >
-                  {locale === "de" ? "Weiter" : "Next"}
+                  {t("next")}
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -170,7 +173,7 @@ export const HorizonGameCards = memo(function HorizonGameCards({
                       d="M5 15l7-7 7 7"
                     />
                   </svg>
-                  {locale === "de" ? "Höher" : "Higher"}
+                  {t("higher")}
                 </button>
                 <button
                   className="stats-btn-lower flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 cursor-pointer"
@@ -189,7 +192,7 @@ export const HorizonGameCards = memo(function HorizonGameCards({
                       d="M19 9l-7 7-7-7"
                     />
                   </svg>
-                  {locale === "de" ? "Niedriger" : "Lower"}
+                  {t("lower")}
                 </button>
               </div>
             </>

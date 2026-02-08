@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useLocale } from "next-intl";
 import confetti from "canvas-confetti";
 import { useHorizon, ROUND_TIME_LIMIT } from "./hooks/useHorizon";
@@ -14,6 +14,11 @@ import { ShareResultModal } from "@/components/guesser/ShareResultModal";
 export default function HorizonPage() {
   const locale = useLocale();
   const game = useHorizon();
+
+  const boundFormatValue = useCallback(
+    (value: number, unit: string) => game.formatValue(value, unit, locale),
+    [game.formatValue, locale]
+  );
 
   const prevScoreRef = useRef(0);
   const [scoreAnimating, setScoreAnimating] = useState(false);
@@ -225,7 +230,7 @@ export default function HorizonPage() {
                 itemB={game.itemB}
                 phase={game.phase}
                 lastGuessCorrect={game.lastGuessCorrect}
-                formatValue={game.formatValue}
+                formatValue={boundFormatValue}
                 onGuessHigher={() => game.guess(true)}
                 onGuessLower={() => game.guess(false)}
                 onAdvance={() => game.advanceAfterReveal()}
@@ -242,7 +247,7 @@ export default function HorizonPage() {
             isNewHighscore={isNewHighscore}
             itemA={game.itemA}
             itemB={game.itemB}
-            formatValue={game.formatValue}
+            formatValue={boundFormatValue}
             onPlayAgain={handlePlayAgain}
             onReset={game.resetGame}
             onShare={() => setShowShareModal(true)}

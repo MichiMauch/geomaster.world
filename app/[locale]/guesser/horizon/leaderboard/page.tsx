@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import "../horizon.css";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
@@ -20,6 +20,7 @@ interface LeaderboardEntry {
 
 export default function HorizonLeaderboardPage() {
   const locale = useLocale();
+  const t = useTranslations("horizon");
   const { data: session } = useSession();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
@@ -39,7 +40,7 @@ export default function HorizonLeaderboardPage() {
   const rest = leaderboard.slice(3);
 
   const displayName = (entry: LeaderboardEntry) =>
-    entry.nickname || entry.name || "Anonym";
+    entry.nickname || entry.name || t("anonymous");
 
   return (
     <div className="relative min-h-screen">
@@ -72,10 +73,10 @@ export default function HorizonLeaderboardPage() {
               filter: "drop-shadow(0 0 20px rgba(0,217,255,0.4))",
             }}
           >
-            {locale === "de" ? "Rangliste" : "Leaderboard"}
+            {t("leaderboard")}
           </h1>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 mt-1">
-            {locale === "de" ? "Die besten Horizon-Spieler" : "Top Horizon Players"}
+            {t("topPlayers")}
           </p>
         </div>
 
@@ -100,15 +101,13 @@ export default function HorizonLeaderboardPage() {
           <div className="text-center py-16">
             <div className="text-4xl mb-3">🏆</div>
             <p className="text-text-secondary text-sm">
-              {locale === "de"
-                ? "Noch keine Einträge. Spiel eine Runde Horizon!"
-                : "No entries yet. Play a round of Horizon!"}
+              {t("noEntries")}
             </p>
             <Link
               href={`/${locale}/guesser/horizon`}
               className="inline-block mt-4 px-5 py-2.5 text-sm font-semibold uppercase tracking-wider rounded-xl bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors"
             >
-              {locale === "de" ? "Jetzt spielen" : "Play now"}
+              {t("playNow")}
             </Link>
           </div>
         )}
@@ -199,7 +198,7 @@ export default function HorizonLeaderboardPage() {
                           {displayName(entry)}
                           {isMe && (
                             <span className="text-primary/60 text-xs ml-1.5">
-                              ({locale === "de" ? "Du" : "You"})
+                              ({t("you")})
                             </span>
                           )}
                         </span>
@@ -208,10 +207,10 @@ export default function HorizonLeaderboardPage() {
                       {/* Stats */}
                       <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                         <span className="text-xs text-white/30 font-mono tabular-nums hidden sm:block">
-                          {entry.roundsSurvived} {locale === "de" ? "Runden" : "rounds"}
+                          {entry.roundsSurvived} {t("rounds")}
                         </span>
                         <span className="font-mono font-bold text-sm text-white tabular-nums">
-                          {entry.score.toLocaleString("de-CH")}
+                          {entry.score.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
                         </span>
                       </div>
                     </div>
@@ -249,7 +248,8 @@ function PodiumPillar({
   isCurrentUser: boolean;
   locale: string;
 }) {
-  const rankLabels = ["", "1st", "2nd", "3rd"];
+  const t = useTranslations("horizon");
+  const rankLabels = ["", t("1st"), t("2nd"), t("3rd")];
 
   return (
     <div className="flex flex-col items-center w-24 sm:w-28">
@@ -281,10 +281,10 @@ function PodiumPillar({
       {/* Pillar */}
       <div className={`horizon-pillar ${colorClass} ${height} w-full rounded-t-xl flex flex-col items-center justify-start pt-3 sm:pt-4`}>
         <span className="font-mono font-black text-lg sm:text-2xl tabular-nums text-white drop-shadow-lg">
-          {entry.score.toLocaleString("de-CH")}
+          {entry.score.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
         </span>
         <span className="text-[9px] text-white/40 font-mono mt-0.5">
-          {entry.roundsSurvived} {locale === "de" ? "Runden" : "rounds"}
+          {entry.roundsSurvived} {t("rounds")}
         </span>
       </div>
     </div>

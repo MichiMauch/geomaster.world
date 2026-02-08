@@ -44,7 +44,7 @@ export interface UseHorizonReturn extends HorizonState {
   advanceAfterReveal: () => void;
   resetGame: () => void;
   timeUp: () => void;
-  formatValue: (value: number, unit: string) => string;
+  formatValue: (value: number, unit: string, locale?: string) => string;
   roundsSurvived: number;
 }
 
@@ -83,41 +83,42 @@ function saveHighscore(score: number): void {
 
 /**
  * Format a numeric value + unit for display.
- * Examples:
- *   30000000, "Einwohner" → "30,0 Mio. Einwohner"
- *   2923000000, "USD" → "2,92 Mrd. USD"
- *   8848, "Meter" → "8.848 Meter"
- *   0.24, "km/h" → "0,24 km/h"
+ * Examples (de): 30000000, "Einwohner" → "30,0 Mio. Einwohner"
+ * Examples (en): 30000000, "Population" → "30.0M Population"
  */
-export function formatValue(value: number, unit: string): string {
+export function formatValue(value: number, unit: string, locale?: string): string {
   const absValue = Math.abs(value);
+  const loc = locale === "de" ? "de-CH" : "en-US";
+  const sep = locale === "de" ? "," : ".";
 
   if (absValue >= 1_000_000_000) {
-    const formatted = (value / 1_000_000_000)
-      .toFixed(2)
-      .replace(".", ",")
-      .replace(/,?0+$/, "");
-    return `${formatted} Mrd. ${unit}`;
+    const raw = (value / 1_000_000_000).toFixed(2);
+    const formatted = locale === "de"
+      ? raw.replace(".", ",").replace(/,?0+$/, "")
+      : raw.replace(/\.?0+$/, "");
+    const abbr = locale === "de" ? "Mrd." : "B";
+    return `${formatted} ${abbr} ${unit}`;
   }
 
   if (absValue >= 1_000_000) {
-    const formatted = (value / 1_000_000)
-      .toFixed(1)
-      .replace(".", ",")
-      .replace(/,0$/, "");
-    return `${formatted} Mio. ${unit}`;
+    const raw = (value / 1_000_000).toFixed(1);
+    const formatted = locale === "de"
+      ? raw.replace(".", ",").replace(/,0$/, "")
+      : raw.replace(/\.0$/, "");
+    const abbr = locale === "de" ? "Mio." : "M";
+    return `${formatted} ${abbr} ${unit}`;
   }
 
   if (absValue >= 10_000) {
-    return `${value.toLocaleString("de-CH")} ${unit}`;
+    return `${value.toLocaleString(loc)} ${unit}`;
   }
 
   // Small numbers: use locale formatting but avoid unnecessary decimals
   if (Number.isInteger(value)) {
-    return `${value.toLocaleString("de-CH")} ${unit}`;
+    return `${value.toLocaleString(loc)} ${unit}`;
   }
 
-  return `${value.toLocaleString("de-CH", { maximumFractionDigits: 2 })} ${unit}`;
+  return `${value.toLocaleString(loc, { maximumFractionDigits: 2 })} ${unit}`;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────

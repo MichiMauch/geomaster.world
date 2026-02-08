@@ -1,5 +1,6 @@
 import { memo } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface HorizonStartScreenProps {
   locale: string;
@@ -26,6 +27,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
   onHoldStart,
   onHoldEnd,
 }: HorizonStartScreenProps) {
+  const t = useTranslations("horizon");
   const circumference = 2 * Math.PI * 52;
   const dashOffset = circumference * (1 - holdProgress);
 
@@ -107,9 +109,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
             Horizon
           </h1>
           <p className="text-xs sm:text-sm uppercase tracking-[0.3em] text-white/60">
-            {locale === "de"
-              ? "Higher or Lower — Teste dein Wissen"
-              : "Higher or Lower — Test your knowledge"}
+            {t("subtitle")}
           </p>
         </div>
 
@@ -181,7 +181,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
 
         {/* Hold label */}
         <p className="sb-label-blink text-xs sm:text-sm uppercase tracking-[0.3em] text-white/70 font-mono mb-8 sm:mb-10">
-          {locale === "de" ? "Gedrückt halten" : "Hold to start"}
+          {t("holdToStart")}
         </p>
 
         {/* Glass Footer */}
@@ -192,7 +192,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
                 <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 inline-block mr-1 -mt-0.5 text-yellow-400/60" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M5 3h14v2h-1.09A8.006 8.006 0 0113 12.89V16h2a3 3 0 013 3v1H6v-1a3 3 0 013-3h2v-3.11A8.006 8.006 0 015.09 5H4V3h1z" />
                 </svg>
-                {topPlayer.score.toLocaleString("de-CH")} · {topPlayer.name}
+                {topPlayer.score.toLocaleString(locale === "de" ? "de-CH" : "en-US")} · {topPlayer.name}
               </span>
               <div className="w-px h-4 bg-white/10" />
             </>
@@ -201,7 +201,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
             className={`font-mono uppercase tracking-wider ${savedHs > 0 ? "text-primary/60" : "text-white/50"}`}
             style={savedHs > 0 ? { textShadow: "0 0 6px rgba(0,217,255,0.3)" } : undefined}
           >
-            {locale === "de" ? "Dein Best" : "Your Best"}: {savedHs > 0 ? savedHs.toLocaleString("de-CH") : "—"}
+            {t("yourBest")}: {savedHs > 0 ? savedHs.toLocaleString(locale === "de" ? "de-CH" : "en-US") : "—"}
           </span>
           <div className="w-px h-4 bg-white/10" />
           <Link
@@ -211,7 +211,7 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M5 3h14v2h-1.09A8.006 8.006 0 0113 12.89V16h2a3 3 0 013 3v1H6v-1a3 3 0 013-3h2v-3.11A8.006 8.006 0 015.09 5H4V3h1z" />
             </svg>
-            {locale === "de" ? "Rangliste" : "Leaderboard"}
+            {t("leaderboard")}
           </Link>
         </div>
       </div>

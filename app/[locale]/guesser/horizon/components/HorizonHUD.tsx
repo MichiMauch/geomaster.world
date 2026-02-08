@@ -39,7 +39,7 @@ export const HorizonHUD = memo(function HorizonHUD({
           <div className="flex flex-col items-center">
             <span className="text-[8px] md:text-[11px] uppercase tracking-[0.2em] text-white/40">Best</span>
             <span className="text-sm md:text-xl font-mono font-bold text-white/30 tabular-nums">
-              {highscore.toLocaleString("de-CH")}
+              {highscore.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
             </span>
           </div>
 
@@ -54,7 +54,7 @@ export const HorizonHUD = memo(function HorizonHUD({
                 scoreAnimating ? "animate-score-pop" : ""
               }`}
             >
-              {score.toLocaleString("de-CH")}
+              {score.toLocaleString(locale === "de" ? "de-CH" : "en-US")}
             </span>
             {lastRoundPoints !== null && (
               <span
