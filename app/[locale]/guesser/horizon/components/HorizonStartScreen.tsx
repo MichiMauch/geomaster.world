@@ -8,11 +8,8 @@ interface HorizonStartScreenProps {
   error: string | null;
   savedHs: number;
   topPlayer: { name: string; score: number } | null;
-  holdProgress: number;
-  isHolding: boolean;
   showFlash: boolean;
-  onHoldStart: () => void;
-  onHoldEnd: () => void;
+  onStart: () => void;
 }
 
 export const HorizonStartScreen = memo(function HorizonStartScreen({
@@ -21,15 +18,10 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
   error,
   savedHs,
   topPlayer,
-  holdProgress,
-  isHolding,
   showFlash,
-  onHoldStart,
-  onHoldEnd,
+  onStart,
 }: HorizonStartScreenProps) {
   const t = useTranslations("horizon");
-  const circumference = 2 * Math.PI * 52;
-  const dashOffset = circumference * (1 - holdProgress);
 
   return (
     <>
@@ -122,40 +114,28 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
           </div>
         )}
 
-        {/* Hold-to-Start Reactor Core */}
+        {/* Start Button */}
         <button
-          className={`relative cursor-pointer mb-4 sm:mb-6 w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center select-none ${
-            isHolding ? "sb-reactor-core-active" : "sb-reactor-core"
-          }`}
+          className="relative cursor-pointer mb-8 sm:mb-10 w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center select-none sb-reactor-core"
           style={{ background: "radial-gradient(circle, rgba(0,217,255,0.2) 0%, rgba(0,128,255,0.08) 60%, transparent 70%)" }}
-          onPointerDown={onHoldStart}
-          onPointerUp={onHoldEnd}
-          onPointerLeave={onHoldEnd}
-          onPointerCancel={onHoldEnd}
+          onClick={onStart}
           disabled={loading}
         >
-          {/* Progress ring */}
+          {/* Ring */}
           <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 120 120">
-            {/* Track */}
             <circle
               cx="60" cy="60" r="52"
               fill="none"
               stroke="rgba(255,255,255,0.08)"
               strokeWidth="4"
             />
-            {/* Progress */}
             <circle
               cx="60" cy="60" r="52"
               fill="none"
               stroke="#00D9FF"
               strokeWidth="4"
               strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
-              style={{
-                transition: isHolding ? "none" : "stroke-dashoffset 0.3s ease",
-                filter: holdProgress > 0 ? `drop-shadow(0 0 ${8 + holdProgress * 20}px rgba(0,217,255,0.8))` : undefined,
-              }}
+              style={{ filter: "drop-shadow(0 0 8px rgba(0,217,255,0.8))" }}
             />
           </svg>
 
@@ -170,21 +150,12 @@ export const HorizonStartScreen = memo(function HorizonStartScreen({
               className="w-10 h-10 sm:w-12 sm:h-12 text-white ml-1"
               fill="currentColor"
               viewBox="0 0 24 24"
-              style={{
-                transform: `scale(${1 + holdProgress * 0.3})`,
-                transition: isHolding ? "none" : "transform 0.3s ease",
-                filter: `drop-shadow(0 0 ${6 + holdProgress * 15}px rgba(0,217,255,0.7))`,
-              }}
+              style={{ filter: "drop-shadow(0 0 6px rgba(0,217,255,0.7))" }}
             >
               <path d="M8 5v14l11-7z" />
             </svg>
           )}
         </button>
-
-        {/* Hold label */}
-        <p className="sb-label-blink text-xs sm:text-sm uppercase tracking-[0.3em] text-white/70 font-mono mb-8 sm:mb-10">
-          {t("holdToStart")}
-        </p>
 
         {/* Glass Footer */}
         <div className="hud-glass-panel px-5 py-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-6 text-xs sm:text-sm mb-16">

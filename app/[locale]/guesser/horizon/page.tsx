@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useLocale } from "next-intl";
+import { useSearchParams, useRouter, useParams } from "next/navigation";
 import confetti from "canvas-confetti";
-import { useHorizon, ROUND_TIME_LIMIT } from "./hooks/useHorizon";
+import { useHorizon, ROUND_TIME_LIMIT, type CampaignConfig } from "./hooks/useHorizon";
+import { getCampaignContext, clearCampaignContext } from "@/lib/campaign-utils";
 import "./horizon.css";
 import { HorizonStartScreen } from "./components/HorizonStartScreen";
 import { HorizonHUD } from "./components/HorizonHUD";
@@ -13,7 +15,30 @@ import { ShareResultModal } from "@/components/guesser/ShareResultModal";
 
 export default function HorizonPage() {
   const locale = useLocale();
-  const game = useHorizon();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { locale: routeLocale } = useParams();
+
+  // Campaign mode detection
+  const isCampaignParam = searchParams.get("campaign") === "true";
+
+  const campaignConfig = useMemo<CampaignConfig | undefined>(() => {
+    if (!isCampaignParam) return undefined;
+
+    const ctx = getCampaignContext();
+    if (!ctx) return undefined;
+
+    const config = ctx.config;
+    const winCondition = ctx.winCondition;
+
+    return {
+      category: config.category as string,
+      count: (config.count as number) || 5,
+      maxErrors: (winCondition.max_errors as number) ?? 2,
+    };
+  }, [isCampaignParam]);
+
+  const game = useHorizon(campaignConfig);
 
   const boundFormatValue = useCallback(
     (value: number, unit: string) => game.formatValue(value, unit, locale),
@@ -25,19 +50,68 @@ export default function HorizonPage() {
   const [availablePoints, setAvailablePoints] = useState(1000);
   const roundStartRef = useRef(0);
 
-  // Hold-to-start reactor
-  const [holdProgress, setHoldProgress] = useState(0);
-  const [isHolding, setIsHolding] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
-  const holdStartRef = useRef<number | null>(null);
-  const holdRafRef = useRef<number | null>(null);
-  const HOLD_DURATION = 1500;
+
+  // Campaign: auto-start game when entering in campaign mode
+  const campaignStartedRef = useRef(false);
+  useEffect(() => {
+    if (campaignConfig && game.phase === "idle" && !campaignStartedRef.current && !game.loading) {
+      campaignStartedRef.current = true;
+      game.startGame();
+    }
+  }, [campaignConfig, game]);
+
+  // Campaign: complete level on game over
+  const campaignCompletedRef = useRef(false);
+  const [campaignCompleting, setCampaignCompleting] = useState(false);
+
+  useEffect(() => {
+    if (!campaignConfig || game.phase !== "gameOver" || campaignCompletedRef.current) return;
+    campaignCompletedRef.current = true;
+
+    const ctx = getCampaignContext();
+    if (!ctx) return;
+
+    setCampaignCompleting(true);
+    clearCampaignContext();
+
+    fetch("/api/campaign/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        levelId: ctx.levelId,
+        score: game.roundsSurvived,
+        errors: game.errorsCount,
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((result) => {
+        setCampaignCompleting(false);
+        if (result) {
+          const params = new URLSearchParams({
+            completed: String(ctx.levelId),
+            won: String(result.won),
+            stars: String(result.stars),
+          });
+          router.push(`/${routeLocale}/guesser/campaign?${params.toString()}`);
+        } else {
+          router.push(`/${routeLocale}/guesser/campaign`);
+        }
+      })
+      .catch(() => {
+        setCampaignCompleting(false);
+        router.push(`/${routeLocale}/guesser/campaign`);
+      });
+  }, [campaignConfig, game.phase, game.roundsSurvived, game.errorsCount, router, routeLocale]);
 
   // Sync highscore: use server value (source of truth), fallback to localStorage
   const [showShareModal, setShowShareModal] = useState(false);
   const [savedHs, setSavedHs] = useState(0);
   const [topPlayer, setTopPlayer] = useState<{ name: string; score: number } | null>(null);
   useEffect(() => {
+    // Skip in campaign mode
+    if (campaignConfig) return;
+
     // Immediately show localStorage value to avoid blank
     try {
       const v = localStorage.getItem("horizon_hs");
@@ -58,7 +132,7 @@ export default function HorizonPage() {
         }
       })
       .catch(() => {});
-  }, [game.phase]);
+  }, [game.phase, campaignConfig]);
 
   // Animate score changes
   useEffect(() => {
@@ -71,9 +145,10 @@ export default function HorizonPage() {
     prevScoreRef.current = game.score;
   }, [game.score]);
 
-  // Confetti on new highscore
+  // Confetti on new highscore (skip in campaign mode)
   const confettiFired = useRef(false);
   useEffect(() => {
+    if (campaignConfig) return;
     if (game.phase === "gameOver" && game.score > 0 && game.score >= game.highscore && !confettiFired.current) {
       confettiFired.current = true;
       const end = Date.now() + 2000;
@@ -99,7 +174,7 @@ export default function HorizonPage() {
     if (game.phase !== "gameOver") {
       confettiFired.current = false;
     }
-  }, [game.phase, game.score, game.highscore]);
+  }, [game.phase, game.score, game.highscore, campaignConfig]);
 
   // Reset available points on round change
   useEffect(() => {
@@ -133,46 +208,12 @@ export default function HorizonPage() {
     game.startGame();
   }, [game]);
 
-  // Hold-to-start handlers
-  const handleHoldStart = useCallback(() => {
+  const handleClickStart = useCallback(() => {
     if (game.loading) return;
-    holdStartRef.current = performance.now();
-    setIsHolding(true);
-    const tick = () => {
-      if (holdStartRef.current === null) return;
-      const elapsed = performance.now() - holdStartRef.current;
-      const progress = Math.min(elapsed / HOLD_DURATION, 1);
-      setHoldProgress(progress);
-      if (progress >= 1) {
-        // Fire!
-        setShowFlash(true);
-        try { navigator.vibrate?.(50); } catch {}
-        setTimeout(() => handleStart(), 150);
-        holdStartRef.current = null;
-        setIsHolding(false);
-        return;
-      }
-      holdRafRef.current = requestAnimationFrame(tick);
-    };
-    holdRafRef.current = requestAnimationFrame(tick);
+    setShowFlash(true);
+    try { navigator.vibrate?.(50); } catch {}
+    setTimeout(() => handleStart(), 150);
   }, [game.loading, handleStart]);
-
-  const handleHoldEnd = useCallback(() => {
-    holdStartRef.current = null;
-    setIsHolding(false);
-    if (holdRafRef.current !== null) {
-      cancelAnimationFrame(holdRafRef.current);
-      holdRafRef.current = null;
-    }
-    setHoldProgress(0);
-  }, []);
-
-  // Cleanup RAF on unmount
-  useEffect(() => {
-    return () => {
-      if (holdRafRef.current !== null) cancelAnimationFrame(holdRafRef.current);
-    };
-  }, []);
 
   const isNewHighscore = game.phase === "gameOver" && game.score > 0 && game.score >= game.highscore;
 
@@ -196,19 +237,25 @@ export default function HorizonPage() {
 
       <div className="container max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-8">
         {/* ─── IDLE PHASE ─── */}
-        {game.phase === "idle" && (
+        {game.phase === "idle" && !campaignConfig && (
           <HorizonStartScreen
             locale={locale}
             loading={game.loading}
             error={game.error}
             savedHs={savedHs}
             topPlayer={topPlayer}
-            holdProgress={holdProgress}
-            isHolding={isHolding}
             showFlash={showFlash}
-            onHoldStart={handleHoldStart}
-            onHoldEnd={handleHoldEnd}
+            onStart={handleClickStart}
           />
+        )}
+
+        {/* Campaign: loading while auto-starting */}
+        {game.phase === "idle" && campaignConfig && (
+          <div className="flex items-center justify-center" style={{ minHeight: "calc(100dvh - 8rem)" }}>
+            <div className="text-center">
+              <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            </div>
+          </div>
         )}
 
         {/* ─── PLAYING / REVEALING PHASE ─── */}
@@ -242,7 +289,7 @@ export default function HorizonPage() {
           )}
 
         {/* ─── GAME OVER PHASE ─── */}
-        {game.phase === "gameOver" && game.itemA && game.itemB && (
+        {game.phase === "gameOver" && game.itemA && game.itemB && !campaignConfig && (
           <HorizonGameOver
             score={game.score}
             highscore={game.highscore}
@@ -255,6 +302,19 @@ export default function HorizonPage() {
             onShare={() => setShowShareModal(true)}
             locale={locale}
           />
+        )}
+
+        {/* ─── CAMPAIGN GAME OVER ─── */}
+        {game.phase === "gameOver" && campaignConfig && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/70" />
+            <div className="relative z-10 text-center">
+              <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-white text-lg">
+                {campaignCompleting ? "..." : ""}
+              </p>
+            </div>
+          </div>
         )}
       </div>
 
