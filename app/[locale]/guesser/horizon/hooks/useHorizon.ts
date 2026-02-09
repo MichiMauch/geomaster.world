@@ -18,6 +18,12 @@ export type GamePhase = "idle" | "playing" | "revealing" | "gameOver";
 
 export const ROUND_TIME_LIMIT = 10_000; // 10 seconds in ms
 
+export interface CampaignConfig {
+  category: string;
+  count: number;
+  maxErrors: number;
+}
+
 export interface HorizonState {
   phase: GamePhase;
   /** Left item (value visible) */
@@ -34,6 +40,10 @@ export interface HorizonState {
   roundKey: number;
   /** Number of rounds survived (correct answers) */
   roundsSurvived: number;
+  /** Number of errors (wrong answers) — tracked for campaign mode */
+  errorsCount: number;
+  /** Campaign: true = won by reaching target rounds, false = lost */
+  campaignWon: boolean | null;
   loading: boolean;
   error: string | null;
 }
@@ -46,6 +56,7 @@ export interface UseHorizonReturn extends HorizonState {
   timeUp: () => void;
   formatValue: (value: number, unit: string, locale?: string) => string;
   roundsSurvived: number;
+  isCampaign: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -122,7 +133,7 @@ export function formatValue(value: number, unit: string, locale?: string): strin
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useHorizon(): UseHorizonReturn {
+export function useHorizon(campaignConfig?: CampaignConfig): UseHorizonReturn {
   const [state, setState] = useState<HorizonState>({
     phase: "idle",
     itemA: null,
@@ -133,9 +144,13 @@ export function useHorizon(): UseHorizonReturn {
     lastRoundPoints: null,
     roundKey: 0,
     roundsSurvived: 0,
+    errorsCount: 0,
+    campaignWon: null,
     loading: false,
     error: null,
   });
+
+  const campaignConfigRef = useRef(campaignConfig);
 
   // All items loaded, grouped by category
   const allItemsRef = useRef<Map<string, HorizonItem[]>>(new Map());
@@ -150,6 +165,9 @@ export function useHorizon(): UseHorizonReturn {
   // ── Save result to server (fire-and-forget) ─────────────────────────────
 
   const saveResultToServer = useCallback((score: number, roundsSurvived: number) => {
+    // Skip saving to horizon results in campaign mode
+    if (campaignConfigRef.current) return;
+
     fetch("/api/horizon/results", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -249,7 +267,14 @@ export function useHorizon(): UseHorizonReturn {
       const res = await fetch("/api/horizon/items");
       if (!res.ok) throw new Error("Failed to fetch items");
       const data = await res.json();
-      const items: HorizonItem[] = data.items;
+      let items: HorizonItem[] = data.items;
+
+      // Campaign mode: filter by category
+      if (campaignConfigRef.current) {
+        items = items.filter(
+          (item) => item.category === campaignConfigRef.current!.category
+        );
+      }
 
       const grouped = new Map<string, HorizonItem[]>();
       for (const item of items) {
@@ -263,7 +288,7 @@ export function useHorizon(): UseHorizonReturn {
       const pair = pickChaosPair();
       if (!pair) throw new Error("Not enough items");
 
-      const hs = loadHighscore();
+      const hs = campaignConfigRef.current ? 0 : loadHighscore();
       roundStartedAtRef.current = Date.now();
 
       setState({
@@ -276,6 +301,8 @@ export function useHorizon(): UseHorizonReturn {
         lastRoundPoints: null,
         roundKey: 0,
         roundsSurvived: 0,
+        errorsCount: 0,
+        campaignWon: null,
         loading: false,
         error: null,
       });
@@ -313,6 +340,31 @@ export function useHorizon(): UseHorizonReturn {
           lastRoundPoints: roundPoints,
         };
       } else {
+        // Campaign mode: track errors, allow continuation if under limit
+        const cfg = campaignConfigRef.current;
+        if (cfg) {
+          const newErrors = prev.errorsCount + 1;
+          if (newErrors > cfg.maxErrors) {
+            // Too many errors → game over (lose)
+            return {
+              ...prev,
+              phase: "gameOver" as const,
+              lastGuessCorrect: false,
+              errorsCount: newErrors,
+              campaignWon: false,
+            };
+          }
+          // Still under error limit → reveal the answer but continue
+          return {
+            ...prev,
+            phase: "revealing" as const,
+            lastGuessCorrect: false,
+            errorsCount: newErrors,
+            lastRoundPoints: null,
+          };
+        }
+
+        // Normal mode: single wrong answer → game over
         const finalScore = prev.score;
         saveHighscore(finalScore);
         return {
@@ -343,9 +395,30 @@ export function useHorizon(): UseHorizonReturn {
     setState((prev) => {
       if (prev.phase !== "revealing" || !prev.itemB) return prev;
 
+      const newRoundsSurvived = prev.lastGuessCorrect
+        ? prev.roundsSurvived + 1
+        : prev.roundsSurvived;
+
+      // Campaign mode: check if target reached (win condition)
+      const cfg = campaignConfigRef.current;
+      if (cfg && newRoundsSurvived >= cfg.count) {
+        return {
+          ...prev,
+          phase: "gameOver" as const,
+          roundsSurvived: newRoundsSurvived,
+          campaignWon: true,
+        };
+      }
+
       if (!nextPair) {
-        saveHighscore(prev.score);
-        return { ...prev, phase: "gameOver", roundsSurvived: prev.roundsSurvived + 1, highscore: Math.max(prev.highscore, prev.score) };
+        if (!cfg) saveHighscore(prev.score);
+        return {
+          ...prev,
+          phase: "gameOver",
+          roundsSurvived: newRoundsSurvived,
+          highscore: cfg ? prev.highscore : Math.max(prev.highscore, prev.score),
+          campaignWon: cfg ? newRoundsSurvived >= cfg.count : null,
+        };
       }
       return {
         ...prev,
@@ -355,7 +428,7 @@ export function useHorizon(): UseHorizonReturn {
         lastGuessCorrect: null,
         lastRoundPoints: null,
         roundKey: prev.roundKey + 1,
-        roundsSurvived: prev.roundsSurvived + 1,
+        roundsSurvived: newRoundsSurvived,
       };
     });
   }, [pickChaosPair]);
@@ -377,6 +450,8 @@ export function useHorizon(): UseHorizonReturn {
       lastRoundPoints: null,
       roundKey: 0,
       roundsSurvived: 0,
+      errorsCount: 0,
+      campaignWon: null,
       loading: false,
       error: null,
     });
@@ -385,12 +460,13 @@ export function useHorizon(): UseHorizonReturn {
   const timeUp = useCallback(() => {
     setState((prev) => {
       if (prev.phase !== "playing") return prev;
-      saveHighscore(prev.score);
+      if (!campaignConfigRef.current) saveHighscore(prev.score);
       return {
         ...prev,
         phase: "gameOver",
         lastGuessCorrect: false,
-        highscore: Math.max(prev.highscore, prev.score),
+        highscore: campaignConfigRef.current ? prev.highscore : Math.max(prev.highscore, prev.score),
+        campaignWon: campaignConfigRef.current ? false : null,
       };
     });
   }, []);
@@ -403,5 +479,6 @@ export function useHorizon(): UseHorizonReturn {
     timeUp,
     formatValue,
     advanceAfterReveal,
+    isCampaign: !!campaignConfigRef.current,
   };
 }
