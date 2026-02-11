@@ -323,6 +323,10 @@
     "redirecting": "Preusmeritev na skupino..."
   },
   "landing": {
+    "seo": {
+      "title": "GeoMaster World - Najboljši geografski kviz",
+      "description": "Preizkusite svoje geografsko znanje v GeoMaster World! Odkrijte lokacije v Švici, Sloveniji in po celem svetu. Igrajte proti prijateljem in se povzpnite na lestvici."
+    },
     "hero": {
       "subtitle": "Kako dobro poznaš naš planet?",
       "tagline": "5 naključnih lokacij. 30 sekund časa. Pokaži, kaj znaš.",

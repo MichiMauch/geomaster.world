@@ -323,6 +323,10 @@
     "redirecting": "Redirecting to group..."
   },
   "landing": {
+    "seo": {
+      "title": "GeoMaster World - The Ultimate Geography Quiz",
+      "description": "Test your geographical knowledge in GeoMaster World! Discover locations in Switzerland, Slovenia, and around the world. Play against friends and climb the rankings."
+    },
     "hero": {
       "subtitle": "How well do you know our Earth?",
       "tagline": "5 random places. 30 seconds each. Show what you've got.",

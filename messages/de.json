@@ -323,6 +323,10 @@
     "redirecting": "Weiterleitung zur Gruppe..."
   },
   "landing": {
+    "seo": {
+      "title": "GeoMaster World - Das ultimative Geografie-Quiz",
+      "description": "Teste dein geografisches Wissen in GeoMaster World! Entdecke Orte in der Schweiz, Slowenien und auf der ganzen Welt. Spiele gegen Freunde und steige in den Rankings auf."
+    },
     "hero": {
       "subtitle": "Wie gut kennst du unsere Erde?",
       "tagline": "5 zufällige Orte. 30 Sekunden Zeit. Zeig, was du drauf hast.",
