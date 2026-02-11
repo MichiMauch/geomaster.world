@@ -18,9 +18,13 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "GeoMaster World",
-  description: "Teste dein geografisches Wissen",
+  title: {
+    template: "%s | GeoMaster World",
+    default: "GeoMaster World",
+  },
+  description: "Teste dein geografisches Wissen in GeoMaster World! Entdecke Orte in der Schweiz und auf der ganzen Welt.",
   manifest: "/manifest.webmanifest",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://geomaster.world"),
   icons: {
     icon: [
       { url: "/favicon.ico", type: "image/x-icon" },
@@ -47,12 +51,43 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "GeoMaster World",
   },
+  openGraph: {
+    type: "website",
+    locale: "de_CH",
+    url: "https://geomaster.world",
+    siteName: "GeoMaster World",
+    images: [
+      {
+        url: "/images/worldquiz.webp",
+        width: 1200,
+        height: 630,
+        alt: "GeoMaster World",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GeoMaster World",
+    description: "Teste dein geografisches Wissen",
+    images: ["/images/worldquiz.webp"],
+  },
   other: {
     "mobile-web-app-capable": "yes",
     "application-name": "GeoMaster World",
     "msapplication-TileColor": "#0a0a0f",
     "msapplication-TileImage": "/mstile-144x144.png",
     "msapplication-config": "/browserconfig.xml",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
