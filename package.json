@@ -12,6 +12,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@auth/drizzle-adapter": "^1.11.3",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@libsql/client": "^0.17.0",
@@ -40,7 +41,6 @@
     "next-auth": "^4.24.15",
     "next-intl": "^4.14.9",
     "nodemailer": "^10.1.7",
-    "openai": "^6.15.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-globe.gl": "^2.37.0",

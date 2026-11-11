@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
 export interface TranslationResult {
   original: string;
@@ -13,19 +13,80 @@ export interface NewsTranslationResult {
 }
 
 export class TranslationService {
-  private static openai: OpenAI | null = null;
+  private static anthropic: Anthropic | null = null;
 
-  private static getClient(): OpenAI {
-    if (!this.openai) {
-      this.openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
+  private static getClient(): Anthropic {
+    if (!this.anthropic) {
+      this.anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
       });
     }
-    return this.openai;
+    return this.anthropic;
+  }
+
+  private static getModel(): string {
+    return process.env.ANTHROPIC_MODEL || "claude-haiku-5-5";
   }
 
   /**
-   * Translate a batch of location names using GPT-4o-mini
+   * Send a prompt to Claude and return the text of the response
+   */
+  private static async complete(
+    client: Anthropic,
+    system: string,
+    prompt: string
+  ): Promise<string> {
+    const response = await client.messages.create({
+      model: this.getModel(),
+      // Thinking-Tokens zählen mit, darum mehr Luft als die früheren 4000
+      max_tokens: 16000,
+      output_config: { effort: "low" },
+      system,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    if (response.stop_reason === "refusal") {
+      throw new Error("Claude refused the translation request");
+    }
+    if (response.stop_reason === "max_tokens") {
+      throw new Error("Translation response was cut off (max_tokens)");
+    }
+
+    const content = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("")
+      .trim();
+    if (!content) {
+      throw new Error("No response from Claude");
+    }
+    return content;
+  }
+
+  /**
+   * Parse a JSON array from the model output (tolerates code fences or surrounding text)
+   */
+  private static parseJsonArray<T>(content: string): T[] {
+    const cleaned = content
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/, "")
+      .trim();
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) return parsed as T[];
+    } catch {
+      // fall through to extraction
+    }
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed)) return parsed as T[];
+    }
+    throw new Error("Failed to parse translation response");
+  }
+
+  /**
+   * Translate a batch of location names using Claude
    * Batching reduces API calls and costs
    */
   static async translateBatch(names: string[]): Promise<TranslationResult[]> {
@@ -47,7 +108,7 @@ export class TranslationService {
   }
 
   private static async translateSingleBatch(
-    client: OpenAI,
+    client: Anthropic,
     names: string[]
   ): Promise<TranslationResult[]> {
     const prompt = `Translate the following location names into German (de), English (en), and Slovenian (sl).
@@ -70,44 +131,17 @@ Important rules:
 
 Return ONLY valid JSON, no markdown or explanation.`;
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a professional translator specializing in geographic location names. Return only valid JSON arrays.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.1, // Low temperature for consistent translations
-      max_tokens: 4000,
-    });
+    const content = await this.complete(
+      client,
+      "You are a professional translator specializing in geographic location names. Return only valid JSON arrays.",
+      prompt
+    );
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error("No response from OpenAI");
-    }
-
-    // Parse JSON response
-    try {
-      const parsed = JSON.parse(content);
-      return parsed as TranslationResult[];
-    } catch {
-      // Try to extract JSON from response
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]) as TranslationResult[];
-      }
-      throw new Error("Failed to parse translation response");
-    }
+    return this.parseJsonArray<TranslationResult>(content);
   }
 
   /**
-   * Translate news content from German to English using GPT-4o-mini
+   * Translate news content from German to English using Claude
    * Optimized for longer text like news titles and content
    */
   static async translateNewsContent(texts: string[]): Promise<NewsTranslationResult[]> {
@@ -133,36 +167,12 @@ Important rules:
 
 Return ONLY valid JSON, no markdown or explanation.`;
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a professional translator. Translate German to English naturally. Return only valid JSON arrays.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 4000,
-    });
+    const content = await this.complete(
+      client,
+      "You are a professional translator. Translate German to English naturally. Return only valid JSON arrays.",
+      prompt
+    );
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error("No response from OpenAI");
-    }
-
-    try {
-      const parsed = JSON.parse(content);
-      return parsed as NewsTranslationResult[];
-    } catch {
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]) as NewsTranslationResult[];
-      }
-      throw new Error("Failed to parse translation response");
-    }
+    return this.parseJsonArray<NewsTranslationResult>(content);
   }
 }
