@@ -77,6 +77,6 @@
   "overrides": {
     "@auth/core": "0.41.3",
     "nodemailer": "^10.1.7",
-    "serialize-javascript": "^7.1.2"
+    "serialize-javascript": "^7.1.3"
   }
 }
